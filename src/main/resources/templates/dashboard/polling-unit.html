@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="wide-narrow">
+    <div class="panel"><div class="ph"><h2>Polling unit location</h2><span class="sub" th:text="${profile.lat() != null} ? 'Pinned location of your polling unit' : 'No GPS location yet — add one under Profile & Settings'"></span></div>
+      <div id="puMap" class="map2" style="height:420px" th:if="${profile.lat() != null}"></div>
+      <div class="empty" th:if="${profile.lat() == null}"><span class="big">📍</span>No GPS location on record for your polling unit.</div>
+    </div>
+    <div class="panel"><div class="ph"><h2>Details</h2></div><div class="pb">
+      <dl class="facts">
+        <dt>Zone</dt><dd th:text="${profile.zoneName()} ?: '—'"></dd><dt>State</dt><dd th:text="${profile.stateName()} ?: '—'"></dd><dt>LGA</dt><dd th:text="${profile.lgaName()} ?: '—'"></dd><dt>Ward</dt><dd th:text="${profile.wardName()} ?: '—'"></dd>
+        <dt>Polling unit</dt><dd th:text="(${profile.puCode()} != null ? ${profile.puCode()} + ' — ' : '') + (${profile.puName()} ?: '—')"></dd>
+        <dt>GPS</dt><dd th:text="${profile.lat() != null} ? (${#numbers.formatDecimal(profile.lat(),1,6)} + ', ' + ${#numbers.formatDecimal(profile.lng(),1,6)}) : 'Not set'"></dd>
+        <dt>Referred by</dt><dd th:text="${profile.referrerName() != null} ? (${profile.referrerName()} + ' (' + ${profile.referrerCode()} + ')') : 'Nobody (direct)'"></dd>
+      </dl>
+      <div class="kpis" style="margin-top:1rem;grid-template-columns:1fr 1fr">
+        <div class="kpi grey" style="padding:.7rem .9rem"><div><div class="v" style="font-size:1.3rem" th:text="${coverage.pollingUnit()}">0</div><div class="l">At your polling unit</div></div></div>
+        <div class="kpi grey" style="padding:.7rem .9rem"><div><div class="v" style="font-size:1.3rem" th:text="${coverage.ward()}">0</div><div class="l">In your ward</div></div></div>
+        <div class="kpi grey" style="padding:.7rem .9rem"><div><div class="v" style="font-size:1.3rem" th:text="${coverage.lga()}">0</div><div class="l">In your LGA</div></div></div>
+        <div class="kpi grey" style="padding:.7rem .9rem"><div><div class="v" style="font-size:1.3rem" th:text="${coverage.state()}">0</div><div class="l">In your state</div></div></div>
+      </div>
+      <div class="no-print" style="margin-top:1rem"><a class="btn secondary sm" href="/dashboard/profile#location">Update location</a></div>
+    </div></div>
+  </div>
+  <script th:if="${profile.lat() != null}" th:inline="javascript">
+    document.addEventListener("DOMContentLoaded", () => GAT.pointMap("puMap", [{ lat: /*[[${profile.lat()}]]*/ 0, lng: /*[[${profile.lng()}]]*/ 0, label: /*[[${profile.puName()}]]*/ "", sub: /*[[${profile.wardName() + ', ' + profile.lgaName()}]]*/ "" }], { pin: true }));
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="kpis" style="margin-bottom:1.1rem">
+    <div class="kpi"><div class="ico">◆</div><div><div class="v" th:text="${#lists.size(refs.direct())}">0</div><div class="l">Direct referrals</div></div></div>
+    <div class="kpi blue"><div class="ico">◆</div><div><div class="v" th:text="${refs.totalDownline()}">0</div><div class="l">Total network</div></div></div>
+    <div class="kpi gold"><div class="ico">◆</div><div><div class="v" th:text="${#lists.size(refs.levels())}">0</div><div class="l">Levels deep</div></div></div>
+    <div class="kpi red"><div class="ico">◆</div><div><div class="v" th:text="${refs.direct().isEmpty()} ? 0 : ${#aggregates.max(refs.direct().![theirReferrals()])}">0</div><div class="l">Best recruiter in your network</div></div></div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>People you referred</h2><span class="sub"><th:block th:if="${refs.levels().isEmpty()}">No referrals yet</th:block><th:block th:unless="${refs.levels().isEmpty()}">Network by level — <th:block th:each="l, st : ${refs.levels()}"><span th:text="'Level ' + ${l[0]} + ': ' + ${l[1]}"></span><th:block th:unless="${st.last}"> · </th:block></th:block></th:block></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>#</th><th>Member</th><th>Phone</th><th>Polling unit</th><th class="num">Their referrals</th><th>Joined</th></tr></thead>
+      <tbody>
+        <tr th:each="d, st : ${refs.direct()}"><td><span class="rank" th:classappend="${st.index == 0} ? 'g' : (${st.index == 1} ? 's' : (${st.index == 2} ? 'b' : ''))" th:text="${st.count}"></span></td>
+          <td><b th:text="${d.firstName() + ' ' + d.lastName()}"></b><div class="mini" th:text="${d.memberCode()}"></div></td><td th:text="${d.phone()}"></td><td class="mini" th:text="${d.location()}"></td><td class="num" th:text="${d.theirReferrals()}"></td><td class="mini" th:text="${#temporals.format(d.createdAt(), 'd MMM yyyy')}"></td></tr>
+        <tr th:if="${refs.direct().isEmpty()}"><td colspan="6" class="empty"><span class="big">⇄</span>Nobody yet. Share your referral link to get started.</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

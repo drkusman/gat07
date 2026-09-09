@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel" style="margin-bottom:1.1rem"><div class="pb profile-strip">
+    <img th:if="${me.photo != null}" th:src="${me.photo}" alt="">
+    <span class="init" th:if="${me.photo == null}" th:text="${me.initials}">AB</span>
+    <div class="meta"><h1 th:text="${me.fullName}">Name</h1>
+      <span class="pill" th:text="${me.memberCode}">GAT-000002</span> <span class="pill grey" th:text="${#strings.toLowerCase(me.role)}">member</span>
+      <span class="mini muted" style="margin-left:.4rem">Member since <span th:text="${#temporals.format(me.createdAt, 'd MMM yyyy')}"></span></span>
+      <div class="muted" style="margin-top:.4rem;font-size:.88rem" th:text="${profile.locationLine()}"></div></div>
+    <div class="no-print"><a class="btn secondary" href="/dashboard/profile">Edit profile</a></div>
+  </div></div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="ico">⇄</div><div><div class="v" th:text="${#numbers.formatInteger(profile.directReferrals(),1,'COMMA')}">0</div><div class="l">People you referred</div><div class="f">Direct registrations through your link</div></div></div>
+    <div class="kpi blue"><div class="ico">⚇</div><div><div class="v" th:text="${#numbers.formatInteger(profile.totalDownline(),1,'COMMA')}">0</div><div class="l">Total network</div>
+      <div class="f"><th:block th:if="${refs.levels().isEmpty()}">All levels below you</th:block><th:block th:each="l, st : ${refs.levels()}"><span th:text="'L' + ${l[0]} + ': ' + ${l[1]}"></span><th:block th:unless="${st.last}"> · </th:block></th:block></div></div></div>
+    <div class="kpi gold"><div class="ico">▤</div><div><div class="v" th:text="${#lists.size(myReports)}">0</div><div class="l">Reports filed</div>
+      <div class="f" th:text="${#lists.isEmpty(myReports)} ? 'Nothing filed yet' : (${#lists.size(myReports.?[status.name() == 'OPEN'])} + ' awaiting review')"></div></div></div>
+    <div class="kpi red"><div class="ico">◉</div><div><div class="v" th:text="${#numbers.formatInteger(coverage.pollingUnit(),1,'COMMA')}">0</div><div class="l">Members at your polling unit</div>
+      <div class="f" th:text="'Ward: ' + ${coverage.ward()} + ' · LGA: ' + ${coverage.lga()} + ' · State: ' + ${coverage.state()}"></div></div></div>
+  </div>
+
+  <div class="wide-narrow" style="margin-top:1.1rem">
+    <div class="panel">
+      <div class="ph"><h2>Your referral link</h2><span class="sub">Every registration through this link counts under you</span></div>
+      <div class="pb">
+        <div th:replace="~{fragments/share :: box(${me.referralCode})}"></div>
+        <p class="muted" style="margin:.9rem 0 0;font-size:.85rem">Tip: ask each person you bring in to share their own link too. Everyone they register counts in your total network.</p>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="ph"><h2>Recent referrals</h2><a class="btn secondary sm act" href="/dashboard/referrals">View all</a></div>
+      <div class="pb flush"><table class="tbl"><tbody>
+        <tr th:each="d : ${refs.direct()}" th:if="${dStat.index < 5}"><td><b th:text="${d.firstName() + ' ' + d.lastName()}"></b><div class="mini" th:text="${d.location()}"></div></td><td class="num mini" th:text="${#temporals.format(d.createdAt(), 'd MMM yyyy')}"></td></tr>
+        <tr th:if="${refs.direct().isEmpty()}"><td class="empty">No referrals yet</td></tr>
+      </tbody></table></div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div th:replace="~{fragments/adminfilter :: bar}"></div>
+  <div class="panel">
+    <div class="ph"><h2>Members</h2><span class="pill" th:text="${#numbers.formatInteger(total,1,'COMMA')} + ' total'"></span>
+      <div class="act"><span class="mini" th:text="'Page ' + ${page} + ' of ' + ${pages}"></span>
+        <a th:if="${page > 1}" class="btn secondary sm" th:href="@{/admin/members} + ${filter.qs()} + (${filter.qs().isEmpty()} ? '?' : '&') + 'page=' + ${page - 1}">‹ Prev</a>
+        <a th:if="${page < pages}" class="btn secondary sm" th:href="@{/admin/members} + ${filter.qs()} + (${filter.qs().isEmpty()} ? '?' : '&') + 'page=' + ${page + 1}">Next ›</a></div></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Code</th><th>Name</th><th>Phone</th><th>Gender</th><th>Location</th><th>GPS</th><th>Referred by</th><th class="num">Refs</th><th>Joined</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="r : ${rows}">
+          <td class="mini"><span th:text="${r.memberCode()}"></span> <span class="pill blue" th:if="${r.role() != 'MEMBER'}" th:text="${#strings.toLowerCase(r.role())}"></span> <span class="pill red" th:if="${r.status() != 'ACTIVE'}">suspended</span></td>
+          <td><b th:text="${r.firstName() + ' ' + r.lastName()}"></b></td><td th:text="${r.phone()}"></td><td th:text="${r.gender()} ?: '—'"></td>
+          <td class="mini" style="max-width:260px" th:text="${r.location()}"></td>
+          <td class="mini"><a th:if="${r.lat() != null}" target="_blank" rel="noopener" th:href="'https://www.google.com/maps?q=' + ${r.lat()} + ',' + ${r.lng()}" th:text="${#numbers.formatDecimal(r.lat(),1,4)} + ', ' + ${#numbers.formatDecimal(r.lng(),1,4)}"></a><span th:if="${r.lat() == null}">—</span></td>
+          <td class="mini"><th:block th:if="${r.referrerName() != null}"><span th:text="${r.referrerName()}"></span><br><span th:text="${r.referrerCode()}"></span></th:block><span th:if="${r.referrerName() == null}">—</span></td>
+          <td class="num" th:text="${r.referrals()}"></td><td class="mini" th:text="${#temporals.format(r.createdAt(), 'd MMM yyyy')}"></td>
+          <td class="no-print"><a class="btn secondary sm" th:href="@{/admin/members/{id}(id=${r.id()})}">View</a></td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="10" class="empty">No members match this selection</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

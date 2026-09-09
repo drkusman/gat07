@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<!-- Coordination centre filter bar; submits as GET to the current page -->
+<form th:fragment="bar" class="panel no-print" method="get" th:action="${currentPath}" style="padding:.9rem 1.25rem">
+  <input type="hidden" name="level" th:if="${filter.level != null}" th:value="${filter.level}">
+  <input type="hidden" name="status" th:if="${filter.status != null}" th:value="${filter.status}">
+  <div class="filterbar">
+    <div class="field"><label>Zone</label>
+      <select name="zoneId" th:disabled="${!isAdmin}" onchange="this.form.stateId.value='';this.form.lgaId.value='';this.form.wardId.value='';this.form.pollingUnitId.value='';this.form.submit()">
+        <option value="">All zones</option>
+        <option th:each="z : ${zoneOptions}" th:value="${z.id}" th:text="${z.name}" th:selected="${z.id == filter.zoneId}"></option></select></div>
+    <div class="field"><label>State</label>
+      <select name="stateId" th:disabled="${!isAdmin}" onchange="this.form.lgaId.value='';this.form.wardId.value='';this.form.pollingUnitId.value='';this.form.submit()">
+        <option value="">All states</option>
+        <option th:each="s : ${stateOptions}" th:value="${s.id}" th:text="${s.name}" th:selected="${s.id == filter.stateId}"></option></select></div>
+    <div class="field"><label>LGA</label>
+      <select name="lgaId" th:disabled="${filter.stateId == null}" onchange="this.form.wardId.value='';this.form.pollingUnitId.value='';this.form.submit()">
+        <option value="">All LGAs</option>
+        <option th:each="l : ${lgaOptions}" th:value="${l.id}" th:text="${l.name}" th:selected="${l.id == filter.lgaId}"></option></select></div>
+    <div class="field"><label>Ward</label>
+      <select name="wardId" th:disabled="${filter.lgaId == null}" onchange="this.form.pollingUnitId.value='';this.form.submit()">
+        <option value="">All wards</option>
+        <option th:each="w : ${wardOptions}" th:value="${w.id}" th:text="${w.name}" th:selected="${w.id == filter.wardId}"></option></select></div>
+    <div class="field"><label>Polling unit</label>
+      <select name="pollingUnitId" th:disabled="${filter.wardId == null}" onchange="this.form.submit()">
+        <option value="">All units</option>
+        <option th:each="p : ${puOptions}" th:value="${p.id}" th:text="${p.label}" th:selected="${p.id == filter.pollingUnitId}"></option></select></div>
+    <div class="field"><label>Gender</label>
+      <select name="gender"><option value="">All</option><option th:selected="${filter.gender == 'Male'}">Male</option><option th:selected="${filter.gender == 'Female'}">Female</option></select></div>
+    <div class="field"><label>Search</label><input name="q" placeholder="Name, phone, code" th:value="${filter.q}"></div>
+    <div class="field"><label>&nbsp;</label><div class="btn-row"><button class="btn sm" type="submit">Apply</button><a class="btn secondary sm" th:href="${currentPath}">Clear</a></div></div>
+  </div>
+  <th:block th:if="${!isAdmin}"><input type="hidden" name="zoneId" th:value="${filter.zoneId}"><input type="hidden" name="stateId" th:value="${filter.stateId}"></th:block>
+</form>
+</body>
+</html>

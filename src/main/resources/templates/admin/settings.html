@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="two">
+    <div class="panel"><div class="ph"><h2>Registration age limit</h2><span class="sub">Applied to new registrations and profile updates</span></div>
+      <form th:action="@{/admin/settings}" method="post" class="pb">
+        <div class="form-grid">
+          <div class="field"><label>Minimum age (years)</label><input name="minAge" type="number" min="1" max="120" required th:value="${rules.minAge()}"><span class="help">Members must be at least this old.</span></div>
+          <div class="field"><label>Maximum age (years)</label><input name="maxAge" type="number" min="1" max="130" th:value="${rules.maxAge()}" placeholder="No limit"><span class="help">Optional upper limit.</span></div>
+        </div>
+        <label style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;font-weight:500"><input type="checkbox" name="requireDob" th:checked="${rules.requireDob()}" style="width:auto"> Date of birth is required at registration</label>
+        <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Save settings</button></div>
+      </form></div>
+    <div class="panel"><div class="ph"><h2>How the age limit works</h2></div><div class="pb">
+      <ul class="muted" style="font-size:.9rem;padding-left:1.2rem;line-height:1.7">
+        <li>Age is calculated from the date of birth entered at registration, in whole years, on the day of registration.</li>
+        <li>Anyone younger than the <b>minimum age</b> cannot complete registration and sees a clear message explaining why.</li>
+        <li>Leave the <b>maximum age</b> blank for no upper limit.</li>
+        <li>When <b>date of birth is required</b>, members must supply it; otherwise the limits only apply to members who do.</li>
+        <li>Existing members are not removed when you change the limits; the rules apply the next time they edit their profile.</li>
+        <li>Nigeria's voting age is 18. A lower minimum lets youth mobilisers register ahead of voter registration.</li>
+      </ul></div></div>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div th:replace="~{fragments/adminfilter :: bar}"></div>
+  <div class="panel">
+    <div class="ph"><h2>Polling unit coverage</h2><span class="sub">Each marker is a polling unit with at least one member; size reflects member count</span><span class="pill act" th:text="${#lists.size(points)} + ' polling units'"></span></div>
+    <div id="bigMap" class="map2 tall" th:unless="${points.isEmpty()}"></div>
+    <div class="empty" th:if="${points.isEmpty()}"><span class="big">◉</span>No polling units with members in this selection.</div>
+  </div>
+  <script th:inline="javascript" th:unless="${points.isEmpty()}">
+    const pts = /*[[${points}]]*/ [];
+    document.addEventListener("DOMContentLoaded", () => GAT.pointMap("bigMap", pts.map(p => ({ lat: p.lat, lng: p.lng, label: p.name + (p.code ? " (" + p.code + ")" : ""), sub: p.ward + ", " + p.lga + ", " + p.state, members: p.members }))));
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><th:block th:replace="~{fragments/site :: pageHead('Welcome')}"></th:block></head>
+<body>
+<th:block th:replace="~{fragments/site :: siteHeader('/register')}"></th:block>
+<main class="container narrow" style="max-width:760px">
+  <section class="card">
+    <h2>🎉 Welcome to GAT 2027!</h2>
+    <p>Your registration is complete. Your member number is <b class="code" th:text="${member.memberCode}">GAT-000002</b>.</p>
+    <p>Share your personal referral link to bring others on board:</p>
+    <div th:replace="~{fragments/share :: box(${member.referralCode})}"></div>
+    <div class="btn-row" style="margin-top:1rem"><a class="btn" href="/dashboard">Go to my dashboard</a></div>
+  </section>
+</main>
+<th:block th:replace="~{fragments/site :: siteFooter(false)}"></th:block>
+<script src="/js/gat.js"></script>
+</body>
+</html>

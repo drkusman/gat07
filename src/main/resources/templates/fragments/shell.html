@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:fragment="layout(content)" lang="en">
+<head>
+  <th:block th:replace="~{fragments/site :: pageHead(${shellTitle})}"></th:block>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="/css/dashboard.css">
+  <th:block th:replace="~{fragments/site :: leaflet}"></th:block>
+</head>
+<body class="dash">
+<div class="shell">
+  <aside class="sidebar" id="sidebar">
+    <div class="logo"><img src="/img/logo.jpg" alt="GAT 2027"></div>
+    <div class="org"><b>Grassroot Advocacy for Tinubu</b><span th:text="${shellSubtitle}">Member Portal · 2027</span></div>
+    <nav>
+      <th:block th:each="it, st : ${nav}">
+        <div class="sec" th:if="${it.section != null and (st.first or nav[st.index - 1].section != it.section)}" th:text="${it.section}">Section</div>
+        <a th:href="${it.href}" th:classappend="${it.isActive(currentPath)} ? 'active'" th:target="${it.external} ? '_blank' : null" th:rel="${it.external} ? 'noopener' : null">
+          <span class="ic" th:text="${it.icon}">▦</span> <span th:text="${it.label}">Label</span>
+          <span class="cnt" th:if="${it.count != null}" th:text="${it.count}">0</span>
+        </a>
+      </th:block>
+    </nav>
+    <div class="userbox">
+      <img th:if="${me.photo != null}" th:src="${me.photo}" alt="">
+      <span class="init" th:if="${me.photo == null}" th:text="${me.initials}">AB</span>
+      <div><b th:text="${me.displayName}">Name</b><span th:text="${shellUserLine}">code</span></div>
+      <form th:action="@{/logout}" method="post"><button title="Log out" style="background:none;border:none;color:#86a894;font-size:1.1rem;cursor:pointer">⏻</button></form>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar2">
+      <button class="burger" id="burger" aria-label="Menu" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+      <div><div class="crumb" th:text="${shellCrumb}">Member portal</div><h1 th:text="${shellTitle}">Overview</h1></div>
+      <div class="right">
+        <span class="date" th:text="${todayLabel}">Today</span>
+        <a th:unless="${isAdmin != null}" class="btn sm" href="/report">✚ File report</a>
+        <th:block th:if="${isAdmin != null}">
+          <button class="btn secondary sm" onclick="window.print()">🖨 Print</button>
+          <a class="btn sm" th:href="@{/api/admin/members.csv} + ${filter.qs()}">⬇ Export CSV</a>
+        </th:block>
+      </div>
+    </header>
+
+    <main class="page">
+      <div class="alert error" th:if="${error}" th:text="${error}"></div>
+      <div class="alert success" th:if="${success}" th:text="${success}"></div>
+      <th:block th:replace="${content}"></th:block>
+    </main>
+    <div class="footer2"><b>GAT</b><br>Grassroot Advocacy for Tinubu<br>GAT 2027 · Forward Together with PBAT</div>
+  </div>
+</div>
+<script src="/js/gat.js"></script>
+</body>
+</html>

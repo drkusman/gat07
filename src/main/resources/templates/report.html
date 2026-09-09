@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><th:block th:replace="~{fragments/site :: pageHead('File a report')}"></th:block></head>
+<body>
+<th:block th:replace="~{fragments/site :: siteHeader('/report')}"></th:block>
+<main class="container narrow" style="max-width:720px">
+  <div class="card">
+    <h1>File a field report</h1>
+    <p class="muted">Tell the coordinators what is happening at your polling unit or ward: rallies, meetings, voter registration drives, incidents, or complaints.</p>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+    <form th:action="@{/report}" th:object="${form}" method="post">
+      <div class="form-grid">
+        <div class="field"><label>Category <span class="req">*</span></label>
+          <select th:field="*{category}" required><option value="">Select</option><option th:each="c : ${categories}" th:value="${c}" th:text="${c.label}"></option></select></div>
+        <div class="field"><label>Reporting from</label><input disabled th:value="${from}"></div>
+        <div class="field full"><label>Title <span class="req">*</span></label><input th:field="*{title}" required maxlength="160" placeholder="Short summary, e.g. Ward meeting held at Ogugu I"></div>
+        <div class="field full"><label>Details <span class="req">*</span></label><textarea th:field="*{body}" required maxlength="5000" placeholder="What happened, when, how many people, what support is needed…"></textarea></div>
+        <div class="field full"><label style="display:flex;gap:.5rem;align-items:center;font-weight:500"><input type="checkbox" id="attachLoc" style="width:auto"> Attach my current GPS location to this report</label><span class="help" id="locStatus"></span></div>
+      </div>
+      <input type="hidden" th:field="*{latitude}"><input type="hidden" th:field="*{longitude}">
+      <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Submit report</button><a class="btn secondary" href="/dashboard">Cancel</a></div>
+    </form>
+  </div>
+</main>
+<th:block th:replace="~{fragments/site :: siteFooter(false)}"></th:block>
+<script src="/js/gat.js"></script>
+<script>GAT.reportPage();</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div th:replace="~{fragments/adminfilter :: bar}"></div>
+  <div class="panel">
+    <div class="ph"><h2>Referral leaderboard</h2><span class="sub">Members ranked by direct referrals in the current selection</span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>#</th><th>Member</th><th>Code</th><th>State</th><th class="num">Direct referrals</th><th style="width:30%"></th></tr></thead>
+      <tbody>
+        <tr th:each="r, st : ${rows}"><td><span class="rank" th:classappend="${st.index == 0} ? 'g' : (${st.index == 1} ? 's' : (${st.index == 2} ? 'b' : ''))" th:text="${st.count}"></span></td>
+          <td><a th:href="@{/admin/members/{id}(id=${r.id()})}"><b th:text="${r.firstName() + ' ' + r.lastName()}"></b></a></td><td class="mini" th:text="${r.memberCode()}"></td><td th:text="${r.stateName()} ?: ''"></td><td class="num"><b th:text="${r.n()}"></b></td>
+          <td><div class="hbar" style="grid-template-columns:1fr"><div class="b gold"><i th:style="'width:' + ${r.n() * 100 / max} + '%'"></i></div></div></td></tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="6" class="empty">No referrals yet</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

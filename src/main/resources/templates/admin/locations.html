@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div th:replace="~{fragments/adminfilter :: bar}"></div>
+  <div class="kpis">
+    <div class="kpi"><div class="ico">⌖</div><div><div class="v" th:text="${ls.states()}">37</div><div class="l">States</div></div></div>
+    <div class="kpi blue"><div class="ico">⌖</div><div><div class="v" th:text="${ls.lgas()}">774</div><div class="l">LGAs</div></div></div>
+    <div class="kpi gold"><div class="ico">⌖</div><div><div class="v" th:text="${#numbers.formatInteger(ls.wards(),1,'COMMA')}">0</div><div class="l">Wards</div></div></div>
+    <div class="kpi"><div class="ico">⌖</div><div><div class="v" th:text="${#numbers.formatInteger(ls.pollingUnits(),1,'COMMA')}">0</div><div class="l">Polling units</div></div></div>
+    <div class="kpi red"><div class="ico">⌖</div><div><div class="v" th:text="${#numbers.formatInteger(ls.pusWithCoords(),1,'COMMA')}">0</div><div class="l">Units with GPS</div></div></div>
+  </div>
+  <div class="wide-narrow" style="margin-top:1.1rem">
+    <div class="panel"><div class="ph"><h2>Wards and polling units on file</h2></div>
+      <div class="pb flush" style="max-height:520px;overflow:auto"><table class="tbl"><thead><tr><th>State</th><th class="num">Wards</th><th class="num">Polling units</th></tr></thead><tbody>
+        <tr th:each="r : ${ls.byState()}"><td th:text="${r[0]}"></td><td class="num" th:text="${#numbers.formatInteger(r[1],1,'COMMA')}"></td><td class="num" th:text="${#numbers.formatInteger(r[2],1,'COMMA')}"></td></tr></tbody></table></div></div>
+    <div class="panel"><div class="ph"><h2>Import from CSV</h2></div>
+      <div class="pb">
+        <p class="muted" style="font-size:.86rem">Columns (any order): <span class="mono">state, lga, ward, polling_unit, pu_code, latitude, longitude</span>. Existing units are updated, new ones created. In Excel use <i>Save As → CSV (UTF-8)</i>.</p>
+        <form th:action="@{/admin/locations/import}" method="post" enctype="multipart/form-data">
+          <input type="file" name="file" accept=".csv,text/csv" required>
+          <div class="btn-row" style="margin-top:.8rem"><button class="btn" type="submit" onclick="this.disabled=true;this.textContent='Importing…';this.form.submit()">Upload &amp; import</button></div>
+        </form>
+      </div></div>
+  </div>
+</div>
+</body>
+</html>

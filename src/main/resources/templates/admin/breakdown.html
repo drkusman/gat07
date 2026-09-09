@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div th:replace="~{fragments/adminfilter :: bar}"></div>
+  <div class="panel">
+    <div class="ph"><h2>Membership by area</h2><span class="sub">Narrow with the filters, then choose a level</span>
+      <div class="act subtabs">
+        <a th:each="l : ${ {'zone','state','lga','ward','pu'} }" th:href="@{/admin/breakdown} + ${filter.qsWith('level', l)}" class="subtab" th:classappend="${l == level} ? 'active'" th:text="${ {'zone':'Zone','state':'State','lga':'LGA','ward':'Ward','pu':'Polling unit'}[l] }" style="display:inline-block;border:1px solid var(--line);background:#fff;padding:.4rem .8rem;border-radius:999px;font-size:.82rem;font-weight:600;color:var(--muted);text-decoration:none"></a>
+      </div></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>#</th><th>Area</th><th class="num">Members</th><th class="num">Male</th><th class="num">Female</th><th style="width:28%">Share of selection</th></tr></thead>
+      <tbody>
+        <tr th:each="r, st : ${rows}"><td><span class="rank" th:classappend="${st.index == 0} ? 'g' : (${st.index == 1} ? 's' : (${st.index == 2} ? 'b' : ''))" th:text="${st.count}"></span></td>
+          <td><b th:text="${r.name()}"></b><div class="mini" th:if="${r.code() != null}" th:text="${r.code()}"></div></td>
+          <td class="num"><b th:text="${#numbers.formatInteger(r.members(),1,'COMMA')}"></b></td><td class="num" th:text="${r.male()}"></td><td class="num" th:text="${r.female()}"></td>
+          <td><div class="hbar" style="grid-template-columns:1fr 48px"><div class="b"><i th:style="'width:' + ${r.members() * 100.0 / total} + '%'"></i></div><span class="n mini" th:text="${#numbers.formatDecimal(r.members() * 100.0 / total, 1, 1)} + '%'"></span></div></td></tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="6" class="empty">No members in this selection</td></tr>
+      </tbody></table></div>
+  </div>
+  <style>.subtab.active{background:var(--green-dark)!important;border-color:var(--green-dark)!important;color:#fff!important}</style>
+</div>
+</body>
+</html>

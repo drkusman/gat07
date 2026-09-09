@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <th:block th:fragment="pageHead(title)">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' · GAT 2027'">GAT 2027</title>
+    <link rel="icon" href="/img/logo.jpg">
+    <link rel="stylesheet" href="/css/style.css">
+    <meta name="_csrf" th:content="${_csrf != null} ? ${_csrf.token} : ''">
+    <meta name="_csrf_header" th:content="${_csrf != null} ? ${_csrf.headerName} : ''">
+  </th:block>
+  <th:block th:fragment="leaflet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  </th:block>
+</head>
+<body>
+  <th:block th:fragment="siteHeader(active)">
+    <div class="stripe"></div>
+    <header class="topbar"><div class="inner">
+      <a class="brand" href="/">
+        <img src="/img/logo.jpg" alt="GAT 2027 logo">
+        <span><span class="t1">Grassroot Advocacy for Tinubu</span><br><span class="t2">GAT 2027 · Forward Together with PBAT</span></span>
+      </a>
+      <nav class="main">
+        <th:block th:if="${currentUser == null}">
+          <a href="/" th:classappend="${active == '/'} ? 'active'">Home</a>
+          <a href="/register" th:classappend="${active == '/register'} ? 'active'">Register</a>
+          <a href="/login" th:classappend="${active == '/login'} ? 'active'">Log in</a>
+        </th:block>
+        <th:block th:if="${currentUser != null}">
+          <a href="/dashboard" th:classappend="${active == '/dashboard'} ? 'active'">My Dashboard</a>
+          <a href="/report" th:classappend="${active == '/report'} ? 'active'">File Report</a>
+          <a th:if="${currentUser.staff}" href="/admin">Admin</a>
+          <form th:action="@{/logout}" method="post" style="display:inline"><button type="submit" style="background:none;border:none;font:inherit;padding:.45rem .8rem;border-radius:8px;cursor:pointer;font-weight:500">Log out</button></form>
+        </th:block>
+      </nav>
+    </div></header>
+  </th:block>
+
+  <footer th:fragment="siteFooter(credit)" class="site-footer"><b>GAT</b><br>Grassroot Advocacy for Tinubu<br>GAT 2027 · Forward Together with PBAT
+    <th:block th:if="${credit}"><br><span class="small muted" style="font-size:.7rem">Presidential portrait: Nosa Asemota, CC BY-SA 4.0, via Wikimedia Commons</span></th:block>
+  </footer>
+</body>
+</html>

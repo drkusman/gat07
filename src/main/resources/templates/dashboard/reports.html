@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Your field reports</h2><a class="btn sm act" href="/report">✚ New report</a></div>
+    <div class="pb flush">
+      <div class="report-item" th:each="r : ${myReports}">
+        <div class="rh"><span class="pill" th:classappend="${r.category.urgent} ? 'red' : 'blue'" th:text="${r.category.label}"></span>
+          <span class="pill" th:classappend="${r.status.name() == 'OPEN'} ? 'gold' : (${r.status.name() == 'REVIEWED'} ? 'blue' : 'grey')" th:text="${#strings.toLowerCase(r.status)}"></span>
+          <b th:text="${r.title}"></b><time th:text="${#temporals.format(r.createdAt, 'd MMM yyyy, HH:mm')}"></time></div>
+        <p th:text="${r.body}"></p>
+        <div class="meta" th:if="${r.adminNote != null}"><b>Coordinator note:</b> <span th:text="${r.adminNote}"></span></div>
+      </div>
+      <div class="empty" th:if="${#lists.isEmpty(myReports)}"><span class="big">▤</span>No reports yet. <a href="/report">File your first report</a>.</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

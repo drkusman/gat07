@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+  <th:block th:replace="~{fragments/site :: pageHead('Register')}"></th:block>
+  <th:block th:replace="~{fragments/site :: leaflet}"></th:block>
+</head>
+<body>
+<th:block th:replace="~{fragments/site :: siteHeader('/register')}"></th:block>
+<main class="container narrow" style="max-width:860px">
+  <h1>Member registration</h1>
+  <p class="muted">Three short steps: your polling unit location, your biodata, then your account.</p>
+  <div class="alert info" th:if="${refBanner}" th:text="${refBanner}"></div>
+  <div class="alert error" th:if="${refError}" th:text="${refError}"></div>
+  <div class="steps">
+    <div class="s active" data-step="1"><b>1</b> Location &amp; polling unit</div>
+    <div class="s" data-step="2"><b>2</b> Biodata profile</div>
+    <div class="s" data-step="3"><b>3</b> Account &amp; referral</div>
+  </div>
+  <div class="alert error" id="msg" th:classappend="${error == null} ? 'hidden'" th:text="${error}"></div>
+
+  <form id="regForm" th:action="@{/register}" th:object="${form}" method="post" autocomplete="on"
+        th:attr="data-zone=*{zoneId},data-state=*{stateId},data-lga=*{lgaId},data-ward=*{wardId},data-pu=*{pollingUnitId}">
+    <!-- STEP 1 -->
+    <section class="card" data-panel="1">
+      <h2>Where do you vote?</h2>
+      <div class="form-grid">
+        <div class="field"><label>Geopolitical zone <span class="req">*</span></label><select id="zone" name="zoneId" required><option value="">Loading…</option></select></div>
+        <div class="field"><label>State <span class="req">*</span></label><select id="state" name="stateId" required disabled><option value="">Select zone first</option></select></div>
+        <div class="field"><label>Local Government Area <span class="req">*</span></label><select id="lga" name="lgaId" required disabled><option value="">Select state first</option></select></div>
+        <div class="field"><label>Ward <span class="req">*</span></label><select id="ward" name="wardId" required disabled><option value="">Select LGA first</option></select></div>
+        <div class="field full hidden" id="newWard"><div class="form-grid">
+          <div class="field"><label>Ward name</label><input th:field="*{newWardName}" placeholder="e.g. Ogugu I"></div>
+          <div class="field"><label>Ward code (optional)</label><input th:field="*{newWardCode}" placeholder="e.g. 05"></div></div></div>
+        <div class="field full"><label>Polling unit <span class="req">*</span></label><select id="pu" name="pollingUnitId" required disabled><option value="">Select ward first</option></select>
+          <span class="help">Choose the polling unit where you are registered to vote. If it is not listed, pick the last option and type it.</span></div>
+        <div class="field full hidden" id="newPu"><div class="form-grid">
+          <div class="field"><label>Polling unit name</label><input th:field="*{newPuName}" placeholder="e.g. LGEA School Inabe"></div>
+          <div class="field"><label>PU code (optional)</label><input th:field="*{newPuCode}" placeholder="e.g. 23/16/05/003"></div></div></div>
+      </div>
+      <h3 style="margin-top:1.2rem">Polling unit GPS location</h3>
+      <p class="help">Tap <b>Use my current location</b> while standing at the polling unit, or click the map to drop the pin, or type the coordinates.</p>
+      <div class="btn-row" style="margin-bottom:.6rem"><button type="button" class="btn blue sm" id="locateBtn">📍 Use my current location</button><span class="small muted" id="puCoordNote"></span></div>
+      <div id="map" class="map"></div>
+      <div class="form-grid" style="margin-top:.7rem">
+        <div class="field"><label>Latitude</label><input th:field="*{puLatitude}" id="lat" type="number" step="any" placeholder="e.g. 7.178359"></div>
+        <div class="field"><label>Longitude</label><input th:field="*{puLongitude}" id="lng" type="number" step="any" placeholder="e.g. 7.577163"></div>
+      </div>
+      <div class="btn-row" style="margin-top:1.2rem;justify-content:flex-end"><button type="button" class="btn" data-next="2">Continue to biodata →</button></div>
+    </section>
+
+    <!-- STEP 2 -->
+    <section class="card hidden" data-panel="2">
+      <h2>Biodata profile</h2>
+      <div class="form-grid">
+        <div class="field"><label>First name <span class="req">*</span></label><input th:field="*{firstName}" required></div>
+        <div class="field"><label>Surname <span class="req">*</span></label><input th:field="*{lastName}" required></div>
+        <div class="field"><label>Other name</label><input th:field="*{otherName}"></div>
+        <div class="field"><label>Gender <span class="req">*</span></label><select th:field="*{gender}" required><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+        <div class="field"><label>Date of birth <span class="req" th:if="${ageRules.requireDob()}">*</span></label><input th:field="*{dob}" type="date" th:max="${ageRules.maxDob()}" th:required="${ageRules.requireDob()}">
+          <span class="help">You must be at least <span th:text="${ageRules.minAge()}">16</span> years old<th:block th:if="${ageRules.maxAge() != null}"> and not older than <span th:text="${ageRules.maxAge()}"></span></th:block> to register.</span></div>
+        <div class="field"><label>Phone number <span class="req">*</span></label><input th:field="*{phone}" type="tel" required placeholder="0803 123 4567"><span class="help">Used to log in. One account per number.</span></div>
+        <div class="field"><label>Email</label><input th:field="*{email}" type="email"></div>
+        <div class="field"><label>Occupation</label><input th:field="*{occupation}" placeholder="e.g. Trader, Teacher, Farmer"></div>
+        <div class="field"><label>Highest education</label><select th:field="*{education}"><option value="">Select</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option><option value="OND/NCE">OND/NCE</option><option value="HND/Bachelor's">HND/Bachelor's</option><option value="Master's">Master's</option><option value="Doctorate">Doctorate</option><option value="Other">Other</option></select></div>
+        <div class="field"><label>Voter Identification Number (VIN)</label><input th:field="*{vin}" placeholder="Optional — on your PVC"></div>
+        <div class="field full"><label>Residential address</label><input th:field="*{address}" placeholder="House number, street, town"></div>
+        <div class="field full"><label>Passport photograph</label><input type="file" id="photo" accept="image/*"><span class="help">Optional. JPG or PNG; it is resized automatically.</span>
+          <img id="photoPreview" class="avatar hidden" alt="Preview"><input type="hidden" th:field="*{photo}"></div>
+      </div>
+      <div class="btn-row" style="margin-top:1.2rem;justify-content:space-between"><button type="button" class="btn secondary" data-next="1">← Back</button><button type="button" class="btn" data-next="3">Continue →</button></div>
+    </section>
+
+    <!-- STEP 3 -->
+    <section class="card hidden" data-panel="3">
+      <h2>Account &amp; referral</h2>
+      <div class="form-grid">
+        <div class="field"><label>Password <span class="req">*</span></label><input th:field="*{password}" type="password" minlength="6" required autocomplete="new-password"><span class="help">At least 6 characters.</span></div>
+        <div class="field"><label>Confirm password <span class="req">*</span></label><input th:field="*{password2}" type="password" minlength="6" required autocomplete="new-password"></div>
+        <div class="field full"><label>Referral code (who invited you?)</label><input th:field="*{referralCode}" id="referral_code" placeholder="e.g. GAT-7KQ2MX" style="text-transform:uppercase"><span class="help" id="refHelp">Leave blank if nobody referred you.</span></div>
+      </div>
+      <div class="card" style="margin-top:1rem;background:#f7f9fb"><h3>Review</h3><dl class="kv" id="review"></dl></div>
+      <label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:1rem;font-weight:500"><input type="checkbox" th:field="*{consent}" required style="width:auto;margin-top:.25rem"> I confirm the information above is correct and I consent to GAT 2027 keeping it for membership and mobilisation purposes.</label>
+      <div class="btn-row" style="margin-top:1.2rem;justify-content:space-between"><button type="button" class="btn secondary" data-next="2">← Back</button><button type="submit" class="btn" id="submitBtn">Complete registration</button></div>
+    </section>
+  </form>
+</main>
+<th:block th:replace="~{fragments/site :: siteFooter(false)}"></th:block>
+<script src="/js/gat.js"></script>
+<script>GAT.registerPage();</script>
+</body>
+</html>

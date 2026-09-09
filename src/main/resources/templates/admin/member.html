@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page" th:with="m=${p.m()}">
+  <div class="panel">
+    <div class="ph"><h2>Member profile</h2><div class="act"><a class="btn secondary sm" href="/admin/members">← Back to members</a></div></div>
+    <div class="pb">
+      <div class="profile-strip">
+        <img th:if="${m.photo != null}" th:src="${m.photo}" alt=""><span class="init" th:if="${m.photo == null}" th:text="${m.initials}">AB</span>
+        <div class="meta"><h1 style="font-size:1.4rem" th:text="${m.fullName}"></h1>
+          <span class="pill" th:text="${m.memberCode}"></span> <span class="pill blue" th:text="${#strings.toLowerCase(m.role)}"></span> <span class="pill" th:classappend="${m.active} ? '' : 'red'" th:text="${#strings.toLowerCase(m.status)}"></span></div>
+      </div>
+      <div class="two" style="margin-top:1.2rem">
+        <dl class="facts">
+          <dt>Phone</dt><dd th:text="${m.phone}"></dd><dt>Email</dt><dd th:text="${m.email} ?: '—'"></dd><dt>Gender</dt><dd th:text="${m.gender} ?: '—'"></dd><dt>Date of birth</dt><dd th:text="${m.dob} ?: '—'"></dd>
+          <dt>Occupation</dt><dd th:text="${m.occupation} ?: '—'"></dd><dt>Education</dt><dd th:text="${m.education} ?: '—'"></dd><dt>VIN</dt><dd th:text="${m.vin} ?: '—'"></dd><dt>Address</dt><dd th:text="${m.address} ?: '—'"></dd>
+          <dt>Referral code</dt><dd><span class="mono" th:text="${m.referralCode}"></span></dd><dt>Referred by</dt><dd th:text="${p.referrerName() != null} ? (${p.referrerName()} + ' (' + ${p.referrerCode()} + ')') : '—'"></dd>
+          <dt>Direct referrals</dt><dd th:text="${p.directReferrals()}"></dd><dt>Total network</dt><dd th:text="${p.totalDownline()}"></dd><dt>Joined</dt><dd th:text="${#temporals.format(m.createdAt, 'd MMM yyyy, HH:mm')}"></dd>
+        </dl>
+        <dl class="facts">
+          <dt>Zone</dt><dd th:text="${p.zoneName()} ?: '—'"></dd><dt>State</dt><dd th:text="${p.stateName()} ?: '—'"></dd><dt>LGA</dt><dd th:text="${p.lgaName()} ?: '—'"></dd><dt>Ward</dt><dd th:text="${p.wardName()} ?: '—'"></dd>
+          <dt>Polling unit</dt><dd th:text="(${p.puCode()} != null ? ${p.puCode()} + ' — ' : '') + (${p.puName()} ?: '—')"></dd>
+          <dt>PU GPS</dt><dd><a th:if="${p.lat() != null}" target="_blank" rel="noopener" th:href="'https://www.google.com/maps?q=' + ${p.lat()} + ',' + ${p.lng()}" th:text="${#numbers.formatDecimal(p.lat(),1,6)} + ', ' + ${#numbers.formatDecimal(p.lng(),1,6)}"></a><span th:if="${p.lat() == null}">—</span></dd>
+        </dl>
+      </div>
+      <div class="btn-row no-print" th:if="${isAdmin}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
+        <form th:action="@{/admin/members/{id}/role(id=${m.id})}" method="post" class="btn-row">
+          <select name="role" style="width:auto" th:disabled="${self}"><option value="MEMBER" th:selected="${m.role.name() == 'MEMBER'}">member</option><option value="COORDINATOR" th:selected="${m.role.name() == 'COORDINATOR'}">coordinator (state)</option><option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option></select>
+          <button class="btn sm" th:disabled="${self}">Save role</button></form>
+        <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post" onsubmit="return confirm('Change this member\'s status?')">
+          <input type="hidden" name="status" th:value="${m.active} ? 'SUSPENDED' : 'ACTIVE'"><button class="btn sm" th:classappend="${m.active} ? 'danger' : ''" th:disabled="${self}" th:text="${m.active} ? 'Suspend' : 'Reactivate'"></button></form>
+        <form th:action="@{/admin/members/{id}/password(id=${m.id})}" method="post" class="btn-row">
+          <input name="password" placeholder="New password" minlength="6" required style="width:170px"><button class="btn secondary sm">Reset password</button></form>
+      </div>
+      <p class="mini muted" th:if="${self}" style="margin-top:.5rem">You cannot change your own role or status.</p>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Direct referrals</h2><span class="sub" th:text="${#lists.size(refs.direct())} + ' people'"></span></div>
+    <div class="pb flush"><table class="tbl"><thead><tr><th>Member</th><th>Phone</th><th>Polling unit</th><th class="num">Their referrals</th><th>Joined</th></tr></thead><tbody>
+      <tr th:each="d : ${refs.direct()}"><td><a th:href="@{/admin/members/{id}(id=${d.id()})}"><b th:text="${d.firstName() + ' ' + d.lastName()}"></b></a><div class="mini" th:text="${d.memberCode()}"></div></td><td th:text="${d.phone()}"></td><td class="mini" th:text="${d.location()}"></td><td class="num" th:text="${d.theirReferrals()}"></td><td class="mini" th:text="${#temporals.format(d.createdAt(), 'd MMM yyyy')}"></td></tr>
+      <tr th:if="${refs.direct().isEmpty()}"><td colspan="5" class="empty">No referrals</td></tr></tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

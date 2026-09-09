@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><th:block th:replace="~{fragments/site :: pageHead('Grassroot Advocacy for Tinubu')}"></th:block></head>
+<body>
+<th:block th:replace="~{fragments/site :: siteHeader('/')}"></th:block>
+
+<section class="hero"><div class="inner">
+  <div>
+    <span class="motto">Motto: Forward Together with PBAT</span>
+    <h1>Mobilising every polling unit for Tinubu 2027</h1>
+    <p>Register as a GAT member, get your personal referral code, bring your community on board, and report from the grassroots — ward by ward, polling unit by polling unit.</p>
+    <div class="btn-row">
+      <a class="btn secondary" href="/register">Register as a member</a>
+      <a class="btn" href="/login" style="background:var(--red)">Member login</a>
+    </div>
+  </div>
+  <img class="logo-big" src="/img/tinubu.jpg" alt="President Bola Ahmed Tinubu" style="max-height:380px;width:auto;object-fit:cover">
+</div></section>
+
+<main class="container">
+  <div class="grid cols-4" style="margin-bottom:1.5rem">
+    <div class="stat"><div class="n" th:text="${#numbers.formatInteger(stats.states(),1,'COMMA')}">37</div><div class="l">States + FCT</div></div>
+    <div class="stat blue"><div class="n" th:text="${#numbers.formatInteger(stats.lgas(),1,'COMMA')}">774</div><div class="l">Local Government Areas</div></div>
+    <div class="stat gold"><div class="n" th:text="${#numbers.formatInteger(stats.wards(),1,'COMMA')}">8,809</div><div class="l">Wards</div></div>
+    <div class="stat red"><div class="n" th:text="${#numbers.formatInteger(stats.pollingUnits(),1,'COMMA')}">174,427</div><div class="l">Polling units</div></div>
+  </div>
+  <div class="grid cols-3" style="margin-bottom:1.5rem">
+    <div class="card feature"><div class="ic">📝</div><div><h3>Registration</h3><p class="muted">Select your geopolitical zone, state, LGA, ward and polling unit, pin its GPS location on the map, and complete your biodata profile.</p></div></div>
+    <div class="card feature"><div class="ic">🔗</div><div><h3>Referrals</h3><p class="muted">Every member gets a unique referral code and link. Track everyone you bring in, and everyone they bring in, from your dashboard.</p></div></div>
+    <div class="card feature"><div class="ic">📊</div><div><h3>Reporting</h3><p class="muted">File field reports from your polling unit. Coordinators see live membership and referral analytics by zone, state, LGA, ward and PU.</p></div></div>
+  </div>
+  <div class="card">
+    <h2 style="text-align:center">Our Leadership</h2>
+    <div class="grid cols-3" style="margin-top:1rem;justify-items:center">
+      <div class="leader"><img src="/img/tinubu.jpg" alt="President Bola Ahmed Tinubu"><b>H.E. Bola Ahmed Tinubu, GCFR</b><span class="muted">President, Federal Republic of Nigeria</span></div>
+      <div class="leader"><img src="/img/chair.jpg" alt="H.E. Mrs Hanmo Akume"><b>H.E. Mrs Hanmo Akume</b><span class="muted">Founder and Board Chair</span></div>
+      <div class="leader"><img src="/img/coordinator.jpg" alt="Prof. Ochugudu Achoda Ipuele"><b>Prof. Ochugudu Achoda Ipuele</b><span class="muted">National Coordinator</span></div>
+    </div>
+  </div>
+  <div class="card" style="margin-top:1rem">
+    <h2>How it works</h2>
+    <ol style="margin:0;padding-left:1.2rem">
+      <li><b>Register</b> with your phone number and choose your polling unit down to its exact map location.</li>
+      <li><b>Share your referral link</b> with friends, family and neighbours in your ward.</li>
+      <li><b>Report</b> activities, incidents and voter mobilisation progress from the field.</li>
+      <li><b>Coordinators monitor</b> coverage across all 6 zones, 37 states, 774 LGAs and every ward.</li>
+    </ol>
+  </div>
+</main>
+<th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>
+</body>
+</html>

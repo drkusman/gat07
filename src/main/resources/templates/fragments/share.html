@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="box(code)" class="refbox-wrap" th:attr="data-code=${code}">
+  <div class="refbox"><input class="ref-link" readonly th:value="'/register?ref=' + ${code}"><button class="btn sm ref-copy" type="button">Copy</button></div>
+  <p style="margin-top:.7rem">Referral code: <span class="code" th:text="${code}">GAT-XXXXXX</span></p>
+  <div class="btn-row">
+    <a class="btn sm ref-wa" target="_blank" rel="noopener" href="#" style="background:#25d366">Share on WhatsApp</a>
+    <a class="btn sm secondary ref-sms" href="#">Share by SMS</a>
+  </div>
+</div>
+</body>
+</html>
