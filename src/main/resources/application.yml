@@ -4,9 +4,10 @@ spring:
   datasource:
     # Default: embedded H2 file database in PostgreSQL mode (zero configuration for local development).
     # Set DATABASE_URL (Railway / local PostgreSQL) to use PostgreSQL instead - see config/DataSourceConfig.
-    url: jdbc:h2:file:./data/gat;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DEFAULT_NULL_ORDERING=HIGH
-    username: sa
-    password: ""
+    # url: jdbc:h2:file:./data/gat;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;CASE_INSENSITIVE_IDENTIFIERS=TRUE;DEFAULT_NULL_ORDERING=HIGH
+    url: jdbc:postgresql://localhost:5432/gat2027
+    username: postgres
+    password: "Oiza"
   jpa:
     open-in-view: false
     hibernate:
@@ -30,7 +31,7 @@ spring:
       enabled: false
 
 server:
-  port: ${PORT:8080}
+  port: ${PORT:8083}
   forward-headers-strategy: framework
   compression:
     enabled: true

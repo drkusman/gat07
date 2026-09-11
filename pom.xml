@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>ng.gat2027</groupId>
 	<artifactId>grassroot</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>grassroot</name>
 	<description/>
 	<url/>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>21</java.version>
+		<java.version>17</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
