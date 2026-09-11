@@ -8,7 +8,7 @@
       <div class="profile-strip">
         <img th:if="${m.photo != null}" th:src="${m.photo}" alt=""><span class="init" th:if="${m.photo == null}" th:text="${m.initials}">AB</span>
         <div class="meta"><h1 style="font-size:1.4rem" th:text="${m.fullName}"></h1>
-          <span class="pill" th:text="${m.memberCode}"></span> <span class="pill blue" th:text="${#strings.toLowerCase(m.role)}"></span> <span class="pill" th:classappend="${m.active} ? '' : 'red'" th:text="${#strings.toLowerCase(m.status)}"></span></div>
+          <span class="pill" th:text="${m.memberCode}"></span> <span class="pill blue" th:text="${#strings.toLowerCase(m.role).replace('_',' ')}"></span> <span class="pill" th:classappend="${m.active} ? '' : 'red'" th:text="${#strings.toLowerCase(m.status)}"></span></div>
       </div>
       <div class="two" style="margin-top:1.2rem">
         <dl class="facts">
@@ -25,7 +25,7 @@
       </div>
       <div class="btn-row no-print" th:if="${isAdmin}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
         <form th:action="@{/admin/members/{id}/role(id=${m.id})}" method="post" class="btn-row">
-          <select name="role" style="width:auto" th:disabled="${self}"><option value="MEMBER" th:selected="${m.role.name() == 'MEMBER'}">member</option><option value="COORDINATOR" th:selected="${m.role.name() == 'COORDINATOR'}">coordinator (state)</option><option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option></select>
+          <select name="role" style="width:auto" th:disabled="${self}"><option value="MEMBER" th:selected="${m.role.name() == 'MEMBER'}">member</option><option value="COORDINATOR" th:selected="${m.role.name() == 'COORDINATOR'}">coordinator (state)</option><option value="GRAND_PATRON" th:selected="${m.role.name() == 'GRAND_PATRON'}">grand patron (zone)</option><option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option></select>
           <button class="btn sm" th:disabled="${self}">Save role</button></form>
         <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post" onsubmit="return confirm('Change this member\'s status?')">
           <input type="hidden" name="status" th:value="${m.active} ? 'SUSPENDED' : 'ACTIVE'"><button class="btn sm" th:classappend="${m.active} ? 'danger' : ''" th:disabled="${self}" th:text="${m.active} ? 'Suspend' : 'Reactivate'"></button></form>

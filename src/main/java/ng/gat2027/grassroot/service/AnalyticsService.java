@@ -15,7 +15,8 @@ import java.util.*;
 
 /**
  * Read models for dashboards. Plain JDBC with portable SQL (runs on PostgreSQL and H2 in PostgreSQL mode).
- * Every member-level query is filtered through {@link #where}, which also locks coordinators to their own state.
+ * Every member-level query is filtered through {@link #where}, which also locks coordinators to their own state
+ * and Grand Patrons to their own zone.
  */
 @Service
 public class AnalyticsService {
@@ -53,8 +54,9 @@ public class AnalyticsService {
     private Where where(Member user, AdminFilter f) {
         StringBuilder sb = new StringBuilder("1=1");
         List<Object> p = new ArrayList<>();
+        Long zone = user.getRole() == Role.GRAND_PATRON ? user.getZoneId() : f.getZoneId();
         Long state = user.getRole() == Role.COORDINATOR ? user.getStateId() : f.getStateId();
-        if (f.getZoneId() != null) { sb.append(" AND m.zone_id = ?"); p.add(f.getZoneId()); }
+        if (zone != null) { sb.append(" AND m.zone_id = ?"); p.add(zone); }
         if (state != null) { sb.append(" AND m.state_id = ?"); p.add(state); }
         if (f.getLgaId() != null) { sb.append(" AND m.lga_id = ?"); p.add(f.getLgaId()); }
         if (f.getWardId() != null) { sb.append(" AND m.ward_id = ?"); p.add(f.getWardId()); }

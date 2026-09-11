@@ -47,7 +47,7 @@ public class Member {
     }
     public String getDisplayName() { return firstName + " " + lastName; }
     public String getInitials() { return ("" + firstName.charAt(0) + lastName.charAt(0)).toUpperCase(); }
-    public boolean isStaff() { return role == Role.ADMIN || role == Role.COORDINATOR; }
+    public boolean isStaff() { return role == Role.ADMIN || role == Role.COORDINATOR || role == Role.GRAND_PATRON; }
     public boolean isAdmin() { return role == Role.ADMIN; }
     public boolean isActive() { return status == MemberStatus.ACTIVE; }
 }

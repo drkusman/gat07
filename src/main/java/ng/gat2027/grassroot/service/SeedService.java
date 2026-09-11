@@ -37,6 +37,7 @@ public class SeedService implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         seedLocations();
         seedAdmin();
+        seedDemoStaff();
         if (importOnStartup && pus.count() == 0) {
             Resource csv = resources.getResource(csvLocation);
             if (csv.exists()) {
@@ -73,5 +74,41 @@ public class SeedService implements ApplicationRunner {
         m.setPasswordHash(encoder.encode(adminPassword));
         members.save(m);
         log.info("[seed] default admin created -> phone {} / password {} (change it after first login)", adminPhone, adminPassword);
+    }
+
+    /** Demo accounts so the state-coordinator and grand-patron roles can be tried out without manual setup. Idempotent by phone. */
+    @Transactional
+    public void seedDemoStaff() {
+        Long ncZoneId = zones.findByCode("NC").map(Zone::getId).orElse(null);
+        Long benueId = ncZoneId == null ? null : states.findByZoneIdOrderByNameAsc(ncZoneId).stream()
+            .filter(s -> s.getName().equals("Benue")).map(State::getId).findFirst().orElse(null);
+
+        String coordPhone = Codes.normalizePhone("08000000002");
+        if (benueId != null && !members.existsByPhone(coordPhone)) {
+            Member m = new Member();
+            m.setMemberCode(Codes.memberCode(members.maxId() + 1));
+            m.setReferralCode(Codes.make("COORD", 6));
+            m.setRole(Role.COORDINATOR);
+            m.setFirstName("Demo"); m.setLastName("Coordinator");
+            m.setZoneId(ncZoneId); m.setStateId(benueId);
+            m.setPhone(coordPhone);
+            m.setPasswordHash(encoder.encode("coord1234"));
+            members.save(m);
+            log.info("[seed] demo state coordinator created -> phone {} / password coord1234 (Benue State)", coordPhone);
+        }
+
+        String patronPhone = Codes.normalizePhone("08000000003");
+        if (ncZoneId != null && !members.existsByPhone(patronPhone)) {
+            Member m = new Member();
+            m.setMemberCode(Codes.memberCode(members.maxId() + 1));
+            m.setReferralCode(Codes.make("PATRON", 6));
+            m.setRole(Role.GRAND_PATRON);
+            m.setFirstName("Demo"); m.setLastName("Grand Patron");
+            m.setZoneId(ncZoneId);
+            m.setPhone(patronPhone);
+            m.setPasswordHash(encoder.encode("patron1234"));
+            members.save(m);
+            log.info("[seed] demo grand patron created -> phone {} / password patron1234 (North Central zone)", patronPhone);
+        }
     }
 }

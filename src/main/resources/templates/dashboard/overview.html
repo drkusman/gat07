@@ -6,7 +6,7 @@
     <img th:if="${me.photo != null}" th:src="${me.photo}" alt="">
     <span class="init" th:if="${me.photo == null}" th:text="${me.initials}">AB</span>
     <div class="meta"><h1 th:text="${me.fullName}">Name</h1>
-      <span class="pill" th:text="${me.memberCode}">GAT-000002</span> <span class="pill grey" th:text="${#strings.toLowerCase(me.role)}">member</span>
+      <span class="pill" th:text="${me.memberCode}">GAT-000002</span> <span class="pill grey" th:text="${#strings.toLowerCase(me.role).replace('_',' ')}">member</span>
       <span class="mini muted" style="margin-left:.4rem">Member since <span th:text="${#temporals.format(me.createdAt, 'd MMM yyyy')}"></span></span>
       <div class="muted" style="margin-top:.4rem;font-size:.88rem" th:text="${profile.locationLine()}"></div></div>
     <div class="no-print"><a class="btn secondary" href="/dashboard/profile">Edit profile</a></div>

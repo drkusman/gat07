@@ -40,7 +40,7 @@ public class SecurityConfig {
                                  "/api/locations/**", "/api/referral/**", "/api/events/**", "/actuator/health").permitAll()
                 .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/events/**", "/api/admin/import", "/admin/members/*/role",
                                  "/admin/members/*/status", "/admin/members/*/password").hasRole("ADMIN")
-                .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR")
+                .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR", "GRAND_PATRON")
                 .anyRequest().authenticated())
             .formLogin(f -> f
                 .loginPage("/login")

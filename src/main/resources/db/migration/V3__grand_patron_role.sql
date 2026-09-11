@@ -1,0 +1,2 @@
+ALTER TABLE members DROP CONSTRAINT ck_member_role;
+ALTER TABLE members ADD CONSTRAINT ck_member_role CHECK (role IN ('MEMBER', 'COORDINATOR', 'GRAND_PATRON', 'ADMIN'));

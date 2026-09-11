@@ -12,7 +12,7 @@
       <thead><tr><th>Code</th><th>Name</th><th>Phone</th><th>Gender</th><th>Location</th><th>GPS</th><th>Referred by</th><th class="num">Refs</th><th>Joined</th><th class="no-print"></th></tr></thead>
       <tbody>
         <tr th:each="r : ${rows}">
-          <td class="mini"><span th:text="${r.memberCode()}"></span> <span class="pill blue" th:if="${r.role() != 'MEMBER'}" th:text="${#strings.toLowerCase(r.role())}"></span> <span class="pill red" th:if="${r.status() != 'ACTIVE'}">suspended</span></td>
+          <td class="mini"><span th:text="${r.memberCode()}"></span> <span class="pill blue" th:if="${r.role() != 'MEMBER'}" th:text="${#strings.toLowerCase(r.role()).replace('_',' ')}"></span> <span class="pill red" th:if="${r.status() != 'ACTIVE'}">suspended</span></td>
           <td><b th:text="${r.firstName() + ' ' + r.lastName()}"></b></td><td th:text="${r.phone()}"></td><td th:text="${r.gender()} ?: '—'"></td>
           <td class="mini" style="max-width:260px" th:text="${r.location()}"></td>
           <td class="mini"><a th:if="${r.lat() != null}" target="_blank" rel="noopener" th:href="'https://www.google.com/maps?q=' + ${r.lat()} + ',' + ${r.lng()}" th:text="${#numbers.formatDecimal(r.lat(),1,4)} + ', ' + ${#numbers.formatDecimal(r.lng(),1,4)}"></a><span th:if="${r.lat() == null}">—</span></td>

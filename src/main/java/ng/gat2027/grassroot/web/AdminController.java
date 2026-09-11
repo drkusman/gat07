@@ -37,7 +37,10 @@ public class AdminController {
     private Member shell(Model model, String title, AdminFilter f) {
         Member u = currentUser.require();
         boolean admin = u.isAdmin();
-        if (!admin) { f.setZoneId(u.getZoneId()); f.setStateId(u.getStateId()); }
+        boolean grandPatron = u.getRole() == Role.GRAND_PATRON;
+        boolean stateLocked = u.getRole() == Role.COORDINATOR;
+        if (stateLocked) { f.setZoneId(u.getZoneId()); f.setStateId(u.getStateId()); }
+        else if (grandPatron) { f.setZoneId(u.getZoneId()); }
         List<NavItem> nav = new ArrayList<>();
         nav.add(NavItem.exact("/admin", "Overview", "▦", "Analytics"));
         nav.add(NavItem.of("/admin/breakdown", "Breakdown by Area", "▥", "Analytics"));
@@ -54,13 +57,17 @@ public class AdminController {
         nav.add(NavItem.of("/dashboard", "My Member Dashboard", "▣", "Shortcuts"));
         nav.add(NavItem.of("/", "Public Website", "⌂", "Shortcuts"));
         String stateName = u.getStateId() == null ? null : states.findById(u.getStateId()).map(s -> s.getName()).orElse(null);
+        String zoneName = u.getZoneId() == null ? null : zones.findById(u.getZoneId()).map(z -> z.getName()).orElse(null);
         model.addAttribute("nav", nav);
         model.addAttribute("shellTitle", title);
-        model.addAttribute("shellCrumb", admin ? "Coordination centre · All states" : "Coordination centre · " + (stateName == null ? "Your state" : stateName) + " only");
+        model.addAttribute("shellCrumb", admin ? "Coordination centre · All states"
+            : grandPatron ? "Coordination centre · " + (zoneName == null ? "Your zone" : zoneName) + " only"
+            : "Coordination centre · " + (stateName == null ? "Your state" : stateName) + " only");
         model.addAttribute("shellSubtitle", "Coordination Centre · 2027");
-        model.addAttribute("shellUserLine", admin ? "National administrator" : "State coordinator");
+        model.addAttribute("shellUserLine", admin ? "National administrator" : grandPatron ? "Grand Patron" : "State coordinator");
         model.addAttribute("me", u);
         model.addAttribute("isAdmin", admin);
+        model.addAttribute("stateLocked", stateLocked);
         model.addAttribute("filter", f);
         model.addAttribute("zoneOptions", zones.findAllByOrderByNameAsc());
         model.addAttribute("stateOptions", f.getZoneId() == null ? states.findAllByOrderByNameAsc() : states.findByZoneIdOrderByNameAsc(f.getZoneId()));
@@ -118,6 +125,7 @@ public class AdminController {
         Member m = members.findById(id).orElse(null);
         if (m == null) return "redirect:/admin/members";
         if (u.getRole() == Role.COORDINATOR && !u.getStateId().equals(m.getStateId())) return "redirect:/admin/members";
+        if (u.getRole() == Role.GRAND_PATRON && !u.getZoneId().equals(m.getZoneId())) return "redirect:/admin/members";
         model.addAttribute("p", analytics.profile(m));
         model.addAttribute("refs", analytics.referrals(m.getId()));
         model.addAttribute("self", u.getId().equals(m.getId()));

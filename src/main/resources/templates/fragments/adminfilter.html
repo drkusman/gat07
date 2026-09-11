@@ -11,7 +11,7 @@
         <option value="">All zones</option>
         <option th:each="z : ${zoneOptions}" th:value="${z.id}" th:text="${z.name}" th:selected="${z.id == filter.zoneId}"></option></select></div>
     <div class="field"><label>State</label>
-      <select name="stateId" th:disabled="${!isAdmin}" onchange="this.form.lgaId.value='';this.form.wardId.value='';this.form.pollingUnitId.value='';this.form.submit()">
+      <select name="stateId" th:disabled="${stateLocked}" onchange="this.form.lgaId.value='';this.form.wardId.value='';this.form.pollingUnitId.value='';this.form.submit()">
         <option value="">All states</option>
         <option th:each="s : ${stateOptions}" th:value="${s.id}" th:text="${s.name}" th:selected="${s.id == filter.stateId}"></option></select></div>
     <div class="field"><label>LGA</label>
@@ -31,7 +31,8 @@
     <div class="field"><label>Search</label><input name="q" placeholder="Name, phone, code" th:value="${filter.q}"></div>
     <div class="field"><label>&nbsp;</label><div class="btn-row"><button class="btn sm" type="submit">Apply</button><a class="btn secondary sm" th:href="${currentPath}">Clear</a></div></div>
   </div>
-  <th:block th:if="${!isAdmin}"><input type="hidden" name="zoneId" th:value="${filter.zoneId}"><input type="hidden" name="stateId" th:value="${filter.stateId}"></th:block>
+  <th:block th:if="${!isAdmin}"><input type="hidden" name="zoneId" th:value="${filter.zoneId}"></th:block>
+  <th:block th:if="${stateLocked}"><input type="hidden" name="stateId" th:value="${filter.stateId}"></th:block>
 </form>
 </body>
 </html>
