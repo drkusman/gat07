@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="card(e)" class="event-card">
+  <div class="event-cover">
+    <img th:if="${e.coverImageUrl != null}" th:src="${e.coverImageUrl}" th:alt="${e.title}">
+    <span th:if="${e.coverImageUrl == null}" class="event-cover-ph">📅</span>
+  </div>
+  <div class="event-body">
+    <span th:if="${e.upcoming}" class="event-tag">Upcoming</span>
+    <h3 th:text="${e.title}"></h3>
+    <div class="event-meta" th:text="${#temporals.format(e.eventDate, 'd MMM yyyy')} + (${e.location} != null ? ' · ' + ${e.location} : '')"></div>
+    <p class="muted" th:text="${e.description}"></p>
+    <div class="event-links">
+      <span th:if="${!e.hasMedia()}" class="muted small" style="font-style:italic">Photos &amp; videos coming soon</span>
+      <a th:if="${e.videoUrl != null}" th:href="${e.videoUrl}" target="_blank" rel="noopener" class="event-link">▶ Watch video</a>
+      <a th:if="${e.photoGalleryUrl != null}" th:href="${e.photoGalleryUrl}" target="_blank" rel="noopener" class="event-link gold">🖼 View photos</a>
+    </div>
+  </div>
+</div>
+</body>
+</html>

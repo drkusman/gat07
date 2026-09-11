@@ -26,6 +26,7 @@
       <nav class="main">
         <th:block th:if="${currentUser == null}">
           <a href="/" th:classappend="${active == '/'} ? 'active'">Home</a>
+          <a href="/#events">Events</a>
           <a href="/register" th:classappend="${active == '/register'} ? 'active'">Register</a>
           <a href="/login" th:classappend="${active == '/login'} ? 'active'">Log in</a>
         </th:block>

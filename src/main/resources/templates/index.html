@@ -38,6 +38,25 @@
       <div class="leader"><img src="/img/coordinator.jpg" alt="Prof. Ochugudu Achoda Ipuele"><b>Prof. Ochugudu Achoda Ipuele</b><span class="muted">National Coordinator</span></div>
     </div>
   </div>
+  <section id="events" style="margin-top:1.5rem">
+    <h2>Events</h2>
+    <p class="muted" style="margin-top:-.3rem">Rallies, town halls and mobilisation drives from across the country.</p>
+    <div th:if="${upcomingEvents.size() > 0}" style="margin-top:1rem">
+      <h3>Upcoming</h3>
+      <div class="grid cols-3">
+        <th:block th:each="e : ${upcomingEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>
+      </div>
+    </div>
+    <div th:if="${pastEvents.size() > 0}" style="margin-top:1.5rem">
+      <h3>Past events</h3>
+      <div class="grid cols-3">
+        <th:block th:each="e : ${pastEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>
+      </div>
+    </div>
+    <div class="card" th:if="${upcomingEvents.size() == 0 and pastEvents.size() == 0}" style="margin-top:1rem;text-align:center">
+      <span class="muted">No events published yet — check back soon.</span>
+    </div>
+  </section>
   <div class="card" style="margin-top:1rem">
     <h2>How it works</h2>
     <ol style="margin:0;padding-left:1.2rem">
