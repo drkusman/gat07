@@ -1,11 +1,13 @@
 package ng.gat2027.grassroot.api;
 
 import jakarta.servlet.http.HttpServletResponse;
+import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.repo.*;
 import ng.gat2027.grassroot.security.CurrentUser;
 import ng.gat2027.grassroot.service.AnalyticsService;
 import ng.gat2027.grassroot.service.CsvImportService;
+import ng.gat2027.grassroot.service.EventService;
 import ng.gat2027.grassroot.web.forms.AdminFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,12 +24,21 @@ import java.util.Map;
 @RequestMapping("/api")
 public class ApiController {
     public record Opt(Long id, String name, String code, Double latitude, Double longitude) {}
+    public record EventDto(Long id, String title, String slug, LocalDate date, String location, String description,
+                            String coverImageUrl, String videoUrl, String photoGalleryUrl, boolean hasMedia, boolean upcoming) {}
 
     private final ZoneRepository zones; private final StateRepository states; private final LgaRepository lgas; private final WardRepository wards; private final PollingUnitRepository pus;
-    private final MemberRepository members; private final CurrentUser currentUser; private final AnalyticsService analytics; private final CsvImportService importer;
+    private final MemberRepository members; private final CurrentUser currentUser; private final AnalyticsService analytics; private final CsvImportService importer; private final EventService events;
 
-    public ApiController(ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus, MemberRepository members, CurrentUser currentUser, AnalyticsService analytics, CsvImportService importer) {
-        this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.members = members; this.currentUser = currentUser; this.analytics = analytics; this.importer = importer;
+    public ApiController(ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus, MemberRepository members, CurrentUser currentUser, AnalyticsService analytics, CsvImportService importer, EventService events) {
+        this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.members = members; this.currentUser = currentUser; this.analytics = analytics; this.importer = importer; this.events = events;
+    }
+
+    /** Published events for the public site (e.g. the Next.js home page). */
+    @GetMapping("/events")
+    public List<EventDto> events() {
+        return events.published().stream().map(e -> new EventDto(e.getId(), e.getTitle(), e.getSlug(), e.getEventDate(), e.getLocation(), e.getDescription(),
+            e.getCoverImageUrl(), e.getVideoUrl(), e.getPhotoGalleryUrl(), e.hasMedia(), e.isUpcoming())).toList();
     }
 
     @GetMapping("/locations/zones")

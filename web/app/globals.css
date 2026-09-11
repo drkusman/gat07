@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+:root {
+  --green: #0b7a3b;
+  --green-dark: #075a2b;
+  --green-light: #e6f4ec;
+  --red: #d0212a;
+  --blue: #1b4ea3;
+  --gold: #f2a900;
+  --ink: #1c2430;
+  --muted: #5f6b7a;
+  --line: #dde3ea;
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --background: var(--bg);
+  --foreground: var(--ink);
+}
+
+@theme inline {
+  --color-green: var(--green);
+  --color-green-dark: var(--green-dark);
+  --color-green-light: var(--green-light);
+  --color-red: var(--red);
+  --color-blue: var(--blue);
+  --color-gold: var(--gold);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}

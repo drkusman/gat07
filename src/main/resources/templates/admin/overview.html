@@ -8,6 +8,7 @@
     <div class="kpi blue"><div class="ico">✚</div><div><div class="v" th:text="${#numbers.formatInteger(s.today(),1,'COMMA')}">0</div><div class="l">Registered today</div><div class="f" th:text="${#numbers.formatInteger(s.week(),1,'COMMA')} + ' in the last 7 days'"></div></div></div>
     <div class="kpi gold"><div class="ico">◉</div><div><div class="v" th:text="${#numbers.formatInteger(s.pusCovered(),1,'COMMA')}">0</div><div class="l">Polling units covered</div><div class="f" th:text="${#numbers.formatInteger(s.wardsCovered(),1,'COMMA')} + ' wards · ' + ${#numbers.formatInteger(s.lgasCovered(),1,'COMMA')} + ' LGAs'"></div></div></div>
     <div class="kpi red"><div class="ico">▤</div><div><div class="v" th:text="${#numbers.formatInteger(s.openReports(),1,'COMMA')}">0</div><div class="l">Open field reports</div><div class="f">Awaiting coordinator review</div></div></div>
+    <div class="kpi gold"><div class="ico">◈</div><div><div class="v" th:text="${eventStats.upcoming()}">0</div><div class="l">Upcoming events</div><div class="f" th:text="${eventStats.nextEvent() != null} ? ${'Next: ' + eventStats.nextEvent().title + ' · ' + #temporals.format(eventStats.nextEvent().eventDate, 'd MMM yyyy')} : 'None scheduled'"></div></div></div>
   </div>
   <div class="wide-narrow" style="margin-top:1.1rem">
     <div class="panel"><div class="ph"><h2>Registrations — last 30 days</h2><span class="sub" th:text="${#numbers.formatInteger(daysTotal,1,'COMMA')} + ' registrations in 30 days'"></span></div>
@@ -20,7 +21,7 @@
       <tr th:each="r, st : ${s.topReferrers()}"><td style="width:36px"><span class="rank" th:classappend="${st.index == 0} ? 'g' : (${st.index == 1} ? 's' : (${st.index == 2} ? 'b' : ''))" th:text="${st.count}"></span></td>
         <td><a th:href="@{/admin/members/{id}(id=${r.id()})}"><b th:text="${r.firstName() + ' ' + r.lastName()}"></b></a><div class="mini" th:text="${r.memberCode()} + ' · ' + (${r.stateName()} ?: '')"></div></td><td class="num"><b th:text="${r.n()}"></b></td></tr>
       <tr th:if="${s.topReferrers().isEmpty()}"><td class="empty">No referrals yet</td></tr></tbody></table></div></div>
-    <div class="panel"><div class="ph"><h3>Gender &amp; age profile</h3></div><div class="pb"><div th:replace="~{admin/bars :: bars(${ {new ng.gat2027.grassroot.service.AnalyticsService.NameCount('Male', s.male()), new ng.gat2027.grassroot.service.AnalyticsService.NameCount('Female', s.female())} }, 'blue')}"></div><div style="height:.4rem"></div><div th:replace="~{admin/bars :: bars(${s.ageBands()}, 'blue')}"></div></div></div>
+    <div class="panel"><div class="ph"><h3>Gender &amp; age profile</h3></div><div class="pb"><div th:replace="~{admin/bars :: bars(${genderRows}, 'blue')}"></div><div style="height:.4rem"></div><div th:replace="~{admin/bars :: bars(${s.ageBands()}, 'blue')}"></div></div></div>
     <div class="panel"><div class="ph"><h3>Coverage</h3></div><div class="pb"><div class="hbar">
       <th:block th:with="max=${s.pusCovered() < 1 ? 1 : s.pusCovered()}">
         <span class="t">States</span><div class="b gold"><i th:style="'width:' + ${s.statesCovered() * 100 / max} + '%'"></i></div><span class="n" th:text="${s.statesCovered()}"></span>

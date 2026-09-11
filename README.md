@@ -8,6 +8,9 @@ Member registration, referral and field-reporting platform, down to every pollin
 - **PostgreSQL** in production (Railway) — **H2 in PostgreSQL mode** as a zero-config local database (file `data/gat.mv.db`)
 - **Leaflet** maps for polling-unit GPS capture and coverage
 - Deploys to **Railway** from git with a Dockerfile; migrations, seed data and the polling-unit import run automatically at start
+- **`web/`** — a separate **Next.js** app for the public home page and events list, reading a public JSON API from this
+  backend. Registration, login, the member dashboard and the coordination centre stay on this Spring Boot app. See
+  [`web/README.md`](web/README.md).
 
 ## Run locally
 
@@ -36,9 +39,13 @@ DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/gat2027
 | Login | `/login` | Members |
 | Member dashboard | `/dashboard` (overview, referrals, polling unit, reports, profile) | Members |
 | File a field report | `/report` | Members |
-| Coordination centre | `/admin` (overview, breakdown, map, leaderboard, members, reports, location data, settings) | Admin · state coordinators |
+| Coordination centre | `/admin` (overview, breakdown, map, leaderboard, members, reports, **events**, location data, settings) | Admin · state coordinators |
 | User manual (PDF) | `/docs/GAT-2027-User-Manual.pdf` — linked from both dashboards | Everyone |
+| Public events API | `GET /api/events` — published events as JSON, used by `web/` | Everyone |
 | Health check | `/actuator/health` | Railway |
+
+Events (title, date, location, description, cover image, video and photo-gallery links) are managed at
+**Admin → Events** (admin role only) and shown on the public home page (`web/`) once published.
 
 ## Deploy on Railway (git)
 

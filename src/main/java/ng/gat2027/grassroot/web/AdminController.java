@@ -1,5 +1,6 @@
 package ng.gat2027.grassroot.web;
 
+import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.domain.MemberStatus;
 import ng.gat2027.grassroot.domain.ReportStatus;
@@ -23,13 +24,13 @@ import java.util.List;
 @RequestMapping("/admin")
 public class AdminController {
     private final CurrentUser currentUser; private final AnalyticsService analytics; private final MemberService memberService; private final ReportService reportService;
-    private final SettingsService settings; private final CsvImportService importer; private final MemberRepository members;
+    private final SettingsService settings; private final CsvImportService importer; private final MemberRepository members; private final EventService events;
     private final ZoneRepository zones; private final StateRepository states; private final LgaRepository lgas; private final WardRepository wards; private final PollingUnitRepository pus;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
-                           MemberRepository members, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus) {
+                           MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
-        this.members = members; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus;
+        this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -44,7 +45,11 @@ public class AdminController {
         nav.add(NavItem.of("/admin/referrals", "Referral Leaderboard", "⇄", "Analytics"));
         nav.add(NavItem.of("/admin/members", "Members", "☷", "Operations").withCount(analytics.countMembers(u, new AdminFilter())));
         nav.add(NavItem.of("/admin/reports", "Field Reports", "▤", "Operations").withCount(analytics.openReportsFor(u)));
-        if (admin) { nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations")); nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations")); }
+        if (admin) {
+            nav.add(NavItem.of("/admin/events", "Events", "◈", "Operations"));
+            nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
+            nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
+        }
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
         nav.add(NavItem.of("/dashboard", "My Member Dashboard", "▣", "Shortcuts"));
         nav.add(NavItem.of("/", "Public Website", "⌂", "Shortcuts"));
@@ -70,6 +75,7 @@ public class AdminController {
         Member u = shell(model, "Overview", f);
         var s = analytics.summary(u, f);
         model.addAttribute("s", s);
+        model.addAttribute("genderRows", List.of(new AnalyticsService.NameCount("Male", s.male()), new AnalyticsService.NameCount("Female", s.female())));
         // 30-day series
         List<Object[]> days = new ArrayList<>();
         LocalDate today = LocalDate.now();
@@ -82,6 +88,7 @@ public class AdminController {
         model.addAttribute("days", days); model.addAttribute("daysMax", max);
         model.addAttribute("daysTotal", days.stream().mapToLong(d -> (Long) d[1]).sum());
         model.addAttribute("halfState", (s.byState().size() + 1) / 2);
+        model.addAttribute("eventStats", events.stats());
         return "admin/overview";
     }
 
@@ -186,6 +193,54 @@ public class AdminController {
             ra.addFlashAttribute("success", s.text());
         } catch (Exception e) { ra.addFlashAttribute("error", "Import failed: " + e.getMessage()); }
         return "redirect:/admin/locations";
+    }
+
+    @GetMapping("/events")
+    public String eventsList(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Events", f);
+        model.addAttribute("rows", events.all());
+        return "admin/events";
+    }
+
+    @GetMapping("/events/new")
+    public String newEventForm(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "New event", f);
+        model.addAttribute("e", new Event());
+        return "admin/event-form";
+    }
+
+    @GetMapping("/events/{id}/edit")
+    public String editEventForm(@PathVariable Long id, @ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Edit event", f);
+        Event e = events.find(id).orElse(null);
+        if (e == null) return "redirect:/admin/events";
+        model.addAttribute("e", e);
+        return "admin/event-form";
+    }
+
+    @PostMapping("/events")
+    public String createEvent(@RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
+                               @RequestParam String description, @RequestParam(required = false) String coverImageUrl, @RequestParam(required = false) String videoUrl,
+                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published, RedirectAttributes ra) {
+        try { events.save(null, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null); ra.addFlashAttribute("success", "Event created."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/events";
+    }
+
+    @PostMapping("/events/{id}")
+    public String updateEvent(@PathVariable Long id, @RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
+                               @RequestParam String description, @RequestParam(required = false) String coverImageUrl, @RequestParam(required = false) String videoUrl,
+                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published, RedirectAttributes ra) {
+        try { events.save(id, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null); ra.addFlashAttribute("success", "Event updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/events";
+    }
+
+    @PostMapping("/events/{id}/delete")
+    public String deleteEvent(@PathVariable Long id, RedirectAttributes ra) {
+        try { events.delete(id); ra.addFlashAttribute("success", "Event deleted."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/events";
     }
 
     @GetMapping("/settings")

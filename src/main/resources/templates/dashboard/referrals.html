@@ -6,7 +6,7 @@
     <div class="kpi"><div class="ico">◆</div><div><div class="v" th:text="${#lists.size(refs.direct())}">0</div><div class="l">Direct referrals</div></div></div>
     <div class="kpi blue"><div class="ico">◆</div><div><div class="v" th:text="${refs.totalDownline()}">0</div><div class="l">Total network</div></div></div>
     <div class="kpi gold"><div class="ico">◆</div><div><div class="v" th:text="${#lists.size(refs.levels())}">0</div><div class="l">Levels deep</div></div></div>
-    <div class="kpi red"><div class="ico">◆</div><div><div class="v" th:text="${refs.direct().isEmpty()} ? 0 : ${#aggregates.max(refs.direct().![theirReferrals()])}">0</div><div class="l">Best recruiter in your network</div></div></div>
+    <div class="kpi red"><div class="ico">◆</div><div><div class="v" th:text="${refs.direct().isEmpty()} ? 0 : ${#lists.sort(refs.direct().![theirReferrals()])[refs.direct().size() - 1]}">0</div><div class="l">Best recruiter in your network</div></div></div>
   </div>
   <div class="panel">
     <div class="ph"><h2>People you referred</h2><span class="sub"><th:block th:if="${refs.levels().isEmpty()}">No referrals yet</th:block><th:block th:unless="${refs.levels().isEmpty()}">Network by level — <th:block th:each="l, st : ${refs.levels()}"><span th:text="'Level ' + ${l[0]} + ': ' + ${l[1]}"></span><th:block th:unless="${st.last}"> · </th:block></th:block></th:block></span></div>

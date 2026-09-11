@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Events</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span>
+      <div class="act"><a class="btn sm" href="/admin/events/new">+ New event</a></div></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Date</th><th>Title</th><th>Location</th><th>Media</th><th>Status</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="e : ${rows}">
+          <td class="mini" th:text="${#temporals.format(e.eventDate, 'd MMM yyyy')}"></td>
+          <td><b th:text="${e.title}"></b></td>
+          <td class="mini" th:text="${e.location} ?: '—'"></td>
+          <td class="mini">
+            <span th:if="${e.videoUrl != null}" class="pill blue">video</span>
+            <span th:if="${e.photoGalleryUrl != null}" class="pill gold">photos</span>
+            <span th:if="${e.videoUrl == null and e.photoGalleryUrl == null}">—</span>
+          </td>
+          <td><span class="pill" th:classappend="${e.published} ? '' : 'red'" th:text="${e.published} ? 'published' : 'draft'"></span></td>
+          <td class="no-print" style="white-space:nowrap">
+            <a class="btn secondary sm" th:href="@{/admin/events/{id}/edit(id=${e.id})}">Edit</a>
+            <form th:action="@{/admin/events/{id}/delete(id=${e.id})}" method="post" style="display:inline" onsubmit="return confirm('Delete this event?')">
+              <button class="btn sm danger" type="submit">Delete</button></form>
+          </td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="6" class="empty">No events yet — add your first one</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

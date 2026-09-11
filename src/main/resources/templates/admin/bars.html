@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="bars(rows, tone)" class="hbar" th:with="mx=${rows.isEmpty()} ? 1 : ${#aggregates.max(rows.![n()])}, max=${mx < 1} ? 1 : ${mx}">
+<div th:fragment="bars(rows, tone)" class="hbar" th:with="mx=${rows.isEmpty()} ? 1 : ${#lists.sort(rows.![n()])[rows.size() - 1]}, max=${mx < 1} ? 1 : ${mx}">
   <span class="muted" th:if="${rows.isEmpty()}" style="grid-column:1/-1">No data in this selection</span>
   <th:block th:each="r : ${rows}">
     <span class="t" th:text="${r.name()}" th:title="${r.name()}"></span>

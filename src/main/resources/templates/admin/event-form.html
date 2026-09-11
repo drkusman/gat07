@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="two">
+    <div class="panel"><div class="ph"><h2 th:text="${e.id == null} ? 'New event' : 'Edit event'"></h2></div>
+      <form th:action="${e.id == null} ? @{/admin/events} : @{/admin/events/{id}(id=${e.id})}" method="post" class="pb">
+        <div class="form-grid">
+          <div class="field"><label>Title</label><input name="title" type="text" required maxlength="160" th:value="${e.title}"></div>
+          <div class="field"><label>Date</label><input name="eventDate" type="date" required th:value="${e.eventDate}"></div>
+          <div class="field"><label>Location</label><input name="location" type="text" maxlength="200" th:value="${e.location}" placeholder="e.g. National Secretariat, Abuja"></div>
+        </div>
+        <div class="field" style="margin-top:.8rem"><label>Description</label><textarea name="description" required rows="5" th:text="${e.description}"></textarea></div>
+        <div class="form-grid" style="margin-top:.8rem">
+          <div class="field"><label>Cover image URL</label><input name="coverImageUrl" type="url" th:value="${e.coverImageUrl}" placeholder="https://…"><span class="help">Optional — shown on the public event list.</span></div>
+          <div class="field"><label>Video URL</label><input name="videoUrl" type="url" th:value="${e.videoUrl}" placeholder="https://youtube.com/…"><span class="help">Optional — YouTube, Vimeo or a direct link.</span></div>
+          <div class="field"><label>Photo gallery URL</label><input name="photoGalleryUrl" type="url" th:value="${e.photoGalleryUrl}" placeholder="https://…"><span class="help">Optional — link to a photo album.</span></div>
+        </div>
+        <label style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;font-weight:500"><input type="checkbox" name="published" th:checked="${e.id == null} ? true : ${e.published}" style="width:auto"> Published (visible on the public site)</label>
+        <div class="btn-row" style="margin-top:1rem">
+          <button class="btn" type="submit" th:text="${e.id == null} ? 'Create event' : 'Save changes'"></button>
+          <a class="btn secondary" href="/admin/events">Cancel</a>
+        </div>
+      </form></div>
+    <div class="panel"><div class="ph"><h2>About events</h2></div><div class="pb">
+      <ul class="muted" style="font-size:.9rem;padding-left:1.2rem;line-height:1.7">
+        <li>Published events with a date today or later show as "upcoming" on the public home page.</li>
+        <li>Leave the video and photo links blank until they're ready — the public page shows a "coming soon" note automatically.</li>
+        <li>Draft (unpublished) events are only visible here in the coordination centre.</li>
+      </ul></div></div>
+  </div>
+</div>
+</body>
+</html>
