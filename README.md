@@ -32,6 +32,15 @@ DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/gat2027
 **Default admin:** phone `08000000000`, password `admin1234` — change it after the first login (Profile & Settings), or set
 `GAT_ADMIN_PHONE` / `GAT_ADMIN_PASSWORD` before the first start.
 
+**Demo logins for every role** (seeded on first start alongside the admin, so all four roles can be tried immediately):
+
+| Role | Phone | Password | Scope |
+|---|---|---|---|
+| Admin | `08000000000` | `admin1234` | All states |
+| Grand Patron | `08000000003` | `patron1234` | North Central zone only |
+| State Coordinator | `08000000002` | `coord1234` | Benue State only |
+| Member | `08000000004` | `member1234` | — |
+
 | Page | URL | Who |
 |---|---|---|
 | Home | `/` | Everyone |

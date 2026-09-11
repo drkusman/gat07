@@ -37,7 +37,7 @@ public class SeedService implements ApplicationRunner {
     public void run(ApplicationArguments args) throws Exception {
         seedLocations();
         seedAdmin();
-        seedDemoStaff();
+        seedDemoAccounts();
         if (importOnStartup && pus.count() == 0) {
             Resource csv = resources.getResource(csvLocation);
             if (csv.exists()) {
@@ -76,9 +76,9 @@ public class SeedService implements ApplicationRunner {
         log.info("[seed] default admin created -> phone {} / password {} (change it after first login)", adminPhone, adminPassword);
     }
 
-    /** Demo accounts so the state-coordinator and grand-patron roles can be tried out without manual setup. Idempotent by phone. */
+    /** Demo accounts so every role can be tried out without manual setup. Idempotent by phone. */
     @Transactional
-    public void seedDemoStaff() {
+    public void seedDemoAccounts() {
         Long ncZoneId = zones.findByCode("NC").map(Zone::getId).orElse(null);
         Long benueId = ncZoneId == null ? null : states.findByZoneIdOrderByNameAsc(ncZoneId).stream()
             .filter(s -> s.getName().equals("Benue")).map(State::getId).findFirst().orElse(null);
@@ -109,6 +109,20 @@ public class SeedService implements ApplicationRunner {
             m.setPasswordHash(encoder.encode("patron1234"));
             members.save(m);
             log.info("[seed] demo grand patron created -> phone {} / password patron1234 (North Central zone)", patronPhone);
+        }
+
+        String memberPhone = Codes.normalizePhone("08000000004");
+        if (benueId != null && !members.existsByPhone(memberPhone)) {
+            Member m = new Member();
+            m.setMemberCode(Codes.memberCode(members.maxId() + 1));
+            m.setReferralCode(Codes.make("MEMBER", 6));
+            m.setRole(Role.MEMBER);
+            m.setFirstName("Demo"); m.setLastName("Member");
+            m.setZoneId(ncZoneId); m.setStateId(benueId);
+            m.setPhone(memberPhone);
+            m.setPasswordHash(encoder.encode("member1234"));
+            members.save(m);
+            log.info("[seed] demo member created -> phone {} / password member1234 (Benue State)", memberPhone);
         }
     }
 }
