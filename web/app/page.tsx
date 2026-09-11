@@ -25,6 +25,14 @@ export default async function Home() {
             <a href="#events" className="px-3 py-2 rounded-lg font-medium text-ink hover:bg-green-light hover:text-green-dark">
               Events
             </a>
+            <a
+              href={`${APP_BASE}/docs/GAT-2027-Brochure.pdf`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-3 py-2 rounded-lg font-medium text-ink hover:bg-green-light hover:text-green-dark"
+            >
+              Brochure
+            </a>
             <a href={`${APP_BASE}/login`} className="px-3 py-2 rounded-lg font-medium text-ink hover:bg-green-light hover:text-green-dark">
               Log in
             </a>
@@ -51,6 +59,14 @@ export default async function Home() {
               </a>
               <a href={`${APP_BASE}/login`} className="inline-flex items-center px-5 py-3 rounded-lg font-semibold text-white bg-red hover:opacity-90">
                 Member login
+              </a>
+              <a
+                href={`${APP_BASE}/docs/GAT-2027-Brochure.pdf`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-5 py-3 rounded-lg font-semibold text-ink bg-white border border-line hover:bg-background"
+              >
+                ⬇ Download brochure
               </a>
             </div>
           </div>
