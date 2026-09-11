@@ -1,44 +1,11 @@
-import { APP_BASE, getEvents } from "@/lib/api";
-import EventList from "@/components/EventList";
+import { APP_BASE } from "@/lib/api";
+import SiteHeader from "@/components/SiteHeader";
+import SiteFooter from "@/components/SiteFooter";
 
-export const revalidate = 60;
-
-export default async function Home() {
-  const events = await getEvents();
-  const upcoming = events.filter((e) => e.upcoming);
-  const past = events.filter((e) => !e.upcoming);
-
+export default function Home() {
   return (
     <>
-      <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, var(--green) 0 33%, #fff 33% 66%, var(--red) 66%)" }} />
-
-      <header className="bg-white border-b border-line sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
-          <div className="flex items-center gap-3">
-            <img src={`${APP_BASE}/img/logo.jpg`} alt="GAT 2027" className="h-12 w-auto rounded" />
-            <div>
-              <div className="font-bold text-ink leading-tight">Grassroot Advocacy for Tinubu</div>
-              <div className="text-xs text-muted">GAT 2027 · Forward Together with PBAT</div>
-            </div>
-          </div>
-          <nav className="ml-auto flex gap-1">
-            <a href="#events" className="px-3 py-2 rounded-lg font-medium text-ink hover:bg-green-light hover:text-green-dark">
-              Events
-            </a>
-            <a
-              href={`${APP_BASE}/docs/GAT-2027-Brochure.pdf`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-3 py-2 rounded-lg font-medium text-ink hover:bg-green-light hover:text-green-dark"
-            >
-              Brochure
-            </a>
-            <a href={`${APP_BASE}/login`} className="px-3 py-2 rounded-lg font-medium text-ink hover:bg-green-light hover:text-green-dark">
-              Log in
-            </a>
-          </nav>
-        </div>
-      </header>
+      <SiteHeader active="/" />
 
       <section className="bg-green-light">
         <div className="max-w-6xl mx-auto px-4 py-16 grid md:grid-cols-2 gap-8 items-center">
@@ -74,36 +41,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <main className="max-w-6xl mx-auto px-4 py-14 flex-1 w-full" id="events">
-        <div className="mb-10">
-          <h2 className="text-2xl font-bold text-ink mb-1">Events</h2>
-          <p className="text-muted">Rallies, town halls and mobilisation drives from across the country.</p>
-        </div>
-
-        {upcoming.length > 0 && (
-          <div className="mb-10">
-            <h3 className="text-lg font-bold text-ink mb-4">Upcoming</h3>
-            <EventList events={upcoming} />
-          </div>
-        )}
-
-        {past.length > 0 && (
-          <div>
-            <h3 className="text-lg font-bold text-ink mb-4">Past events</h3>
-            <EventList events={past} />
-          </div>
-        )}
-
-        {events.length === 0 && <EventList events={[]} />}
-      </main>
-
-      <footer className="bg-ink text-white text-center py-6 text-sm">
-        <b>GAT</b>
-        <br />
-        Grassroot Advocacy for Tinubu
-        <br />
-        GAT 2027 · Forward Together with PBAT
-      </footer>
+      <SiteFooter />
     </>
   );
 }

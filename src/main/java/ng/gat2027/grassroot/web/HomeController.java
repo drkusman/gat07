@@ -20,9 +20,14 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("stats", analytics.locationStats());
+        return "index";
+    }
+
+    @GetMapping("/events")
+    public String eventsPage(Model model) {
         List<Event> published = events.published();
         model.addAttribute("upcomingEvents", published.stream().filter(Event::isUpcoming).sorted(Comparator.comparing(Event::getEventDate)).toList());
         model.addAttribute("pastEvents", published.stream().filter(e -> !e.isUpcoming()).toList());
-        return "index";
+        return "events";
     }
 }

@@ -36,7 +36,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, MemberUserDetailsService uds, PersistentTokenRepository tokens) throws Exception {
         http
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/", "/register", "/login", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
+                .requestMatchers("/", "/events", "/register", "/login", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
                                  "/api/locations/**", "/api/referral/**", "/api/events/**", "/actuator/health").permitAll()
                 .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/events/**", "/api/admin/import", "/admin/members/*/role",
                                  "/admin/members/*/status", "/admin/members/*/password").hasRole("ADMIN")
