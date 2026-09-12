@@ -9,6 +9,30 @@
     <h2 style="text-align:center">Events</h2>
     <p class="muted" style="text-align:center;margin-top:-.3rem">Rallies, town halls and mobilisation drives from across the country.</p>
   </div>
+  <div class="card" style="margin-bottom:1.5rem">
+    <h2 style="text-align:center">Photo Gallery</h2>
+    <div class="slideshow" id="gallery">
+      <div class="slide active"><img src="/img/gallery/event-1.jpeg" alt="GAT 2027 event photo 1" loading="eager"></div>
+      <div class="slide"><img src="/img/gallery/event-2.jpeg" alt="GAT 2027 event photo 2" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-3.jpeg" alt="GAT 2027 event photo 3" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-4.jpeg" alt="GAT 2027 event photo 4" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-5.jpeg" alt="GAT 2027 event photo 5" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-6.jpeg" alt="GAT 2027 event photo 6" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-7.jpeg" alt="GAT 2027 event photo 7" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-8.jpeg" alt="GAT 2027 event photo 8" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-9.jpeg" alt="GAT 2027 event photo 9" loading="lazy"></div>
+      <div class="slide"><img src="/img/gallery/event-10.jpeg" alt="GAT 2027 event photo 10" loading="lazy"></div>
+      <button type="button" class="slide-nav prev" aria-label="Previous photo">&#10094;</button>
+      <button type="button" class="slide-nav next" aria-label="Next photo">&#10095;</button>
+      <div class="slide-dots">
+        <span class="dot active" data-i="0"></span><span class="dot" data-i="1"></span><span class="dot" data-i="2"></span>
+        <span class="dot" data-i="3"></span><span class="dot" data-i="4"></span><span class="dot" data-i="5"></span>
+        <span class="dot" data-i="6"></span><span class="dot" data-i="7"></span><span class="dot" data-i="8"></span>
+        <span class="dot" data-i="9"></span>
+      </div>
+      <div class="slide-caption">National Inauguration at Merit House, Abuja</div>
+    </div>
+  </div>
   <div th:if="${upcomingEvents.size() > 0}" style="margin-top:1rem">
     <h3>Upcoming</h3>
     <div class="grid cols-3">
@@ -26,5 +50,24 @@
   </div>
 </main>
 <th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>
+<script>
+(function () {
+  var gallery = document.getElementById('gallery');
+  if (!gallery) return;
+  var slides = gallery.querySelectorAll('.slide');
+  var dots = gallery.querySelectorAll('.dot');
+  var i = 0, timer;
+  function show(n) {
+    slides[i].classList.remove('active'); dots[i].classList.remove('active');
+    i = (n + slides.length) % slides.length;
+    slides[i].classList.add('active'); dots[i].classList.add('active');
+  }
+  function restart() { clearInterval(timer); timer = setInterval(function () { show(i + 1); }, 5000); }
+  gallery.querySelector('.next').addEventListener('click', function () { show(i + 1); restart(); });
+  gallery.querySelector('.prev').addEventListener('click', function () { show(i - 1); restart(); });
+  dots.forEach(function (d, idx) { d.addEventListener('click', function () { show(idx); restart(); }); });
+  restart();
+})();
+</script>
 </body>
 </html>
