@@ -11,16 +11,21 @@
           <div class="field"><label>Location</label><input name="location" type="text" maxlength="200" th:value="${e.location}" placeholder="e.g. National Secretariat, Abuja"></div>
         </div>
         <div class="field" style="margin-top:.8rem"><label>Description</label><textarea name="description" required rows="5" th:text="${e.description}"></textarea></div>
-        <div class="form-grid" style="margin-top:.8rem">
-          <div class="field"><label>Cover image URL</label><input name="coverImageUrl" type="url" th:value="${e.coverImageUrl}" placeholder="https://…"><span class="help">Optional — shown on the public event list.</span></div>
-          <div class="field"><label>Video URL</label><input name="videoUrl" type="url" th:value="${e.videoUrl}" placeholder="https://youtube.com/…"><span class="help">Optional — YouTube, Vimeo or a direct link.</span></div>
-          <div class="field"><label>Photo gallery URL</label><input name="photoGalleryUrl" type="url" th:value="${e.photoGalleryUrl}" placeholder="https://…"><span class="help">Optional — link to an external photo album instead of uploading below.</span></div>
-        </div>
         <div class="field" style="margin-top:.8rem">
           <label>Upload photos</label>
           <input type="file" id="eventPhotos" accept="image/*" multiple>
           <span class="help">Select every photo from this event's folder at once — they'll appear in the Photo Gallery slideshow on the public Events page.</span>
           <div id="eventPhotosPreview" class="grid cols-4" style="margin-top:.6rem"></div>
+        </div>
+        <div class="field" style="margin-top:.8rem">
+          <label>Upload video clip</label>
+          <input type="file" id="eventVideo" accept="video/*">
+          <span class="help">Upload the actual clip (MP4 etc., up to 150MB) — the public "Watch video" link will play it directly, no YouTube link needed.</span>
+          <div id="eventVideoStatus" style="margin-top:.5rem">
+            <span th:if="${e.hasUploadedVideo()}" class="pill blue">Video uploaded</span>
+            <a th:if="${e.hasUploadedVideo()}" th:href="@{/events/{id}/video(id=${e.id})}" target="_blank" rel="noopener" style="margin-left:.5rem">▶ Preview</a>
+            <button th:if="${e.hasUploadedVideo()}" type="submit" form="removeVideoForm" class="btn danger sm" style="margin-left:.5rem" onclick="return confirm('Remove the uploaded video?')">Remove video</button>
+          </div>
         </div>
         <label style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;font-weight:500"><input type="checkbox" name="published" th:checked="${e.id == null} ? true : ${e.published}" style="width:auto"> Published (visible on the public site)</label>
         <div class="btn-row" style="margin-top:1rem">
@@ -28,6 +33,7 @@
           <a class="btn secondary" href="/admin/events">Cancel</a>
         </div>
       </form>
+      <form th:if="${e.id != null}" id="removeVideoForm" th:action="@{/admin/events/{id}/video/delete(id=${e.id})}" method="post" style="display:none"></form>
       <div th:if="${e.id != null and photos != null and !photos.isEmpty()}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
         <h3 style="margin-top:0">Uploaded photos (<span th:text="${photos.size()}"></span>)</h3>
         <div class="grid cols-4">
@@ -44,9 +50,10 @@
     <div class="panel"><div class="ph"><h2>About events</h2></div><div class="pb">
       <ul class="muted" style="font-size:.9rem;padding-left:1.2rem;line-height:1.7">
         <li>Published events with a date today or later show as "upcoming" on the public home page.</li>
-        <li>Leave the video and photo links blank until they're ready — the public page shows a "coming soon" note automatically.</li>
+        <li>Leave photos and video blank until they're ready — the public page shows a "coming soon" note automatically.</li>
         <li>Draft (unpublished) events are only visible here in the coordination centre.</li>
         <li>An event with uploaded photos gets its own tab in the Photo Gallery slideshow on the public Events page.</li>
+        <li>Uploading a video clip here gives the public event card a "Watch video" link that plays it directly.</li>
       </ul></div></div>
   </div>
   <script>
@@ -98,6 +105,44 @@
       submitBtn.disabled = false;
       status.textContent = dataUrls.length + ' photo(s) ready — you can submit now.';
     });
+  });
+})();
+(function () {
+  var input = document.getElementById('eventVideo');
+  if (!input) return;
+  var form = input.closest('form');
+  var submitBtn = form.querySelector('button[type=submit]');
+  var statusEl = document.getElementById('eventVideoStatus');
+  var status = document.createElement('span');
+  status.className = 'help';
+  status.style.display = 'block';
+  status.style.marginTop = '.4rem';
+  statusEl.insertAdjacentElement('beforebegin', status);
+  var MAX_BYTES = 150 * 1024 * 1024;
+
+  input.addEventListener('change', function () {
+    var file = input.files[0];
+    if (!file) return;
+    if (file.size > MAX_BYTES) {
+      status.textContent = 'That file is ' + (file.size / 1024 / 1024).toFixed(1) + 'MB — please keep uploads under 150MB.';
+      input.value = '';
+      return;
+    }
+    submitBtn.disabled = true;
+    status.textContent = 'Processing video… please wait before submitting.';
+    var reader = new FileReader();
+    reader.onload = function () {
+      var hidden = form.querySelector('input[name=videoData]');
+      if (!hidden) {
+        hidden = document.createElement('input');
+        hidden.type = 'hidden'; hidden.name = 'videoData';
+        form.appendChild(hidden);
+      }
+      hidden.value = reader.result;
+      submitBtn.disabled = false;
+      status.textContent = 'Video ready (' + (file.size / 1024 / 1024).toFixed(1) + 'MB) — you can submit now.';
+    };
+    reader.readAsDataURL(file);
   });
 })();
   </script>

@@ -17,13 +17,12 @@ public class Event {
     @Column(name = "event_date", nullable = false) private LocalDate eventDate;
     private String location;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(nullable = false) private String description;
-    @Column(name = "cover_image_url") private String coverImageUrl;
-    @Column(name = "video_url") private String videoUrl;
-    @Column(name = "photo_gallery_url") private String photoGalleryUrl;
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(name = "video_data") private String videoData;
     @Column(nullable = false) private boolean published = true;
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     @Column(name = "updated_at", nullable = false) private LocalDateTime updatedAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
 
     public boolean isUpcoming() { return !eventDate.isBefore(LocalDate.now()); }
-    public boolean hasMedia() { return (photoGalleryUrl != null && !photoGalleryUrl.isBlank()) || (videoUrl != null && !videoUrl.isBlank()); }
+    public boolean hasUploadedVideo() { return videoData != null && !videoData.isBlank(); }
+    public boolean hasMedia() { return hasUploadedVideo(); }
 }

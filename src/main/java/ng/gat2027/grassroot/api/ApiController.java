@@ -25,7 +25,7 @@ import java.util.Map;
 public class ApiController {
     public record Opt(Long id, String name, String code, Double latitude, Double longitude) {}
     public record EventDto(Long id, String title, String slug, LocalDate date, String location, String description,
-                            String coverImageUrl, String videoUrl, String photoGalleryUrl, boolean hasMedia, boolean upcoming) {}
+                            String videoUrl, boolean hasMedia, boolean upcoming) {}
 
     private final ZoneRepository zones; private final StateRepository states; private final LgaRepository lgas; private final WardRepository wards; private final PollingUnitRepository pus;
     private final MemberRepository members; private final CurrentUser currentUser; private final AnalyticsService analytics; private final CsvImportService importer; private final EventService events;
@@ -38,7 +38,7 @@ public class ApiController {
     @GetMapping("/events")
     public List<EventDto> events() {
         return events.published().stream().map(e -> new EventDto(e.getId(), e.getTitle(), e.getSlug(), e.getEventDate(), e.getLocation(), e.getDescription(),
-            e.getCoverImageUrl(), e.getVideoUrl(), e.getPhotoGalleryUrl(), e.hasMedia(), e.isUpcoming())).toList();
+            e.hasUploadedVideo() ? "/events/" + e.getId() + "/video" : null, e.hasMedia(), e.isUpcoming())).toList();
     }
 
     @GetMapping("/locations/zones")

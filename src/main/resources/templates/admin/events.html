@@ -13,9 +13,8 @@
           <td><b th:text="${e.title}"></b></td>
           <td class="mini" th:text="${e.location} ?: '—'"></td>
           <td class="mini">
-            <span th:if="${e.videoUrl != null}" class="pill blue">video</span>
-            <span th:if="${e.photoGalleryUrl != null}" class="pill gold">photos</span>
-            <span th:if="${e.videoUrl == null and e.photoGalleryUrl == null}">—</span>
+            <span th:if="${e.hasUploadedVideo()}" class="pill blue">video</span>
+            <span th:if="${!e.hasUploadedVideo()}">—</span>
           </td>
           <td><span class="pill" th:classappend="${e.published} ? '' : 'red'" th:text="${e.published} ? 'published' : 'draft'"></span></td>
           <td class="no-print" style="white-space:nowrap">

@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @Controller
@@ -229,12 +231,12 @@ public class AdminController {
 
     @PostMapping("/events")
     public String createEvent(@RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
-                               @RequestParam String description, @RequestParam(required = false) String coverImageUrl, @RequestParam(required = false) String videoUrl,
-                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published,
-                               @RequestParam(required = false) List<String> photos, RedirectAttributes ra) {
+                               @RequestParam String description, @RequestParam(required = false) String published,
+                               @RequestParam(required = false) String videoData, HttpServletRequest request, RedirectAttributes ra) {
         try {
-            Event e = events.save(null, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null);
-            events.addPhotos(e.getId(), photos);
+            Event e = events.save(null, title, eventDate, location, description, published != null);
+            events.addPhotos(e.getId(), photosFrom(request));
+            events.setVideo(e.getId(), videoData);
             ra.addFlashAttribute("success", "Event created.");
         } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events";
@@ -242,15 +244,29 @@ public class AdminController {
 
     @PostMapping("/events/{id}")
     public String updateEvent(@PathVariable Long id, @RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
-                               @RequestParam String description, @RequestParam(required = false) String coverImageUrl, @RequestParam(required = false) String videoUrl,
-                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published,
-                               @RequestParam(required = false) List<String> photos, RedirectAttributes ra) {
+                               @RequestParam String description, @RequestParam(required = false) String published,
+                               @RequestParam(required = false) String videoData, HttpServletRequest request, RedirectAttributes ra) {
         try {
-            events.save(id, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null);
-            events.addPhotos(id, photos);
+            events.save(id, title, eventDate, location, description, published != null);
+            events.addPhotos(id, photosFrom(request));
+            events.setVideo(id, videoData);
             ra.addFlashAttribute("success", "Event updated.");
         } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events/" + id + "/edit";
+    }
+
+    @PostMapping("/events/{id}/video/delete")
+    public String deleteEventVideo(@PathVariable Long id, RedirectAttributes ra) {
+        try { events.clearVideo(id); ra.addFlashAttribute("success", "Video removed."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/events/" + id + "/edit";
+    }
+
+    /** Reads the raw "photos" values off the request instead of binding a List<String>, because Spring's
+     *  StringToCollectionConverter comma-splits a single-occurrence param (a data: URL has a comma in it). */
+    private List<String> photosFrom(HttpServletRequest request) {
+        String[] values = request.getParameterValues("photos");
+        return values == null ? List.of() : Arrays.asList(values);
     }
 
     @PostMapping("/events/photos/{photoId}/delete")

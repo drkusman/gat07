@@ -49,6 +49,21 @@ public class EventService {
     @Transactional
     public void deletePhoto(Long photoId) { photoRepo.deleteById(photoId); }
 
+    @Transactional
+    public void setVideo(Long eventId, String dataUrl) {
+        if (dataUrl == null || dataUrl.isBlank()) return;
+        Event e = repo.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+        e.setVideoData(dataUrl);
+        repo.save(e);
+    }
+
+    @Transactional
+    public void clearVideo(Long eventId) {
+        Event e = repo.findById(eventId).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+        e.setVideoData(null);
+        repo.save(e);
+    }
+
     public Stats stats() {
         long total = repo.count();
         long published = repo.countByPublishedTrue();
@@ -61,17 +76,13 @@ public class EventService {
     }
 
     @Transactional
-    public Event save(Long id, String title, LocalDate eventDate, String location, String description,
-                       String coverImageUrl, String videoUrl, String photoGalleryUrl, boolean published) {
+    public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published) {
         Event e = id == null ? new Event() : repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
         boolean isNew = e.getId() == null;
         e.setTitle(title);
         e.setEventDate(eventDate);
         e.setLocation(blankToNull(location));
         e.setDescription(description);
-        e.setCoverImageUrl(blankToNull(coverImageUrl));
-        e.setVideoUrl(blankToNull(videoUrl));
-        e.setPhotoGalleryUrl(blankToNull(photoGalleryUrl));
         e.setPublished(published);
         e.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         if (isNew || e.getSlug() == null || e.getSlug().isBlank()) e.setSlug(uniqueSlug(title, id));

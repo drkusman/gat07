@@ -10,9 +10,7 @@ export type GatEvent = {
   date: string;
   location: string | null;
   description: string;
-  coverImageUrl: string | null;
   videoUrl: string | null;
-  photoGalleryUrl: string | null;
   hasMedia: boolean;
   upcoming: boolean;
 };

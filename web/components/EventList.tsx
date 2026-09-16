@@ -1,4 +1,4 @@
-import type { GatEvent } from "@/lib/api";
+import { APP_BASE, type GatEvent } from "@/lib/api";
 
 function formatDate(iso: string) {
   return new Date(iso + "T00:00:00").toLocaleDateString("en-NG", { day: "numeric", month: "short", year: "numeric" });
@@ -11,13 +11,8 @@ function MediaLinks({ event }: { event: GatEvent }) {
   return (
     <div className="flex gap-3 flex-wrap">
       {event.videoUrl && (
-        <a href={event.videoUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue hover:underline">
+        <a href={`${APP_BASE}${event.videoUrl}`} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-blue hover:underline">
           ▶ Watch video
-        </a>
-      )}
-      {event.photoGalleryUrl && (
-        <a href={event.photoGalleryUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-semibold text-green hover:underline">
-          🖼 View photos
         </a>
       )}
     </div>
@@ -38,12 +33,7 @@ export default function EventList({ events }: { events: GatEvent[] }) {
       {events.map((event) => (
         <article key={event.id} className="rounded-xl border border-line bg-white shadow-sm overflow-hidden flex flex-col">
           <div className="aspect-[16/9] bg-green-light flex items-center justify-center overflow-hidden">
-            {event.coverImageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={event.coverImageUrl} alt={event.title} className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-4xl">📅</span>
-            )}
+            <span className="text-4xl">📅</span>
           </div>
           <div className="p-4 flex flex-col gap-2 flex-1">
             {event.upcoming && (

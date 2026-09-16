@@ -37,8 +37,8 @@ server:
   error:
     include-message: always
   tomcat:
-    max-http-form-post-size: 50MB
-    max-swallow-size: 50MB
+    max-http-form-post-size: 210MB
+    max-swallow-size: 210MB
 
 management:
   endpoints:
