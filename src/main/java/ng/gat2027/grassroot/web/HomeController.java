@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.Base64;
-import java.util.Comparator;
 import java.util.List;
 
 @Controller
@@ -32,9 +31,7 @@ public class HomeController {
 
     @GetMapping("/events")
     public String eventsPage(Model model) {
-        List<Event> published = events.published();
-        model.addAttribute("upcomingEvents", published.stream().filter(Event::isUpcoming).sorted(Comparator.comparing(Event::getEventDate)).toList());
-        model.addAttribute("pastEvents", published.stream().filter(e -> !e.isUpcoming()).toList());
+        model.addAttribute("allEvents", events.published());
         model.addAttribute("galleryTabs", events.withPhotos().stream().map(e -> new GalleryTab(e, events.photosFor(e.getId()))).toList());
         return "events";
     }
