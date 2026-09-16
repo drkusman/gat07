@@ -28,13 +28,7 @@
       <div class="slide-caption" th:text="${tab.event().title}"></div>
     </div>
   </div>
-  <div th:if="${upcomingEvents.size() > 0}" style="margin-top:1rem">
-    <h3>Upcoming</h3>
-    <div class="grid cols-3">
-      <th:block th:each="e : ${upcomingEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>
-    </div>
-  </div>
-  <div th:if="${pastEvents.size() > 0}" style="margin-top:1.5rem">
+  <div th:if="${pastEvents.size() > 0}" style="margin-top:1rem">
     <h3>Past events</h3>
     <div class="grid cols-3">
       <th:block th:each="e : ${pastEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>

@@ -49,16 +49,21 @@
         <li>An event with uploaded photos gets its own tab in the Photo Gallery slideshow on the public Events page.</li>
       </ul></div></div>
   </div>
-</div>
-<script>
+  <script>
 (function () {
   var input = document.getElementById('eventPhotos');
+  if (!input) return;
   var preview = document.getElementById('eventPhotosPreview');
   var form = input.closest('form');
-  if (!input) return;
-  input.addEventListener('change', function () {
-    preview.innerHTML = '';
-    Array.from(input.files).forEach(function (file) {
+  var submitBtn = form.querySelector('button[type=submit]');
+  var status = document.createElement('span');
+  status.className = 'help';
+  status.style.display = 'block';
+  status.style.marginTop = '.4rem';
+  document.getElementById('eventPhotosPreview').insertAdjacentElement('beforebegin', status);
+
+  function resizeFile(file) {
+    return new Promise(function (resolve) {
       var reader = new FileReader();
       reader.onload = function () {
         var img = new Image();
@@ -67,20 +72,35 @@
           var c = document.createElement('canvas');
           c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
           c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-          var dataUrl = c.toDataURL('image/jpeg', 0.82);
-          var hidden = document.createElement('input');
-          hidden.type = 'hidden'; hidden.name = 'photos'; hidden.value = dataUrl;
-          form.appendChild(hidden);
-          var thumb = document.createElement('img');
-          thumb.src = dataUrl; thumb.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line)';
-          preview.appendChild(thumb);
+          resolve(c.toDataURL('image/jpeg', 0.82));
         };
         img.src = reader.result;
       };
       reader.readAsDataURL(file);
     });
+  }
+
+  input.addEventListener('change', function () {
+    preview.innerHTML = '';
+    var files = Array.from(input.files);
+    if (!files.length) return;
+    submitBtn.disabled = true;
+    status.textContent = 'Processing ' + files.length + ' photo(s)… please wait before submitting.';
+    Promise.all(files.map(resizeFile)).then(function (dataUrls) {
+      dataUrls.forEach(function (dataUrl) {
+        var hidden = document.createElement('input');
+        hidden.type = 'hidden'; hidden.name = 'photos'; hidden.value = dataUrl;
+        form.appendChild(hidden);
+        var thumb = document.createElement('img');
+        thumb.src = dataUrl; thumb.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line)';
+        preview.appendChild(thumb);
+      });
+      submitBtn.disabled = false;
+      status.textContent = dataUrls.length + ' photo(s) ready — you can submit now.';
+    });
   });
 })();
-</script>
+  </script>
+</div>
 </body>
 </html>
