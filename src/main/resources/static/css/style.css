@@ -178,3 +178,7 @@ dl.kv dt { color: var(--muted); } dl.kv dd { margin: 0; }
 .slide-dots .dot.active { background: #fff; }
 .slide-caption { position: absolute; top: 12px; left: 12px; right: 12px; background: rgba(11,122,59,.85); color: #fff; font-weight: 600; font-size: .85rem; padding: .5rem .8rem; border-radius: 8px; }
 @media (max-width: 800px) { .slideshow { aspect-ratio: 4/5; } }
+.gallery-tabs { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin: .75rem 0 1rem; }
+.gallery-tab { background: #fff; border: 1px solid var(--line); color: var(--ink); font-weight: 600; font-size: .85rem; padding: .5rem 1rem; border-radius: 999px; cursor: pointer; }
+.gallery-tab:hover { background: var(--green-light); }
+.gallery-tab.active { background: var(--green); color: #fff; border-color: var(--green); }

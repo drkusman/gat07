@@ -1,6 +1,8 @@
 package ng.gat2027.grassroot.service;
 
 import ng.gat2027.grassroot.domain.Event;
+import ng.gat2027.grassroot.domain.EventPhoto;
+import ng.gat2027.grassroot.repo.EventPhotoRepository;
 import ng.gat2027.grassroot.repo.EventRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,12 +18,36 @@ public class EventService {
     public record Stats(long total, long published, long upcoming, Event nextEvent) {}
 
     private final EventRepository repo;
+    private final EventPhotoRepository photoRepo;
 
-    public EventService(EventRepository repo) { this.repo = repo; }
+    public EventService(EventRepository repo, EventPhotoRepository photoRepo) { this.repo = repo; this.photoRepo = photoRepo; }
 
     public List<Event> all() { return repo.findAllByOrderByEventDateDesc(); }
     public List<Event> published() { return repo.findByPublishedTrueOrderByEventDateDesc(); }
     public Optional<Event> find(Long id) { return repo.findById(id); }
+    public List<EventPhoto> photosFor(Long eventId) { return photoRepo.findByEventIdOrderBySortOrderAsc(eventId); }
+    public long photoCount(Long eventId) { return photoRepo.countByEventId(eventId); }
+
+    /** Events (published, any date) that have at least one uploaded photo, for the public photo gallery tabs. */
+    public List<Event> withPhotos() {
+        return published().stream().filter(e -> photoCount(e.getId()) > 0).toList();
+    }
+
+    @Transactional
+    public void addPhotos(Long eventId, List<String> dataUrls) {
+        if (dataUrls == null || dataUrls.isEmpty()) return;
+        int start = (int) photoCount(eventId);
+        for (int i = 0; i < dataUrls.size(); i++) {
+            String data = dataUrls.get(i);
+            if (data == null || data.isBlank()) continue;
+            EventPhoto p = new EventPhoto();
+            p.setEventId(eventId); p.setImageData(data); p.setSortOrder(start + i);
+            photoRepo.save(p);
+        }
+    }
+
+    @Transactional
+    public void deletePhoto(Long photoId) { photoRepo.deleteById(photoId); }
 
     public Stats stats() {
         long total = repo.count();

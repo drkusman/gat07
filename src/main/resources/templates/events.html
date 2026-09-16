@@ -9,28 +9,23 @@
     <h2 style="text-align:center">Events</h2>
     <p class="muted" style="text-align:center;margin-top:-.3rem">Rallies, town halls and mobilisation drives from across the country.</p>
   </div>
-  <div class="card" style="margin-bottom:1.5rem">
+  <div class="card" style="margin-bottom:1.5rem" th:if="${galleryTabs.size() > 0}">
     <h2 style="text-align:center">Photo Gallery</h2>
-    <div class="slideshow" id="gallery">
-      <div class="slide active"><img src="/img/gallery/event-1.jpeg" alt="GAT 2027 event photo 1" loading="eager"></div>
-      <div class="slide"><img src="/img/gallery/event-2.jpeg" alt="GAT 2027 event photo 2" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-3.jpeg" alt="GAT 2027 event photo 3" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-4.jpeg" alt="GAT 2027 event photo 4" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-5.jpeg" alt="GAT 2027 event photo 5" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-6.jpeg" alt="GAT 2027 event photo 6" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-7.jpeg" alt="GAT 2027 event photo 7" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-8.jpeg" alt="GAT 2027 event photo 8" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-9.jpeg" alt="GAT 2027 event photo 9" loading="lazy"></div>
-      <div class="slide"><img src="/img/gallery/event-10.jpeg" alt="GAT 2027 event photo 10" loading="lazy"></div>
+    <div class="gallery-tabs">
+      <button type="button" th:each="tab, tabStat : ${galleryTabs}" class="gallery-tab" th:classappend="${tabStat.first} ? 'active'"
+              th:attr="data-target=|gallery-${tab.event().id}|" th:text="${tab.event().title}"></button>
+    </div>
+    <div th:each="tab, tabStat : ${galleryTabs}" class="slideshow gallery-panel" th:id="|gallery-${tab.event().id}|"
+         th:style="${tabStat.first} ? '' : 'display:none'">
+      <div class="slide" th:each="p, pStat : ${tab.photos()}" th:classappend="${pStat.first} ? 'active'">
+        <img th:src="${p.imageData}" th:alt="|${tab.event().title} — photo ${pStat.count}|" loading="lazy">
+      </div>
       <button type="button" class="slide-nav prev" aria-label="Previous photo">&#10094;</button>
       <button type="button" class="slide-nav next" aria-label="Next photo">&#10095;</button>
       <div class="slide-dots">
-        <span class="dot active" data-i="0"></span><span class="dot" data-i="1"></span><span class="dot" data-i="2"></span>
-        <span class="dot" data-i="3"></span><span class="dot" data-i="4"></span><span class="dot" data-i="5"></span>
-        <span class="dot" data-i="6"></span><span class="dot" data-i="7"></span><span class="dot" data-i="8"></span>
-        <span class="dot" data-i="9"></span>
+        <span class="dot" th:each="p, pStat : ${tab.photos()}" th:classappend="${pStat.first} ? 'active'" th:attr="data-i=${pStat.index}"></span>
       </div>
-      <div class="slide-caption">National Inauguration at Merit House, Abuja</div>
+      <div class="slide-caption" th:text="${tab.event().title}"></div>
     </div>
   </div>
   <div th:if="${upcomingEvents.size() > 0}" style="margin-top:1rem">
@@ -52,21 +47,41 @@
 <th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>
 <script>
 (function () {
-  var gallery = document.getElementById('gallery');
-  if (!gallery) return;
-  var slides = gallery.querySelectorAll('.slide');
-  var dots = gallery.querySelectorAll('.dot');
-  var i = 0, timer;
-  function show(n) {
-    slides[i].classList.remove('active'); dots[i].classList.remove('active');
-    i = (n + slides.length) % slides.length;
-    slides[i].classList.add('active'); dots[i].classList.add('active');
+  var panels = document.querySelectorAll('.gallery-panel');
+  var tabs = document.querySelectorAll('.gallery-tab');
+  if (!panels.length) return;
+  var states = {};
+
+  panels.forEach(function (panel) {
+    var slides = panel.querySelectorAll('.slide');
+    var dots = panel.querySelectorAll('.dot');
+    var state = { i: 0, timer: null };
+    states[panel.id] = state;
+
+    function show(n) {
+      slides[state.i].classList.remove('active'); dots[state.i].classList.remove('active');
+      state.i = (n + slides.length) % slides.length;
+      slides[state.i].classList.add('active'); dots[state.i].classList.add('active');
+    }
+    state.restart = function () { clearInterval(state.timer); state.timer = setInterval(function () { show(state.i + 1); }, 5000); };
+    state.stop = function () { clearInterval(state.timer); };
+
+    panel.querySelector('.next').addEventListener('click', function () { show(state.i + 1); state.restart(); });
+    panel.querySelector('.prev').addEventListener('click', function () { show(state.i - 1); state.restart(); });
+    dots.forEach(function (d, idx) { d.addEventListener('click', function () { show(idx); state.restart(); }); });
+  });
+
+  function activate(id) {
+    panels.forEach(function (p) {
+      var active = p.id === id;
+      p.style.display = active ? '' : 'none';
+      if (active) states[p.id].restart(); else states[p.id].stop();
+    });
+    tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.target === id); });
   }
-  function restart() { clearInterval(timer); timer = setInterval(function () { show(i + 1); }, 5000); }
-  gallery.querySelector('.next').addEventListener('click', function () { show(i + 1); restart(); });
-  gallery.querySelector('.prev').addEventListener('click', function () { show(i - 1); restart(); });
-  dots.forEach(function (d, idx) { d.addEventListener('click', function () { show(idx); restart(); }); });
-  restart();
+
+  tabs.forEach(function (t) { t.addEventListener('click', function () { activate(t.dataset.target); }); });
+  activate(panels[0].id);
 })();
 </script>
 </body>

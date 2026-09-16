@@ -30,12 +30,15 @@ spring:
       enabled: false
 
 server:
-  port: ${PORT:8083}
+  port: ${PORT:8084}
   forward-headers-strategy: framework
   compression:
     enabled: true
   error:
     include-message: always
+  tomcat:
+    max-http-form-post-size: 50MB
+    max-swallow-size: 50MB
 
 management:
   endpoints:

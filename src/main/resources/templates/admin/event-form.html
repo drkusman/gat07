@@ -14,21 +14,73 @@
         <div class="form-grid" style="margin-top:.8rem">
           <div class="field"><label>Cover image URL</label><input name="coverImageUrl" type="url" th:value="${e.coverImageUrl}" placeholder="https://…"><span class="help">Optional — shown on the public event list.</span></div>
           <div class="field"><label>Video URL</label><input name="videoUrl" type="url" th:value="${e.videoUrl}" placeholder="https://youtube.com/…"><span class="help">Optional — YouTube, Vimeo or a direct link.</span></div>
-          <div class="field"><label>Photo gallery URL</label><input name="photoGalleryUrl" type="url" th:value="${e.photoGalleryUrl}" placeholder="https://…"><span class="help">Optional — link to a photo album.</span></div>
+          <div class="field"><label>Photo gallery URL</label><input name="photoGalleryUrl" type="url" th:value="${e.photoGalleryUrl}" placeholder="https://…"><span class="help">Optional — link to an external photo album instead of uploading below.</span></div>
+        </div>
+        <div class="field" style="margin-top:.8rem">
+          <label>Upload photos</label>
+          <input type="file" id="eventPhotos" accept="image/*" multiple>
+          <span class="help">Select every photo from this event's folder at once — they'll appear in the Photo Gallery slideshow on the public Events page.</span>
+          <div id="eventPhotosPreview" class="grid cols-4" style="margin-top:.6rem"></div>
         </div>
         <label style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;font-weight:500"><input type="checkbox" name="published" th:checked="${e.id == null} ? true : ${e.published}" style="width:auto"> Published (visible on the public site)</label>
         <div class="btn-row" style="margin-top:1rem">
           <button class="btn" type="submit" th:text="${e.id == null} ? 'Create event' : 'Save changes'"></button>
           <a class="btn secondary" href="/admin/events">Cancel</a>
         </div>
-      </form></div>
+      </form>
+      <div th:if="${e.id != null and photos != null and !photos.isEmpty()}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
+        <h3 style="margin-top:0">Uploaded photos (<span th:text="${photos.size()}"></span>)</h3>
+        <div class="grid cols-4">
+          <div th:each="p : ${photos}" style="position:relative">
+            <img th:src="${p.imageData}" alt="" style="width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line)">
+            <form th:action="@{/admin/events/photos/{id}/delete(id=${p.id})}" method="post" style="position:absolute;top:4px;right:4px">
+              <input type="hidden" name="eventId" th:value="${e.id}">
+              <button class="btn danger sm" type="submit" title="Remove photo" onclick="return confirm('Remove this photo?')" style="padding:.15rem .5rem">&times;</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="panel"><div class="ph"><h2>About events</h2></div><div class="pb">
       <ul class="muted" style="font-size:.9rem;padding-left:1.2rem;line-height:1.7">
         <li>Published events with a date today or later show as "upcoming" on the public home page.</li>
         <li>Leave the video and photo links blank until they're ready — the public page shows a "coming soon" note automatically.</li>
         <li>Draft (unpublished) events are only visible here in the coordination centre.</li>
+        <li>An event with uploaded photos gets its own tab in the Photo Gallery slideshow on the public Events page.</li>
       </ul></div></div>
   </div>
 </div>
+<script>
+(function () {
+  var input = document.getElementById('eventPhotos');
+  var preview = document.getElementById('eventPhotosPreview');
+  var form = input.closest('form');
+  if (!input) return;
+  input.addEventListener('change', function () {
+    preview.innerHTML = '';
+    Array.from(input.files).forEach(function (file) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        var img = new Image();
+        img.onload = function () {
+          var scale = Math.min(1, 1280 / Math.max(img.width, img.height));
+          var c = document.createElement('canvas');
+          c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+          c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+          var dataUrl = c.toDataURL('image/jpeg', 0.82);
+          var hidden = document.createElement('input');
+          hidden.type = 'hidden'; hidden.name = 'photos'; hidden.value = dataUrl;
+          form.appendChild(hidden);
+          var thumb = document.createElement('img');
+          thumb.src = dataUrl; thumb.style.cssText = 'width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;border:1px solid var(--line)';
+          preview.appendChild(thumb);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+})();
+</script>
 </body>
 </html>

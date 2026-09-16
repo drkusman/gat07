@@ -223,25 +223,41 @@ public class AdminController {
         Event e = events.find(id).orElse(null);
         if (e == null) return "redirect:/admin/events";
         model.addAttribute("e", e);
+        model.addAttribute("photos", events.photosFor(id));
         return "admin/event-form";
     }
 
     @PostMapping("/events")
     public String createEvent(@RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
                                @RequestParam String description, @RequestParam(required = false) String coverImageUrl, @RequestParam(required = false) String videoUrl,
-                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published, RedirectAttributes ra) {
-        try { events.save(null, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null); ra.addFlashAttribute("success", "Event created."); }
-        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published,
+                               @RequestParam(required = false) List<String> photos, RedirectAttributes ra) {
+        try {
+            Event e = events.save(null, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null);
+            events.addPhotos(e.getId(), photos);
+            ra.addFlashAttribute("success", "Event created.");
+        } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events";
     }
 
     @PostMapping("/events/{id}")
     public String updateEvent(@PathVariable Long id, @RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
                                @RequestParam String description, @RequestParam(required = false) String coverImageUrl, @RequestParam(required = false) String videoUrl,
-                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published, RedirectAttributes ra) {
-        try { events.save(id, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null); ra.addFlashAttribute("success", "Event updated."); }
+                               @RequestParam(required = false) String photoGalleryUrl, @RequestParam(required = false) String published,
+                               @RequestParam(required = false) List<String> photos, RedirectAttributes ra) {
+        try {
+            events.save(id, title, eventDate, location, description, coverImageUrl, videoUrl, photoGalleryUrl, published != null);
+            events.addPhotos(id, photos);
+            ra.addFlashAttribute("success", "Event updated.");
+        } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/events/" + id + "/edit";
+    }
+
+    @PostMapping("/events/photos/{photoId}/delete")
+    public String deleteEventPhoto(@PathVariable Long photoId, @RequestParam Long eventId, RedirectAttributes ra) {
+        try { events.deletePhoto(photoId); ra.addFlashAttribute("success", "Photo removed."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
-        return "redirect:/admin/events";
+        return "redirect:/admin/events/" + eventId + "/edit";
     }
 
     @PostMapping("/events/{id}/delete")
