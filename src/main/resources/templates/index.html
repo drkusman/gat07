@@ -26,28 +26,37 @@
     <div class="stat red"><div class="n" th:text="${#numbers.formatInteger(stats.wards(),1,'COMMA')}">8,809</div><div class="l">Wards</div></div>
     <div class="stat"><div class="n" th:text="${#numbers.formatInteger(stats.pollingUnits(),1,'COMMA')}">174,427</div><div class="l">Polling units</div></div>
   </div>
-  <div class="card" th:if="${publicInfo.size() > 0}" style="margin-bottom:1.5rem">
+  <div class="grid cols-8-4" style="margin-bottom:1.5rem;align-items:start">
+    <div class="card">
+      <div style="position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px">
+        <iframe src="https://www.youtube-nocookie.com/embed/KvxAbGYzfX8?autoplay=1&mute=1&loop=1&playlist=KvxAbGYzfX8&controls=1&rel=0"
+          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
+          title="GAT 2027 video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+      </div>
+    </div>
+    <div class="card">
+      <h2 style="text-align:center">Our Leadership</h2>
+      <div class="grid" style="margin-top:1rem;justify-items:center">
+        <div class="leader lg"><img src="/img/tinubu.jpg" alt="President Bola Ahmed Tinubu"><b>H.E. Bola Ahmed Tinubu, GCFR</b><span class="muted">President, Federal Republic of Nigeria</span></div>
+      </div>
+      <div class="grid" style="margin-top:1.5rem;justify-items:center">
+        <div class="leader lg"><img src="/img/coordinator.jpg" alt="Prof. Ochugudu Achoda Ipuele"><b>Prof. Ochugudu Achoda Ipuele</b><span class="muted">National Coordinator</span></div>
+        <div class="leader lg"><img src="/img/chair.jpg" alt="H.E. Mrs Hanmo Akume"><b>H.E. Mrs Hanmo Akume</b><span class="muted">Founder and Board Chair</span></div>
+      </div>
+      <div class="grid" style="margin-top:1.5rem;justify-items:center">
+        <div class="leader"><img src="/img/leader-nwifuru.jpg" alt="His Excellency Rt. Hon. Francis Ogbonna Nwifuru"><b>H.E. Rt. Hon. Francis Ogbonna Nwifuru</b><span class="muted">Executive Governor of Ebonyi State<br>Grand Patron (South)</span></div>
+        <div class="leader"><img src="/img/leader-masari.png" alt="Hon. Ibrahim Kabir Masari"><b>Hon. Ibrahim Kabir Masari</b><span class="muted">S.A to the President on Political Affairs<br>Grand Patron (North)</span></div>
+        <div class="leader"><img src="/img/leader-franklin.png" alt="Amb. Chief Michael Babatunde Franklin"><b>Amb. Chief Michael Babatunde Franklin</b><span class="muted">National Patron (South)</span></div>
+        <div class="leader"><img src="/img/leader-gizo.png" alt="Chief Amos Yaduksu Gizo"><b>Chief Amos Yaduksu Gizo</b><span class="muted">Chairman of Chairmen, River Basin Development Authority<br>National Patron (North)</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="card" th:if="${publicInfo.size() > 0}">
     <h2 style="text-align:center">General Information</h2>
     <div th:each="a, aStat : ${publicInfo}" th:style="${aStat.first} ? 'margin-top:1rem' : 'margin-top:1rem;border-top:1px solid var(--line);padding-top:1rem'">
       <h3 style="margin-bottom:.3rem" th:text="${a.title}"></h3>
       <p class="muted" style="white-space:pre-wrap" th:text="${a.body}"></p>
       <div class="small muted" th:text="${#temporals.format(a.createdAt, 'd MMM yyyy')}"></div>
-    </div>
-  </div>
-  <div class="card">
-    <h2 style="text-align:center">Our Leadership</h2>
-    <div class="grid cols-3" style="margin-top:1rem;justify-items:center">
-      <div class="leader lg"><img src="/img/tinubu.jpg" alt="President Bola Ahmed Tinubu"><b>H.E. Bola Ahmed Tinubu, GCFR</b><span class="muted">President, Federal Republic of Nigeria</span></div>
-    </div>
-    <div class="grid cols-3" style="margin-top:2rem;justify-items:center">
-      <div class="leader lg"><img src="/img/coordinator.jpg" alt="Prof. Ochugudu Achoda Ipuele"><b>Prof. Ochugudu Achoda Ipuele</b><span class="muted">National Coordinator</span></div>
-      <div class="leader lg"><img src="/img/chair.jpg" alt="H.E. Mrs Hanmo Akume"><b>H.E. Mrs Hanmo Akume</b><span class="muted">Founder and Board Chair</span></div>
-    </div>
-    <div class="grid cols-4" style="margin-top:2rem;justify-items:center">
-      <div class="leader"><img src="/img/leader-nwifuru.jpg" alt="His Excellency Rt. Hon. Francis Ogbonna Nwifuru"><b>H.E. Rt. Hon. Francis Ogbonna Nwifuru</b><span class="muted">Executive Governor of Ebonyi State<br>Grand Patron (South)</span></div>
-      <div class="leader"><img src="/img/leader-masari.png" alt="Hon. Ibrahim Kabir Masari"><b>Hon. Ibrahim Kabir Masari</b><span class="muted">S.A to the President on Political Affairs<br>Grand Patron (North)</span></div>
-      <div class="leader"><img src="/img/leader-franklin.png" alt="Amb. Chief Michael Babatunde Franklin"><b>Amb. Chief Michael Babatunde Franklin</b><span class="muted">National Patron (South)</span></div>
-      <div class="leader"><img src="/img/leader-gizo.png" alt="Chief Amos Yaduksu Gizo"><b>Chief Amos Yaduksu Gizo</b><span class="muted">Chairman of Chairmen, River Basin Development Authority<br>National Patron (North)</span></div>
     </div>
   </div>
 </main>

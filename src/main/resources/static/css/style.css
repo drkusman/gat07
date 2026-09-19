@@ -126,6 +126,7 @@ nav.main a:hover, nav.main a.active { background: var(--green-light); color: var
 .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.25rem; }
 .card + .card { margin-top: 1rem; }
 .grid { display: grid; gap: 1rem; }
+.grid.cols-8-4 { grid-template-columns: 2fr 1fr; }
 .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
@@ -230,6 +231,7 @@ dl.kv dt { color: var(--muted); } dl.kv dd { margin: 0; }
 .event-link.gold { color: var(--green); }
 
 @media (max-width: 800px) {
+  .grid.cols-8-4 { grid-template-columns: 1fr; }
   .hero .inner { grid-template-columns: 1fr; }
   .hero h1 { font-size: 1.7rem; }
   header.topbar .inner { flex-wrap: wrap; }
