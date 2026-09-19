@@ -43,7 +43,7 @@
             <option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option>
           </select>
           <button class="btn sm" th:disabled="${self}">Save role</button></form>
-        <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post" onsubmit="return confirm('Change this member\'s status?')">
+        <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post">
           <input type="hidden" name="status" th:value="${m.active} ? 'SUSPENDED' : 'ACTIVE'"><button class="btn sm" th:classappend="${m.active} ? 'danger' : ''" th:disabled="${self}" th:text="${m.active} ? 'Suspend' : 'Reactivate'"></button></form>
         <form th:action="@{/admin/members/{id}/password(id=${m.id})}" method="post" class="btn-row">
           <input name="password" placeholder="New password" minlength="6" required style="width:170px"><button class="btn secondary sm">Reset password</button></form>

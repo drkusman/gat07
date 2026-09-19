@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Suspended Members</h2><span class="pill red" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' suspended'"></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Member</th><th>Phone</th><th>Role</th><th>Location</th><th>Suspended</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="row : ${rows}" th:with="m=${row.member()}">
+          <td><a th:href="@{/admin/members/{id}(id=${m.id})}"><b th:text="${m.fullName}"></b></a><div class="mini" th:text="${m.memberCode}"></div></td>
+          <td class="mini" th:text="${m.phone}"></td>
+          <td class="mini" th:text="${#strings.toLowerCase(m.role).replace('_',' ')}"></td>
+          <td class="mini" th:text="${row.location()}"></td>
+          <td class="mini" th:text="${#temporals.format(m.updatedAt, 'd MMM yyyy, HH:mm')}"></td>
+          <td class="no-print" style="white-space:nowrap">
+            <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post" style="display:inline">
+              <input type="hidden" name="status" value="ACTIVE">
+              <input type="hidden" name="back" value="/admin/members/suspended">
+              <button class="btn sm" type="submit">Reactivate</button></form>
+          </td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="6" class="empty">No suspended members</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

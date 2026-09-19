@@ -74,6 +74,7 @@ public class AdminController {
             nav.add(NavItem.of("/admin/promotions", "Pending Promotions", "★", "Operations").withCount(pendingCount));
         }
         if (admin) {
+            nav.add(NavItem.of("/admin/members/suspended", "Suspended Members", "⛔", "Operations").withCount(members.countByStatus(MemberStatus.SUSPENDED)));
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
         }
@@ -154,6 +155,24 @@ public class AdminController {
         return "admin/members";
     }
 
+    public record SuspendedRow(Member member, String location) {}
+
+    @GetMapping("/members/suspended")
+    public String suspendedMembers(@ModelAttribute AdminFilter f, Model model) {
+        Member u = shell(model, "Suspended Members", f);
+        if (!u.isAdmin()) return "redirect:/admin";
+        List<Member> suspended = members.findByStatusOrderByUpdatedAtDesc(MemberStatus.SUSPENDED);
+        model.addAttribute("rows", suspended.stream().map(m -> new SuspendedRow(m, locationLabel(m))).toList());
+        return "admin/suspended";
+    }
+
+    private String locationLabel(Member m) {
+        String state = m.getStateId() == null ? null : states.findById(m.getStateId()).map(s -> s.getName()).orElse(null);
+        if (state != null) return state;
+        String zone = m.getZoneId() == null ? null : zones.findById(m.getZoneId()).map(z -> z.getName()).orElse(null);
+        return zone != null ? zone + " zone" : "—";
+    }
+
     @GetMapping("/members/{id}")
     public String memberDetail(@PathVariable Long id, @ModelAttribute AdminFilter f, Model model) {
         Member u = shell(model, "Member profile", f);
@@ -220,10 +239,10 @@ public class AdminController {
     }
 
     @PostMapping("/members/{id}/status")
-    public String setStatus(@PathVariable Long id, @RequestParam String status, RedirectAttributes ra) {
+    public String setStatus(@PathVariable Long id, @RequestParam String status, @RequestParam(required = false) String back, RedirectAttributes ra) {
         try { memberService.setStatus(currentUser.require(), id, MemberStatus.valueOf(status)); ra.addFlashAttribute("success", "Status updated."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
-        return "redirect:/admin/members/" + id;
+        return "redirect:" + (back != null && back.startsWith("/admin/") ? back : "/admin/members/" + id);
     }
 
     @PostMapping("/members/{id}/password")
