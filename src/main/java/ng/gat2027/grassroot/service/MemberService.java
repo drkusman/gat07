@@ -2,9 +2,11 @@ package ng.gat2027.grassroot.service;
 
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.domain.MemberStatus;
+import ng.gat2027.grassroot.domain.PasswordResetToken;
 import ng.gat2027.grassroot.domain.PromotionStage;
 import ng.gat2027.grassroot.domain.Role;
 import ng.gat2027.grassroot.repo.MemberRepository;
+import ng.gat2027.grassroot.repo.PasswordResetTokenRepository;
 import ng.gat2027.grassroot.repo.PollingUnitRepository;
 import ng.gat2027.grassroot.web.forms.ProfileForm;
 import ng.gat2027.grassroot.web.forms.RegisterForm;
@@ -20,11 +22,16 @@ import java.time.ZoneOffset;
 public class MemberService {
     public static class MemberException extends RuntimeException { public MemberException(String m) { super(m); } }
 
+    private static final long RESET_TOKEN_TTL_MINUTES = 30;
+
     private final MemberRepository members; private final PollingUnitRepository pus; private final LocationService locations;
     private final SettingsService settings; private final PasswordEncoder encoder; private final JdbcTemplate jdbc;
+    private final PasswordResetTokenRepository resetTokens; private final MailService mail;
 
-    public MemberService(MemberRepository members, PollingUnitRepository pus, LocationService locations, SettingsService settings, PasswordEncoder encoder, JdbcTemplate jdbc) {
+    public MemberService(MemberRepository members, PollingUnitRepository pus, LocationService locations, SettingsService settings, PasswordEncoder encoder, JdbcTemplate jdbc,
+                          PasswordResetTokenRepository resetTokens, MailService mail) {
         this.members = members; this.pus = pus; this.locations = locations; this.settings = settings; this.encoder = encoder; this.jdbc = jdbc;
+        this.resetTokens = resetTokens; this.mail = mail;
     }
 
     @Transactional
@@ -173,6 +180,46 @@ public class MemberService {
         if (password == null || password.length() < 6) throw new MemberException("Password must be at least 6 characters");
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
         m.setPasswordHash(encoder.encode(password)); members.save(m);
+    }
+
+    // ----- self-service password reset (forgot password) -----
+    /** Returns the masked email the link was sent to, or null if no matching/emailable account was found (caller shows a generic message in that case). */
+    @Transactional
+    public String requestPasswordReset(String phone, String resetBaseUrl) {
+        Member m = members.findByPhone(Codes.normalizePhone(phone)).orElse(null);
+        if (m == null || m.getEmail() == null || m.getEmail().isBlank() || !m.isActive()) return null;
+        PasswordResetToken t = new PasswordResetToken();
+        t.setMemberId(m.getId());
+        t.setToken(Codes.secureToken());
+        t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(RESET_TOKEN_TTL_MINUTES));
+        resetTokens.save(t);
+        mail.sendPasswordReset(m.getEmail(), m.getFirstName(), resetBaseUrl + "?token=" + t.getToken());
+        return maskEmail(m.getEmail());
+    }
+
+    private static String maskEmail(String email) {
+        int at = email.indexOf('@');
+        if (at <= 0) return email;
+        String local = email.substring(0, at), domain = email.substring(at);
+        String visible = local.length() <= 2 ? local.substring(0, 1) : local.substring(0, 2);
+        return visible + "***" + domain;
+    }
+
+    public boolean isResetTokenValid(String token) {
+        return token != null && resetTokens.findByToken(token).map(PasswordResetToken::isValid).orElse(false);
+    }
+
+    @Transactional
+    public void resetPasswordWithToken(String token, String password) {
+        if (password == null || password.length() < 6) throw new MemberException("Password must be at least 6 characters");
+        PasswordResetToken t = resetTokens.findByToken(token == null ? "" : token).filter(PasswordResetToken::isValid)
+            .orElseThrow(() -> new MemberException("This reset link is invalid or has expired. Please request a new one."));
+        Member m = members.findById(t.getMemberId()).orElseThrow(() -> new MemberException("Member not found"));
+        m.setPasswordHash(encoder.encode(password));
+        members.save(m);
+        t.setUsedAt(LocalDateTime.now(ZoneOffset.UTC));
+        resetTokens.save(t);
+        jdbc.update("DELETE FROM persistent_logins WHERE username = ?", m.getPhone());
     }
 
     private String uniqueReferralCode() {

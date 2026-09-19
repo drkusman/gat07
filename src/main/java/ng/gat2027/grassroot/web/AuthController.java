@@ -19,6 +19,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @Controller
 public class AuthController {
@@ -30,12 +31,53 @@ public class AuthController {
     }
 
     @GetMapping("/login")
-    public String login(@RequestParam(required = false) String next, @RequestParam(required = false) String error, @RequestParam(required = false) String logout, Model model) {
+    public String login(@RequestParam(required = false) String next, @RequestParam(required = false) String error, @RequestParam(required = false) String logout,
+                         @RequestParam(required = false) String reset, Model model) {
         var u = currentUser.get();
         if (u.isPresent()) return "redirect:" + (next != null && next.startsWith("/") ? next : u.get().isStaff() ? "/admin" : "/dashboard");
         model.addAttribute("next", next);
         model.addAttribute("error", error != null);
+        model.addAttribute("reset", reset != null);
         return "login";
+    }
+
+    @GetMapping("/forgot-password")
+    public String forgotPasswordForm() {
+        return "forgot-password";
+    }
+
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestParam String phone, HttpServletRequest request, Model model) {
+        String resetBaseUrl = ServletUriComponentsBuilder.fromContextPath(request).path("/reset-password").toUriString();
+        String maskedEmail = memberService.requestPasswordReset(phone, resetBaseUrl);
+        model.addAttribute("sent", true);
+        model.addAttribute("maskedEmail", maskedEmail);
+        return "forgot-password";
+    }
+
+    @GetMapping("/reset-password")
+    public String resetPasswordForm(@RequestParam(required = false) String token, Model model) {
+        model.addAttribute("token", token);
+        model.addAttribute("valid", memberService.isResetTokenValid(token));
+        return "reset-password";
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestParam String token, @RequestParam String password, @RequestParam String password2, Model model) {
+        model.addAttribute("token", token);
+        if (!password.equals(password2)) {
+            model.addAttribute("valid", true);
+            model.addAttribute("error", "Passwords do not match");
+            return "reset-password";
+        }
+        try {
+            memberService.resetPasswordWithToken(token, password);
+            return "redirect:/login?reset=1";
+        } catch (MemberService.MemberException e) {
+            model.addAttribute("valid", memberService.isResetTokenValid(token));
+            model.addAttribute("error", e.getMessage());
+            return "reset-password";
+        }
     }
 
     @GetMapping("/register")

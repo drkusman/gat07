@@ -28,6 +28,20 @@ spring:
   h2:
     console:
       enabled: false
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
 
 server:
   port: ${PORT:8084}
@@ -54,6 +68,8 @@ gat:
     csv: ${POLLING_UNITS_CSV:classpath:data/polling-units.csv}
     on-startup: ${GAT_IMPORT_ON_STARTUP:true}
   remember-me-key: ${GAT_REMEMBER_KEY:gat2027-forward-together}
+  mail:
+    from: ${MAIL_FROM:GAT 2027 <no-reply@gat2027.ng>}
 
 logging:
   level:

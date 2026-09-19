@@ -9,13 +9,14 @@
     <p class="muted">Log in with the phone number you registered with.</p>
     <div class="alert error" th:if="${error}">Incorrect phone number or password, or the account is suspended.</div>
     <div class="alert success" th:if="${param.logout != null}">You have been logged out.</div>
+    <div class="alert success" th:if="${reset}">Your password has been reset. You can now log in with your new password.</div>
     <form th:action="@{/login}" method="post">
       <input type="hidden" name="next" th:if="${next != null}" th:value="${next}">
       <div class="field"><label>Phone number</label><input name="phone" type="tel" placeholder="0803 123 4567" required autocomplete="username"></div>
       <div class="field" style="margin-top:.8rem"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
       <button class="btn" type="submit" style="width:100%;margin-top:1rem">Log in</button>
     </form>
-    <p class="small muted" style="margin-top:1rem">Not yet a member? <a href="/register">Register here</a>. Forgot your password? Contact your coordinator to reset it.</p>
+    <p class="small muted" style="margin-top:1rem">Not yet a member? <a href="/register">Register here</a>. <a href="/forgot-password">Forgot your password?</a></p>
   </div>
 </main>
 <th:block th:replace="~{fragments/site :: siteFooter(false)}"></th:block>

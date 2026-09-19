@@ -1,6 +1,7 @@
 package ng.gat2027.grassroot.service;
 
 import java.security.SecureRandom;
+import java.util.Base64;
 
 /** Member / referral codes and phone normalisation. */
 public final class Codes {
@@ -14,7 +15,14 @@ public final class Codes {
         return sb.toString();
     }
 
-    public static String memberCode(long n) { return String.format("GAT-%06d", n); }
+    /** High-entropy, URL-safe token for one-time links (password reset, etc.) - not meant to be typed by a human. */
+    public static String secureToken() {
+        byte[] bytes = new byte[32];
+        RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    public static String memberCode(long n) { return String.format("GAT-%010d", n); }
 
     /** 0803..., +234803..., 234803... -> 0803... */
     public static String normalizePhone(String p) {
