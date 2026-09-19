@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Announcements</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span>
+      <div class="act"><a class="btn sm" href="/admin/announcements/new">+ New announcement</a></div></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Posted</th><th>Title</th><th>Shown to</th><th>Status</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="row : ${rows}" th:with="a=${row.announcement()}">
+          <td class="mini" th:text="${#temporals.format(a.createdAt, 'd MMM yyyy')}"></td>
+          <td><b th:text="${a.title}"></b></td>
+          <td class="mini">
+            <span class="pill" th:classappend="${a.audience.name() == 'PUBLIC'} ? 'gold' : 'blue'" th:text="${row.scopeLabel()}"></span>
+          </td>
+          <td><span class="pill" th:classappend="${a.published} ? '' : 'red'" th:text="${a.published} ? 'published' : 'draft'"></span></td>
+          <td class="no-print" style="white-space:nowrap">
+            <a class="btn secondary sm" th:href="@{/admin/announcements/{id}/edit(id=${a.id})}">Edit</a>
+            <form th:action="@{/admin/announcements/{id}/delete(id=${a.id})}" method="post" style="display:inline" onsubmit="return confirm('Delete this announcement?')">
+              <button class="btn sm danger" type="submit">Delete</button></form>
+          </td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="5" class="empty">No announcements yet — add your first one</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

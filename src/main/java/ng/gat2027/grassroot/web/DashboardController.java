@@ -6,6 +6,7 @@ import ng.gat2027.grassroot.repo.FieldReportRepository;
 import ng.gat2027.grassroot.repo.MemberRepository;
 import ng.gat2027.grassroot.security.CurrentUser;
 import ng.gat2027.grassroot.service.AnalyticsService;
+import ng.gat2027.grassroot.service.AnnouncementService;
 import ng.gat2027.grassroot.service.LocationService;
 import ng.gat2027.grassroot.service.MemberService;
 import ng.gat2027.grassroot.service.SettingsService;
@@ -24,9 +25,12 @@ import java.util.List;
 public class DashboardController {
     private final CurrentUser currentUser; private final AnalyticsService analytics; private final MemberService memberService;
     private final MemberRepository members; private final FieldReportRepository reports; private final SettingsService settings;
+    private final AnnouncementService announcements;
 
-    public DashboardController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, MemberRepository members, FieldReportRepository reports, SettingsService settings) {
+    public DashboardController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, MemberRepository members, FieldReportRepository reports, SettingsService settings,
+                               AnnouncementService announcements) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.members = members; this.reports = reports; this.settings = settings;
+        this.announcements = announcements;
     }
 
     /** Sidebar + common shell attributes for every member page. */
@@ -58,6 +62,7 @@ public class DashboardController {
         model.addAttribute("refs", analytics.referrals(m.getId()));
         model.addAttribute("myReports", reports.findByMemberIdOrderByCreatedAtDesc(m.getId()));
         model.addAttribute("coverage", analytics.coverage(m));
+        model.addAttribute("stateNews", announcements.memberNews(m.getStateId()));
         return "dashboard/overview";
     }
 

@@ -3,6 +3,7 @@ package ng.gat2027.grassroot.web;
 import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.EventPhoto;
 import ng.gat2027.grassroot.service.AnalyticsService;
+import ng.gat2027.grassroot.service.AnnouncementService;
 import ng.gat2027.grassroot.service.EventService;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,12 +21,17 @@ public class HomeController {
 
     private final AnalyticsService analytics;
     private final EventService events;
+    private final AnnouncementService announcements;
 
-    public HomeController(AnalyticsService analytics, EventService events) { this.analytics = analytics; this.events = events; }
+    public HomeController(AnalyticsService analytics, EventService events, AnnouncementService announcements) {
+        this.analytics = analytics; this.events = events; this.announcements = announcements;
+    }
 
     @GetMapping("/")
     public String home(Model model) {
         model.addAttribute("stats", analytics.locationStats());
+        model.addAttribute("totalMembers", analytics.totalMembersDisplay());
+        model.addAttribute("publicInfo", announcements.publicInfo());
         return "index";
     }
 

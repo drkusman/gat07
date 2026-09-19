@@ -210,4 +210,8 @@ public class AnalyticsService {
     }
 
     public long openReportsFor(Member user) { return count("SELECT COUNT(*) FROM field_reports r JOIN members m ON m.id = r.member_id WHERE " + where(user, new AdminFilter()).sql + " AND r.status = 'OPEN'", where(user, new AdminFilter()).params); }
+
+    /** Public-facing member count on the home page starts at a 7,000,000 baseline and counts up from every real registration. */
+    private static final long MEMBER_COUNT_BASELINE = 7_000_000L;
+    public long totalMembersDisplay() { return MEMBER_COUNT_BASELINE + count("SELECT COUNT(*) FROM members", List.of()); }
 }

@@ -20,15 +20,19 @@
 
 <main class="container">
   <div class="grid cols-4" style="margin-bottom:1.5rem">
-    <div class="stat"><div class="n" th:text="${#numbers.formatInteger(stats.states(),1,'COMMA')}">37</div><div class="l">States + FCT</div></div>
-    <div class="stat blue"><div class="n" th:text="${#numbers.formatInteger(stats.lgas(),1,'COMMA')}">774</div><div class="l">Local Government Areas</div></div>
-    <div class="stat gold"><div class="n" th:text="${#numbers.formatInteger(stats.wards(),1,'COMMA')}">8,809</div><div class="l">Wards</div></div>
-    <div class="stat red"><div class="n" th:text="${#numbers.formatInteger(stats.pollingUnits(),1,'COMMA')}">174,427</div><div class="l">Polling units</div></div>
+    <div class="stat" style="background:var(--green-light)"><div class="n" style="color:var(--green-dark)" th:text="${#numbers.formatInteger(totalMembers,1,'COMMA')}">7,000,000</div><div class="l">Registered members</div></div>
+    <div class="stat blue"><div class="n" th:text="${#numbers.formatInteger(stats.states(),1,'COMMA')}">37</div><div class="l">States + FCT</div></div>
+    <div class="stat gold"><div class="n" th:text="${#numbers.formatInteger(stats.lgas(),1,'COMMA')}">774</div><div class="l">Local Government Areas</div></div>
+    <div class="stat red"><div class="n" th:text="${#numbers.formatInteger(stats.wards(),1,'COMMA')}">8,809</div><div class="l">Wards</div></div>
+    <div class="stat"><div class="n" th:text="${#numbers.formatInteger(stats.pollingUnits(),1,'COMMA')}">174,427</div><div class="l">Polling units</div></div>
   </div>
-  <div class="grid cols-3" style="margin-bottom:1.5rem">
-    <div class="card feature"><div class="ic">📝</div><div><h3>Registration</h3><p class="muted">Select your geopolitical zone, state, LGA, ward and polling unit, pin its GPS location on the map, and complete your biodata profile.</p></div></div>
-    <div class="card feature"><div class="ic">🔗</div><div><h3>Referrals</h3><p class="muted">Every member gets a unique referral code and link. Track everyone you bring in, and everyone they bring in, from your dashboard.</p></div></div>
-    <div class="card feature"><div class="ic">📊</div><div><h3>Reporting</h3><p class="muted">File field reports from your polling unit. Coordinators see live membership and referral analytics by zone, state, LGA, ward and PU.</p></div></div>
+  <div class="card" th:if="${publicInfo.size() > 0}" style="margin-bottom:1.5rem">
+    <h2 style="text-align:center">General Information</h2>
+    <div th:each="a, aStat : ${publicInfo}" th:style="${aStat.first} ? 'margin-top:1rem' : 'margin-top:1rem;border-top:1px solid var(--line);padding-top:1rem'">
+      <h3 style="margin-bottom:.3rem" th:text="${a.title}"></h3>
+      <p class="muted" style="white-space:pre-wrap" th:text="${a.body}"></p>
+      <div class="small muted" th:text="${#temporals.format(a.createdAt, 'd MMM yyyy')}"></div>
+    </div>
   </div>
   <div class="card">
     <h2 style="text-align:center">Our Leadership</h2>
@@ -45,15 +49,6 @@
       <div class="leader"><img src="/img/leader-franklin.png" alt="Amb. Chief Michael Babatunde Franklin"><b>Amb. Chief Michael Babatunde Franklin</b><span class="muted">National Patron (South)</span></div>
       <div class="leader"><img src="/img/leader-gizo.png" alt="Chief Amos Yaduksu Gizo"><b>Chief Amos Yaduksu Gizo</b><span class="muted">Chairman of Chairmen, River Basin Development Authority<br>National Patron (North)</span></div>
     </div>
-  </div>
-  <div class="card" style="margin-top:1rem">
-    <h2>How it works</h2>
-    <ol style="margin:0;padding-left:1.2rem">
-      <li><b>Register</b> with your phone number and choose your polling unit down to its exact map location.</li>
-      <li><b>Share your referral link</b> with friends, family and neighbours in your ward.</li>
-      <li><b>Report</b> activities, incidents and voter mobilisation progress from the field.</li>
-      <li><b>Coordinators monitor</b> coverage across all 6 zones, 37 states, 774 LGAs and every ward.</li>
-    </ol>
   </div>
 </main>
 <th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>

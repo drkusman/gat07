@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="two">
+    <div class="panel"><div class="ph"><h2 th:text="${a.id == null} ? 'New announcement' : 'Edit announcement'"></h2></div>
+      <form th:action="${a.id == null} ? @{/admin/announcements} : @{/admin/announcements/{id}(id=${a.id})}" method="post" class="pb">
+        <div class="field"><label>Title</label><input name="title" type="text" required maxlength="200" th:value="${a.title}"></div>
+        <div class="field" style="margin-top:.8rem"><label>Message</label><textarea name="body" required rows="6" th:text="${a.body}"></textarea></div>
+        <div class="form-grid" style="margin-top:.8rem">
+          <div class="field">
+            <label>Show to</label>
+            <select name="audience" id="audienceSelect">
+              <option value="PUBLIC" th:selected="${a.audience == null or a.audience.name() == 'PUBLIC'}">Public — home page (General Information)</option>
+              <option value="MEMBERS" th:selected="${a.audience != null and a.audience.name() == 'MEMBERS'}">Registered members (Breaking News)</option>
+            </select>
+          </div>
+          <div class="field" id="stateField">
+            <label>State (optional)</label>
+            <select name="stateId">
+              <option value="">All states (nationwide)</option>
+              <option th:each="s : ${stateOptions}" th:value="${s.id}" th:text="${s.name}" th:selected="${a.stateId != null and a.stateId == s.id}"></option>
+            </select>
+            <span class="help">Leave blank to show this to every member; pick a state to target only members registered there.</span>
+          </div>
+        </div>
+        <label style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;font-weight:500"><input type="checkbox" name="published" th:checked="${a.id == null} ? true : ${a.published}" style="width:auto"> Published (visible now)</label>
+        <div class="btn-row" style="margin-top:1rem">
+          <button class="btn" type="submit" th:text="${a.id == null} ? 'Post announcement' : 'Save changes'"></button>
+          <a class="btn secondary" href="/admin/announcements">Cancel</a>
+        </div>
+      </form>
+    </div>
+    <div class="panel"><div class="ph"><h2>About announcements</h2></div><div class="pb">
+      <ul class="muted" style="font-size:.9rem;padding-left:1.2rem;line-height:1.7">
+        <li><b>Public</b> announcements appear in a "General Information" section on the public home page — anyone can see them.</li>
+        <li><b>Registered members</b> announcements appear as "State Breaking News" on members' own dashboards.</li>
+        <li>Leaving the state blank for a members announcement shows it to every member nationwide; picking a state shows it only to members registered there.</li>
+        <li>Unpublish (uncheck "Published") to hide an announcement without deleting it.</li>
+      </ul></div></div>
+  </div>
+  <script>
+  (function () {
+    var audience = document.getElementById('audienceSelect');
+    var stateField = document.getElementById('stateField');
+    function sync() { stateField.style.display = audience.value === 'MEMBERS' ? '' : 'none'; }
+    audience.addEventListener('change', sync);
+    sync();
+  })();
+  </script>
+</div>
+</body>
+</html>

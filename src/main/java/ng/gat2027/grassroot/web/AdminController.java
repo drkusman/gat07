@@ -1,5 +1,7 @@
 package ng.gat2027.grassroot.web;
 
+import ng.gat2027.grassroot.domain.Announcement;
+import ng.gat2027.grassroot.domain.AnnouncementAudience;
 import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.domain.MemberStatus;
@@ -29,15 +31,18 @@ import java.util.Objects;
 public class AdminController {
     public record EventRow(Event event, String scopeLabel) {}
     public record PromotionRow(Member member, String requestedByName) {}
+    public record AnnouncementRow(Announcement announcement, String scopeLabel) {}
 
     private final CurrentUser currentUser; private final AnalyticsService analytics; private final MemberService memberService; private final ReportService reportService;
     private final SettingsService settings; private final CsvImportService importer; private final MemberRepository members; private final EventService events;
     private final ZoneRepository zones; private final StateRepository states; private final LgaRepository lgas; private final WardRepository wards; private final PollingUnitRepository pus;
+    private final AnnouncementService announcements;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
-                           MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus) {
+                           MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus,
+                           AnnouncementService announcements) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
-        this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus;
+        this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.announcements = announcements;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -74,6 +79,7 @@ public class AdminController {
             nav.add(NavItem.of("/admin/promotions", "Pending Promotions", "★", "Operations").withCount(pendingCount));
         }
         if (admin) {
+            nav.add(NavItem.of("/admin/announcements", "Announcements", "📣", "Operations"));
             nav.add(NavItem.of("/admin/members/suspended", "Suspended Members", "⛔", "Operations").withCount(members.countByStatus(MemberStatus.SUSPENDED)));
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
@@ -415,6 +421,66 @@ public class AdminController {
         if (stateId != null) return states.findById(stateId).map(s -> s.getName() + " State").orElse("A state");
         if (zoneId != null) return zones.findById(zoneId).map(z -> z.getName() + " zone (all states)").orElse("A zone");
         return "Nationwide";
+    }
+
+    @GetMapping("/announcements")
+    public String announcementsList(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Announcements", f);
+        model.addAttribute("rows", announcements.all().stream().map(a -> new AnnouncementRow(a, announcementScopeLabel(a))).toList());
+        return "admin/announcements";
+    }
+
+    @GetMapping("/announcements/new")
+    public String newAnnouncementForm(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "New announcement", f);
+        Announcement a = new Announcement();
+        a.setAudience(AnnouncementAudience.PUBLIC);
+        model.addAttribute("a", a);
+        model.addAttribute("stateOptions", states.findAllByOrderByNameAsc());
+        return "admin/announcement-form";
+    }
+
+    @GetMapping("/announcements/{id}/edit")
+    public String editAnnouncementForm(@PathVariable Long id, @ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Edit announcement", f);
+        Announcement a = announcements.find(id).orElse(null);
+        if (a == null) return "redirect:/admin/announcements";
+        model.addAttribute("a", a);
+        model.addAttribute("stateOptions", states.findAllByOrderByNameAsc());
+        return "admin/announcement-form";
+    }
+
+    @PostMapping("/announcements")
+    public String createAnnouncement(@RequestParam String title, @RequestParam String body, @RequestParam AnnouncementAudience audience,
+                                      @RequestParam(required = false) Long stateId, @RequestParam(required = false) String published, RedirectAttributes ra) {
+        try {
+            announcements.save(null, title, body, audience, stateId, published != null, currentUser.require().getId());
+            ra.addFlashAttribute("success", "Announcement created.");
+        } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/announcements";
+    }
+
+    @PostMapping("/announcements/{id}")
+    public String updateAnnouncement(@PathVariable Long id, @RequestParam String title, @RequestParam String body, @RequestParam AnnouncementAudience audience,
+                                      @RequestParam(required = false) Long stateId, @RequestParam(required = false) String published, RedirectAttributes ra) {
+        try {
+            announcements.save(id, title, body, audience, stateId, published != null, currentUser.require().getId());
+            ra.addFlashAttribute("success", "Announcement updated.");
+        } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/announcements/" + id + "/edit";
+    }
+
+    @PostMapping("/announcements/{id}/delete")
+    public String deleteAnnouncement(@PathVariable Long id, RedirectAttributes ra) {
+        try { announcements.delete(id); ra.addFlashAttribute("success", "Announcement deleted."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/announcements";
+    }
+
+    private String announcementScopeLabel(Announcement a) {
+        if (a.getAudience() == AnnouncementAudience.PUBLIC) return "Public (home page)";
+        if (a.getStateId() == null) return "All members (nationwide)";
+        return states.findById(a.getStateId()).map(s -> s.getName() + " members").orElse("A state's members");
     }
 
     @GetMapping("/settings")
