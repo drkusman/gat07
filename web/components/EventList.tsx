@@ -22,7 +22,7 @@ function MediaLinks({ event }: { event: GatEvent }) {
 export default function EventList({ events }: { events: GatEvent[] }) {
   if (events.length === 0) {
     return (
-      <div className="rounded-xl border border-line bg-white p-8 text-center text-muted">
+      <div className="rounded-xl border border-line bg-card p-8 text-center text-muted">
         No events published yet — check back soon.
       </div>
     );
@@ -31,7 +31,7 @@ export default function EventList({ events }: { events: GatEvent[] }) {
   return (
     <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
       {events.map((event) => (
-        <article key={event.id} className="rounded-xl border border-line bg-white shadow-sm overflow-hidden flex flex-col">
+        <article key={event.id} className="rounded-xl border border-line bg-card shadow-sm overflow-hidden flex flex-col">
           <div className="aspect-[16/9] bg-green-light flex items-center justify-center overflow-hidden">
             <span className="text-4xl">📅</span>
           </div>

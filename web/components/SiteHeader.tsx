@@ -1,4 +1,5 @@
 import { APP_BASE } from "@/lib/api";
+import ThemeToggle from "./ThemeToggle";
 
 const navLinkClass = (isActive: boolean) =>
   `px-3 py-2 rounded-lg font-medium hover:bg-green-light hover:text-green-dark ${isActive ? "bg-green-light text-green-dark" : "text-ink"}`;
@@ -7,8 +8,8 @@ export default function SiteHeader({ active }: { active: "/" | "/events" }) {
   return (
     <>
       <div className="h-1.5 w-full" style={{ background: "linear-gradient(90deg, var(--green) 0 33%, #fff 33% 66%, var(--red) 66%)" }} />
-      <header className="bg-white border-b border-line sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4">
+      <header className="bg-card border-b border-line sticky top-0 z-50">
+        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
           <a href="/" className="flex items-center gap-3">
             <img src={`${APP_BASE}/img/logo.jpg`} alt="GAT 2027" className="h-12 w-auto rounded" />
             <div>
@@ -16,7 +17,7 @@ export default function SiteHeader({ active }: { active: "/" | "/events" }) {
               <div className="text-xs text-muted">GAT 2027 · Forward Together with PBAT</div>
             </div>
           </a>
-          <nav className="ml-auto flex gap-1">
+          <nav className="ml-auto flex items-center gap-1 flex-wrap">
             <a href="/events" className={navLinkClass(active === "/events")}>
               Events
             </a>
@@ -31,6 +32,7 @@ export default function SiteHeader({ active }: { active: "/" | "/events" }) {
             <a href={`${APP_BASE}/login`} className={navLinkClass(false)}>
               Log in
             </a>
+            <ThemeToggle />
           </nav>
         </div>
       </header>

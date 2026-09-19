@@ -1,6 +1,6 @@
 export default function SiteFooter() {
   return (
-    <footer className="bg-ink text-white text-center py-6 text-sm">
+    <footer className="text-white text-center py-6 text-sm" style={{ background: "#1c2430" }}>
       <b>GAT</b>
       <br />
       Grassroot Advocacy for Tinubu

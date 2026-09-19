@@ -40,6 +40,7 @@
           <button class="btn secondary sm" onclick="window.print()">🖨 Print</button>
           <a class="btn sm" th:href="@{/api/admin/members.csv} + ${filter.qs()}">⬇ Export CSV</a>
         </th:block>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
       </div>
     </header>
 

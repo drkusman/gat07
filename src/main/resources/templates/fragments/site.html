@@ -6,6 +6,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="${title} + ' · GAT 2027'">GAT 2027</title>
     <link rel="icon" href="/img/logo.jpg">
+    <script>
+    (function () {
+      var KEY = "gat-theme";
+      function currentTheme() {
+        var attr = document.documentElement.getAttribute("data-theme");
+        return attr || (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      }
+      function apply(theme) {
+        if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
+        else document.documentElement.removeAttribute("data-theme");
+      }
+      function syncToggleButtons() {
+        var dark = currentTheme() === "dark";
+        var label = dark ? "Switch to light mode" : "Switch to dark mode";
+        Array.prototype.forEach.call(document.querySelectorAll("[data-theme-toggle]"), function (btn) {
+          btn.textContent = dark ? "☀️" : "🌙";
+          btn.setAttribute("aria-label", label);
+          btn.setAttribute("title", label);
+        });
+      }
+      apply(localStorage.getItem(KEY));
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest && e.target.closest("[data-theme-toggle]");
+        if (!btn) return;
+        var next = currentTheme() === "dark" ? "light" : "dark";
+        localStorage.setItem(KEY, next);
+        apply(next);
+        syncToggleButtons();
+      });
+      document.addEventListener("DOMContentLoaded", syncToggleButtons);
+    })();
+    </script>
     <link rel="stylesheet" href="/css/style.css">
     <meta name="_csrf" th:content="${_csrf != null} ? ${_csrf.token} : ''">
     <meta name="_csrf_header" th:content="${_csrf != null} ? ${_csrf.headerName} : ''">
@@ -36,6 +68,7 @@
           <a th:if="${currentUser.staff}" href="/admin">Admin</a>
           <form th:action="@{/logout}" method="post" style="display:inline"><button type="submit" style="background:none;border:none;font:inherit;padding:.45rem .8rem;border-radius:8px;cursor:pointer;font-weight:500">Log out</button></form>
         </th:block>
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode">🌙</button>
       </nav>
     </div></header>
   </th:block>
