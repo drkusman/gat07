@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Pending Promotions</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' pending'"></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Member</th><th>Current role</th><th>Proposed role</th><th>Stage</th><th>Requested by</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="row : ${rows}" th:with="m=${row.member()}">
+          <td><a th:href="@{/admin/members/{id}(id=${m.id})}"><b th:text="${m.fullName}"></b></a><div class="mini" th:text="${m.memberCode}"></div></td>
+          <td class="mini" th:text="${#strings.toLowerCase(m.role).replace('_',' ')}"></td>
+          <td><span class="pill blue" th:text="${#strings.toLowerCase(m.pendingRole).replace('_',' ')}"></span></td>
+          <td class="mini" th:text="${m.pendingRoleStage.name() == 'ZONAL'} ? 'Awaiting Zonal approval' : 'Awaiting National approval'"></td>
+          <td class="mini" th:text="${row.requestedByName()}"></td>
+          <td class="no-print" style="white-space:nowrap">
+            <form th:action="@{/admin/promotions/{id}/approve(id=${m.id})}" method="post" style="display:inline">
+              <button class="btn sm" type="submit">Approve</button></form>
+            <form th:action="@{/admin/promotions/{id}/reject(id=${m.id})}" method="post" style="display:inline" onsubmit="return confirm('Reject this promotion request?')">
+              <button class="btn sm secondary" type="submit">Reject</button></form>
+          </td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="6" class="empty">No pending promotion requests</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

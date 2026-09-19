@@ -2,6 +2,7 @@ package ng.gat2027.grassroot.repo;
 
 import ng.gat2027.grassroot.domain.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
+import ng.gat2027.grassroot.domain.PromotionStage;
 import ng.gat2027.grassroot.domain.Role;
 import org.springframework.data.jpa.repository.Query;
 
@@ -20,5 +21,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     long countByWardId(Long id);
     long countByLgaId(Long id);
     long countByStateId(Long id);
+    long countByPendingRoleIsNotNull();
+    List<Member> findByPendingRoleIsNotNullOrderByIdDesc();
+    long countByPendingRoleIsNotNullAndZoneIdAndPendingRoleStage(Long zoneId, PromotionStage stage);
+    List<Member> findByPendingRoleIsNotNullAndZoneIdAndPendingRoleStageOrderByIdDesc(Long zoneId, PromotionStage stage);
     @Query("select coalesce(max(m.id), 0) from Member m") long maxId();
 }

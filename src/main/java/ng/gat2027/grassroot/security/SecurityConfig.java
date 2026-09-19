@@ -38,9 +38,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/", "/events", "/events/*/video", "/register", "/login", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
                                  "/api/locations/**", "/api/referral/**", "/api/events/**", "/actuator/health").permitAll()
-                .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/events/**", "/api/admin/import", "/admin/members/*/role",
+                .requestMatchers("/admin/locations/**", "/admin/settings/**", "/api/admin/import", "/admin/members/*/role",
                                  "/admin/members/*/status", "/admin/members/*/password").hasRole("ADMIN")
-                .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR", "GRAND_PATRON")
+                .requestMatchers("/admin/promotions/**").hasAnyRole("ADMIN", "ZONAL_COORDINATOR")
+                .requestMatchers("/admin/events/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR")
+                .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "GRAND_PATRON",
+                                 "LGA_COORDINATOR", "WARD_COORDINATOR", "POLLING_UNIT_COORDINATOR")
                 .anyRequest().authenticated())
             .formLogin(f -> f
                 .loginPage("/login")

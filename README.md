@@ -32,14 +32,17 @@ DATABASE_URL=postgresql://postgres:YOUR_PASSWORD@localhost:5432/gat2027
 **Default admin:** phone `08000000000`, password `admin1234` — change it after the first login (Profile & Settings), or set
 `GAT_ADMIN_PHONE` / `GAT_ADMIN_PASSWORD` before the first start.
 
-**Demo logins for every role** (seeded on first start alongside the admin, so all four roles can be tried immediately):
+**Demo logins for every role** (seeded on first start alongside the admin, so every role can be tried immediately):
 
 | Role | Phone | Password | Scope |
 |---|---|---|---|
 | Admin | `08000000000` | `admin1234` | All states |
 | Grand Patron | `08000000003` | `patron1234` | North Central zone only |
+| Zonal Coordinator | `08000000005` | `zonal1234` | North Central zone only |
 | State Coordinator | `08000000002` | `coord1234` | Benue State only |
 | Member | `08000000004` | `member1234` | — |
+
+Admins have full, unscoped view/edit rights over events. Zonal Coordinators can create and edit events within their own zone (which includes every state under it); State Coordinators can create and edit events within their own state only. Grand Patron remains a ceremonial/patron title and does not get event-management access.
 
 | Page | URL | Who |
 |---|---|---|

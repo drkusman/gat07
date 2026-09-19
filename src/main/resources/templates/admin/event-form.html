@@ -3,7 +3,8 @@
 <body>
 <div id="page">
   <div class="two">
-    <div class="panel"><div class="ph"><h2 th:text="${e.id == null} ? 'New event' : 'Edit event'"></h2></div>
+    <div class="panel"><div class="ph"><h2 th:text="${e.id == null} ? 'New event' : 'Edit event'"></h2>
+      <span class="pill" th:text="${scopeLabel}">Nationwide</span></div>
       <form th:action="${e.id == null} ? @{/admin/events} : @{/admin/events/{id}(id=${e.id})}" method="post" class="pb">
         <div class="form-grid">
           <div class="field"><label>Title</label><input name="title" type="text" required maxlength="160" th:value="${e.title}"></div>
@@ -54,6 +55,7 @@
         <li>Draft (unpublished) events are only visible here in the coordination centre.</li>
         <li>An event with uploaded photos gets its own tab in the Photo Gallery slideshow on the public Events page.</li>
         <li>Uploading a video clip here gives the public event card a "Watch video" link that plays it directly.</li>
+        <li>An event's scope is fixed at creation from who created it: State Coordinators create state-only events, Zonal Coordinators create zone-wide events, and Admin-created events are nationwide. It can't be changed after saving.</li>
       </ul></div></div>
   </div>
   <script>

@@ -6,12 +6,13 @@
     <div class="ph"><h2>Events</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span>
       <div class="act"><a class="btn sm" href="/admin/events/new">+ New event</a></div></div>
     <div class="pb flush" style="overflow-x:auto"><table class="tbl">
-      <thead><tr><th>Date</th><th>Title</th><th>Location</th><th>Media</th><th>Status</th><th class="no-print"></th></tr></thead>
+      <thead><tr><th>Date</th><th>Title</th><th>Location</th><th>Scope</th><th>Media</th><th>Status</th><th class="no-print"></th></tr></thead>
       <tbody>
-        <tr th:each="e : ${rows}">
+        <tr th:each="row : ${rows}" th:with="e=${row.event()}">
           <td class="mini" th:text="${#temporals.format(e.eventDate, 'd MMM yyyy')}"></td>
           <td><b th:text="${e.title}"></b></td>
           <td class="mini" th:text="${e.location} ?: '—'"></td>
+          <td class="mini" th:text="${row.scopeLabel()}"></td>
           <td class="mini">
             <span th:if="${e.hasUploadedVideo()}" class="pill blue">video</span>
             <span th:if="${!e.hasUploadedVideo()}">—</span>
@@ -23,7 +24,7 @@
               <button class="btn sm danger" type="submit">Delete</button></form>
           </td>
         </tr>
-        <tr th:if="${rows.isEmpty()}"><td colspan="6" class="empty">No events yet — add your first one</td></tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="7" class="empty">No events yet — add your first one</td></tr>
       </tbody></table></div>
   </div>
 </div>

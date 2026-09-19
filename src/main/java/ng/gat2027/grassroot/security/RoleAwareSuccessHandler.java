@@ -17,7 +17,9 @@ public class RoleAwareSuccessHandler extends SavedRequestAwareAuthenticationSucc
             getRedirectStrategy().sendRedirect(request, response, next);
             return;
         }
-        boolean staff = authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN") || a.getAuthority().equals("ROLE_COORDINATOR") || a.getAuthority().equals("ROLE_GRAND_PATRON"));
+        java.util.Set<String> staffRoles = java.util.Set.of("ROLE_ADMIN", "ROLE_COORDINATOR", "ROLE_ZONAL_COORDINATOR", "ROLE_GRAND_PATRON",
+            "ROLE_LGA_COORDINATOR", "ROLE_WARD_COORDINATOR", "ROLE_POLLING_UNIT_COORDINATOR");
+        boolean staff = authentication.getAuthorities().stream().anyMatch(a -> staffRoles.contains(a.getAuthority()));
         setDefaultTargetUrl(staff ? "/admin" : "/dashboard");
         super.onAuthenticationSuccess(request, response, authentication);
     }

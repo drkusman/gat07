@@ -111,6 +111,20 @@ public class SeedService implements ApplicationRunner {
             log.info("[seed] demo grand patron created -> phone {} / password patron1234 (North Central zone)", patronPhone);
         }
 
+        String zonalPhone = Codes.normalizePhone("08000000005");
+        if (ncZoneId != null && !members.existsByPhone(zonalPhone)) {
+            Member m = new Member();
+            m.setMemberCode(Codes.memberCode(members.maxId() + 1));
+            m.setReferralCode(Codes.make("ZONAL", 6));
+            m.setRole(Role.ZONAL_COORDINATOR);
+            m.setFirstName("Demo"); m.setLastName("Zonal Coordinator");
+            m.setZoneId(ncZoneId);
+            m.setPhone(zonalPhone);
+            m.setPasswordHash(encoder.encode("zonal1234"));
+            members.save(m);
+            log.info("[seed] demo zonal coordinator created -> phone {} / password zonal1234 (North Central zone)", zonalPhone);
+        }
+
         String memberPhone = Codes.normalizePhone("08000000004");
         if (benueId != null && !members.existsByPhone(memberPhone)) {
             Member m = new Member();

@@ -36,6 +36,12 @@ public class Member {
     @Column(name = "polling_unit_id") private Long pollingUnitId;
     @Column(name = "pu_latitude") private Double puLatitude;
     @Column(name = "pu_longitude") private Double puLongitude;
+    /** A promotion proposed for this member, working through its approval chain (ZONAL then NATIONAL, or straight to
+     *  NATIONAL when a Zonal Coordinator is the one proposing it) before it actually takes effect. */
+    @Enumerated(EnumType.STRING) @Column(name = "pending_role") private Role pendingRole;
+    @Column(name = "pending_role_requested_by") private Long pendingRoleRequestedBy;
+    @Enumerated(EnumType.STRING) @Column(name = "pending_role_stage") private PromotionStage pendingRoleStage;
+    @Column(name = "pending_role_zonal_approved_by") private Long pendingRoleZonalApprovedBy;
     @Column(name = "password_hash", nullable = false) private String passwordHash;
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     @Column(name = "updated_at", nullable = false) private LocalDateTime updatedAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
@@ -47,7 +53,10 @@ public class Member {
     }
     public String getDisplayName() { return firstName + " " + lastName; }
     public String getInitials() { return ("" + firstName.charAt(0) + lastName.charAt(0)).toUpperCase(); }
-    public boolean isStaff() { return role == Role.ADMIN || role == Role.COORDINATOR || role == Role.GRAND_PATRON; }
+    public boolean isStaff() {
+        return role == Role.ADMIN || role == Role.COORDINATOR || role == Role.ZONAL_COORDINATOR || role == Role.GRAND_PATRON
+            || role == Role.LGA_COORDINATOR || role == Role.WARD_COORDINATOR || role == Role.POLLING_UNIT_COORDINATOR;
+    }
     public boolean isAdmin() { return role == Role.ADMIN; }
     public boolean isActive() { return status == MemberStatus.ACTIVE; }
 }

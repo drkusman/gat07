@@ -18,6 +18,9 @@ public class Event {
     private String location;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(nullable = false) private String description;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(name = "video_data") private String videoData;
+    /** Null zoneId/stateId = a national event, visible and editable by everyone with event access. */
+    @Column(name = "zone_id") private Long zoneId;
+    @Column(name = "state_id") private Long stateId;
     @Column(nullable = false) private boolean published = true;
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     @Column(name = "updated_at", nullable = false) private LocalDateTime updatedAt = LocalDateTime.now(java.time.ZoneOffset.UTC);

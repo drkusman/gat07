@@ -23,6 +23,8 @@ public class EventService {
     public EventService(EventRepository repo, EventPhotoRepository photoRepo) { this.repo = repo; this.photoRepo = photoRepo; }
 
     public List<Event> all() { return repo.findAllByOrderByEventDateDesc(); }
+    public List<Event> forZone(Long zoneId) { return repo.findByZoneIdOrderByEventDateDesc(zoneId); }
+    public List<Event> forState(Long stateId) { return repo.findByStateIdOrderByEventDateDesc(stateId); }
     public List<Event> published() { return repo.findByPublishedTrueOrderByEventDateDesc(); }
     public Optional<Event> find(Long id) { return repo.findById(id); }
     public List<EventPhoto> photosFor(Long eventId) { return photoRepo.findByEventIdOrderBySortOrderAsc(eventId); }
@@ -75,8 +77,9 @@ public class EventService {
         return new Stats(total, published, upcoming, next);
     }
 
+    /** Zone/state scope is only set when the event is created (from the creator's own scope) - editing never changes it. */
     @Transactional
-    public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published) {
+    public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published, Long creatorZoneId, Long creatorStateId) {
         Event e = id == null ? new Event() : repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
         boolean isNew = e.getId() == null;
         e.setTitle(title);
@@ -85,6 +88,7 @@ public class EventService {
         e.setDescription(description);
         e.setPublished(published);
         e.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
+        if (isNew) { e.setZoneId(creatorZoneId); e.setStateId(creatorStateId); }
         if (isNew || e.getSlug() == null || e.getSlug().isBlank()) e.setSlug(uniqueSlug(title, id));
         return repo.save(e);
     }

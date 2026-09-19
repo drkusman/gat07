@@ -9,6 +9,8 @@ import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllByOrderByEventDateDesc();
+    List<Event> findByZoneIdOrderByEventDateDesc(Long zoneId);
+    List<Event> findByStateIdOrderByEventDateDesc(Long stateId);
     List<Event> findByPublishedTrueOrderByEventDateDesc();
     Optional<Event> findBySlug(String slug);
     boolean existsBySlug(String slug);

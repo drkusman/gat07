@@ -23,9 +23,25 @@
           <dt>PU GPS</dt><dd><a th:if="${p.lat() != null}" target="_blank" rel="noopener" th:href="'https://www.google.com/maps?q=' + ${p.lat()} + ',' + ${p.lng()}" th:text="${#numbers.formatDecimal(p.lat(),1,6)} + ', ' + ${#numbers.formatDecimal(p.lng(),1,6)}"></a><span th:if="${p.lat() == null}">—</span></dd>
         </dl>
       </div>
+      <div class="alert info no-print" th:if="${m.pendingRole != null}" style="margin-top:1.2rem">
+        Promotion to <b th:text="${#strings.toLowerCase(m.pendingRole).replace('_',' ')}"></b> proposed by <b th:text="${pendingRequestedBy}"></b> — awaiting approval from <b th:text="${pendingStageLabel}"></b>.
+        <span th:if="${canDecidePending}" class="btn-row" style="margin-top:.5rem">
+          <form th:action="@{/admin/promotions/{id}/approve(id=${m.id})}" method="post"><button class="btn sm">Approve</button></form>
+          <form th:action="@{/admin/promotions/{id}/reject(id=${m.id})}" method="post"><button class="btn secondary sm">Reject</button></form>
+        </span>
+      </div>
       <div class="btn-row no-print" th:if="${isAdmin}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
         <form th:action="@{/admin/members/{id}/role(id=${m.id})}" method="post" class="btn-row">
-          <select name="role" style="width:auto" th:disabled="${self}"><option value="MEMBER" th:selected="${m.role.name() == 'MEMBER'}">member</option><option value="COORDINATOR" th:selected="${m.role.name() == 'COORDINATOR'}">coordinator (state)</option><option value="GRAND_PATRON" th:selected="${m.role.name() == 'GRAND_PATRON'}">grand patron (zone)</option><option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option></select>
+          <select name="role" style="width:auto" th:disabled="${self}">
+            <option value="MEMBER" th:selected="${m.role.name() == 'MEMBER'}">member</option>
+            <option value="POLLING_UNIT_COORDINATOR" th:selected="${m.role.name() == 'POLLING_UNIT_COORDINATOR'}">polling unit coordinator</option>
+            <option value="WARD_COORDINATOR" th:selected="${m.role.name() == 'WARD_COORDINATOR'}">ward coordinator</option>
+            <option value="LGA_COORDINATOR" th:selected="${m.role.name() == 'LGA_COORDINATOR'}">lga coordinator</option>
+            <option value="COORDINATOR" th:selected="${m.role.name() == 'COORDINATOR'}">coordinator (state)</option>
+            <option value="ZONAL_COORDINATOR" th:selected="${m.role.name() == 'ZONAL_COORDINATOR'}">zonal coordinator (zone)</option>
+            <option value="GRAND_PATRON" th:selected="${m.role.name() == 'GRAND_PATRON'}">grand patron (zone)</option>
+            <option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option>
+          </select>
           <button class="btn sm" th:disabled="${self}">Save role</button></form>
         <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post" onsubmit="return confirm('Change this member\'s status?')">
           <input type="hidden" name="status" th:value="${m.active} ? 'SUSPENDED' : 'ACTIVE'"><button class="btn sm" th:classappend="${m.active} ? 'danger' : ''" th:disabled="${self}" th:text="${m.active} ? 'Suspend' : 'Reactivate'"></button></form>
@@ -33,6 +49,14 @@
           <input name="password" placeholder="New password" minlength="6" required style="width:170px"><button class="btn secondary sm">Reset password</button></form>
       </div>
       <p class="mini muted" th:if="${self}" style="margin-top:.5rem">You cannot change your own role or status.</p>
+      <div class="no-print" th:if="${canPropose}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
+        <form th:action="@{/admin/members/{id}/role/request(id=${m.id})}" method="post" class="btn-row">
+          <select name="role" style="width:auto">
+            <option th:each="r : ${proposableRoles}" th:value="${r}" th:text="${#strings.toLowerCase(r).replace('_',' ')}"></option>
+          </select>
+          <button class="btn secondary sm">Propose promotion</button></form>
+        <p class="help" style="margin-top:.4rem">A State Coordinator's proposal needs Zonal then National approval; a Zonal Coordinator's proposal needs only National approval.</p>
+      </div>
     </div>
   </div>
   <div class="panel">

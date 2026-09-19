@@ -15,8 +15,9 @@ import java.util.*;
 
 /**
  * Read models for dashboards. Plain JDBC with portable SQL (runs on PostgreSQL and H2 in PostgreSQL mode).
- * Every member-level query is filtered through {@link #where}, which also locks coordinators to their own state
- * and Grand Patrons to their own zone.
+ * Every member-level query is filtered through {@link #where}, which locks each coordinator role to its own area:
+ * Grand Patrons / Zonal Coordinators to their zone, State Coordinators to their state, and LGA/Ward/Polling-unit
+ * Coordinators to their state plus their own LGA/ward/polling unit.
  */
 @Service
 public class AnalyticsService {
@@ -54,13 +55,21 @@ public class AnalyticsService {
     private Where where(Member user, AdminFilter f) {
         StringBuilder sb = new StringBuilder("1=1");
         List<Object> p = new ArrayList<>();
-        Long zone = user.getRole() == Role.GRAND_PATRON ? user.getZoneId() : f.getZoneId();
-        Long state = user.getRole() == Role.COORDINATOR ? user.getStateId() : f.getStateId();
+        Role role = user.getRole();
+        boolean stateLocked = role == Role.COORDINATOR || role == Role.LGA_COORDINATOR || role == Role.WARD_COORDINATOR || role == Role.POLLING_UNIT_COORDINATOR;
+        boolean lgaLocked = role == Role.LGA_COORDINATOR || role == Role.WARD_COORDINATOR || role == Role.POLLING_UNIT_COORDINATOR;
+        boolean wardLocked = role == Role.WARD_COORDINATOR || role == Role.POLLING_UNIT_COORDINATOR;
+        boolean puLocked = role == Role.POLLING_UNIT_COORDINATOR;
+        Long zone = (role == Role.GRAND_PATRON || role == Role.ZONAL_COORDINATOR) ? user.getZoneId() : f.getZoneId();
+        Long state = stateLocked ? user.getStateId() : f.getStateId();
+        Long lga = lgaLocked ? user.getLgaId() : f.getLgaId();
+        Long ward = wardLocked ? user.getWardId() : f.getWardId();
+        Long pu = puLocked ? user.getPollingUnitId() : f.getPollingUnitId();
         if (zone != null) { sb.append(" AND m.zone_id = ?"); p.add(zone); }
         if (state != null) { sb.append(" AND m.state_id = ?"); p.add(state); }
-        if (f.getLgaId() != null) { sb.append(" AND m.lga_id = ?"); p.add(f.getLgaId()); }
-        if (f.getWardId() != null) { sb.append(" AND m.ward_id = ?"); p.add(f.getWardId()); }
-        if (f.getPollingUnitId() != null) { sb.append(" AND m.polling_unit_id = ?"); p.add(f.getPollingUnitId()); }
+        if (lga != null) { sb.append(" AND m.lga_id = ?"); p.add(lga); }
+        if (ward != null) { sb.append(" AND m.ward_id = ?"); p.add(ward); }
+        if (pu != null) { sb.append(" AND m.polling_unit_id = ?"); p.add(pu); }
         if ("Male".equals(f.getGender()) || "Female".equals(f.getGender())) { sb.append(" AND m.gender = ?"); p.add(f.getGender()); }
         String q = f.getQ() == null ? "" : f.getQ().trim();
         if (!q.isEmpty()) {
