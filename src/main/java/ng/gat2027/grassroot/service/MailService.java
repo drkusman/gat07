@@ -23,6 +23,8 @@ public class MailService {
         this.from = from;
     }
 
+    public boolean isConfigured() { return configured; }
+
     public void sendPasswordReset(String toEmail, String firstName, String resetLink) {
         String subject = "Reset your GAT 2027 password";
         String html = "<div style=\"font-family:Segoe UI,Roboto,Arial,sans-serif;max-width:480px;margin:0 auto\">"

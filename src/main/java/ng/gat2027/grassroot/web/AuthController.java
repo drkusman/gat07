@@ -49,9 +49,10 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public String forgotPassword(@RequestParam String phone, HttpServletRequest request, Model model) {
         String resetBaseUrl = ServletUriComponentsBuilder.fromContextPath(request).path("/reset-password").toUriString();
-        String maskedEmail = memberService.requestPasswordReset(phone, resetBaseUrl);
+        var result = memberService.requestPasswordReset(phone, resetBaseUrl);
         model.addAttribute("sent", true);
-        model.addAttribute("maskedEmail", maskedEmail);
+        model.addAttribute("maskedEmail", result.maskedEmail());
+        model.addAttribute("devModeLink", result.devModeLink());
         return "forgot-password";
     }
 

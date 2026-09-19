@@ -183,18 +183,21 @@ public class MemberService {
     }
 
     // ----- self-service password reset (forgot password) -----
-    /** Returns the masked email the link was sent to, or null if no matching/emailable account was found (caller shows a generic message in that case). */
+    public record ResetRequestResult(String maskedEmail, String devModeLink) {}
+
+    /** Nothing found/emailable -> both fields null (caller shows a generic message either way, so this can't be used to probe who's registered). */
     @Transactional
-    public String requestPasswordReset(String phone, String resetBaseUrl) {
+    public ResetRequestResult requestPasswordReset(String phone, String resetBaseUrl) {
         Member m = members.findByPhone(Codes.normalizePhone(phone)).orElse(null);
-        if (m == null || m.getEmail() == null || m.getEmail().isBlank() || !m.isActive()) return null;
+        if (m == null || m.getEmail() == null || m.getEmail().isBlank() || !m.isActive()) return new ResetRequestResult(null, null);
         PasswordResetToken t = new PasswordResetToken();
         t.setMemberId(m.getId());
         t.setToken(Codes.secureToken());
         t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(RESET_TOKEN_TTL_MINUTES));
         resetTokens.save(t);
-        mail.sendPasswordReset(m.getEmail(), m.getFirstName(), resetBaseUrl + "?token=" + t.getToken());
-        return maskEmail(m.getEmail());
+        String link = resetBaseUrl + "?token=" + t.getToken();
+        mail.sendPasswordReset(m.getEmail(), m.getFirstName(), link);
+        return mail.isConfigured() ? new ResetRequestResult(maskEmail(m.getEmail()), null) : new ResetRequestResult(null, link);
     }
 
     private static String maskEmail(String email) {
