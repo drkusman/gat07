@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Edit video</h2></div>
+    <form th:action="@{/admin/videos/{id}(id=${v.id})}" method="post" class="pb">
+      <div class="form-grid">
+        <div class="field"><label>YouTube link</label>
+          <input name="url" type="text" required th:value="'https://youtube.com/watch?v=' + ${v.youtubeId}"></div>
+        <div class="field"><label>Title (optional)</label><input name="title" type="text" maxlength="200" th:value="${v.title}"></div>
+      </div>
+      <div class="field" style="margin-top:.8rem">
+        <label>Expires</label>
+        <input name="expiresAt" type="datetime-local" th:value="${#temporals.format(v.effectiveExpiresAt(), 'yyyy-MM-dd''T''HH:mm')}">
+        <span class="help">Leave as-is, or pick a new date/time. The video drops out of the home page loop once this passes.</span>
+      </div>
+      <div class="field" style="margin-top:.8rem">
+        <label>High priority for (hours from now)</label>
+        <input name="priorityHours" type="number" min="1" placeholder="e.g. 4, or 48 for 2 days">
+        <span class="help" th:if="${v.priorityActive}">Currently high priority (exclusive play) until <b th:text="${#temporals.format(v.priorityUntil, 'd MMM yyyy, h:mm a')}"></b>. Enter a new number of hours to change it, or leave blank to clear priority.</span>
+        <span class="help" th:unless="${v.priorityActive}">Not currently flagged. Enter a number of hours to make this the only video playing until then; leave blank to keep it in the normal loop.</span>
+      </div>
+      <div class="btn-row" style="margin-top:1rem">
+        <button class="btn" type="submit">Save changes</button>
+        <a class="btn secondary" href="/admin/videos">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+</body>
+</html>

@@ -28,26 +28,39 @@
   </div>
   <div class="grid cols-8-4" style="margin-bottom:1.5rem;align-items:start">
     <div class="card">
-      <div style="position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px">
-        <iframe src="https://www.youtube-nocookie.com/embed/KvxAbGYzfX8?autoplay=1&mute=1&loop=1&playlist=KvxAbGYzfX8&controls=1&rel=0"
-          style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
-          title="GAT 2027 video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
-      </div>
-    </div>
-    <div class="card">
       <h2 style="text-align:center">Our Leadership</h2>
       <div class="grid" style="margin-top:1rem;justify-items:center">
         <div class="leader lg"><img src="/img/tinubu.jpg" alt="President Bola Ahmed Tinubu"><b>H.E. Bola Ahmed Tinubu, GCFR</b><span class="muted">President, Federal Republic of Nigeria</span></div>
       </div>
-      <div class="grid" style="margin-top:1.5rem;justify-items:center">
+      <div class="grid leaders-2" style="margin-top:1.5rem;justify-items:center">
         <div class="leader lg"><img src="/img/coordinator.jpg" alt="Prof. Ochugudu Achoda Ipuele"><b>Prof. Ochugudu Achoda Ipuele</b><span class="muted">National Coordinator</span></div>
         <div class="leader lg"><img src="/img/chair.jpg" alt="H.E. Mrs Hanmo Akume"><b>H.E. Mrs Hanmo Akume</b><span class="muted">Founder and Board Chair</span></div>
       </div>
-      <div class="grid" style="margin-top:1.5rem;justify-items:center">
+      <div class="grid leaders-2" style="margin-top:1.5rem;justify-items:center">
         <div class="leader"><img src="/img/leader-nwifuru.jpg" alt="His Excellency Rt. Hon. Francis Ogbonna Nwifuru"><b>H.E. Rt. Hon. Francis Ogbonna Nwifuru</b><span class="muted">Executive Governor of Ebonyi State<br>Grand Patron (South)</span></div>
         <div class="leader"><img src="/img/leader-masari.png" alt="Hon. Ibrahim Kabir Masari"><b>Hon. Ibrahim Kabir Masari</b><span class="muted">S.A to the President on Political Affairs<br>Grand Patron (North)</span></div>
         <div class="leader"><img src="/img/leader-franklin.png" alt="Amb. Chief Michael Babatunde Franklin"><b>Amb. Chief Michael Babatunde Franklin</b><span class="muted">National Patron (South)</span></div>
         <div class="leader"><img src="/img/leader-gizo.png" alt="Chief Amos Yaduksu Gizo"><b>Chief Amos Yaduksu Gizo</b><span class="muted">Chairman of Chairmen, River Basin Development Authority<br>National Patron (North)</span></div>
+      </div>
+    </div>
+    <div th:if="${firstVideoId != null}" style="display:flex;flex-direction:column;gap:1rem">
+      <div class="card" id="active-video">
+        <div style="position:relative;width:100%;padding-bottom:56.25%;height:0;overflow:hidden;border-radius:8px">
+          <iframe th:src="'https://www.youtube-nocookie.com/embed/' + ${firstVideoId} + '?autoplay=1&mute=1&loop=1&playlist=' + ${videoPlaylist} + '&controls=1&rel=0'"
+            style="position:absolute;top:0;left:0;width:100%;height:100%;border:0"
+            title="GAT 2027 video" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+        </div>
+        <div th:if="${currentVideoTitle != null}" style="margin-top:.7rem;font-weight:600;text-align:center" th:text="${currentVideoTitle}"></div>
+      </div>
+      <div class="card" th:if="${!upNextVideos.isEmpty()}">
+        <h3 style="margin:0 0 .8rem">Up Next</h3>
+        <div style="max-height:22rem;overflow-y:auto">
+          <a th:each="v, vStat : ${upNextVideos}" th:href="'/?play=' + ${v.youtubeId} + '#active-video'"
+             style="display:flex;gap:.7rem;align-items:center;color:inherit;text-decoration:none" th:style="${vStat.first} ? 'display:flex;gap:.7rem;align-items:center;color:inherit;text-decoration:none' : 'display:flex;gap:.7rem;align-items:center;color:inherit;text-decoration:none;margin-top:.8rem;padding-top:.8rem;border-top:1px solid var(--line)'">
+            <img th:src="'https://img.youtube.com/vi/' + ${v.youtubeId} + '/mqdefault.jpg'" alt="" style="width:88px;border-radius:6px;flex-shrink:0">
+            <span th:text="${v.title != null} ? ${v.title} : ('Video ' + (${vStat.index} + 2))" style="font-weight:600;font-size:.92rem"></span>
+          </a>
+        </div>
       </div>
     </div>
   </div>

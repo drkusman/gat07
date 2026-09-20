@@ -127,6 +127,7 @@ nav.main a:hover, nav.main a.active { background: var(--green-light); color: var
 .card + .card { margin-top: 1rem; }
 .grid { display: grid; gap: 1rem; }
 .grid.cols-8-4 { grid-template-columns: 2fr 1fr; }
+.grid.leaders-2 { grid-template-columns: 1fr 1fr; }
 .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 .grid.cols-3 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); }
@@ -238,6 +239,7 @@ dl.kv dt { color: var(--muted); } dl.kv dd { margin: 0; }
   nav.main { margin-left: 0; width: 100%; }
 }
 @media (max-width: 480px) {
+  .grid.leaders-2 { grid-template-columns: 1fr; }
   .container { padding: 1rem .75rem; }
   h1 { font-size: 1.55rem; } h2 { font-size: 1.2rem; }
   .brand img { height: 40px; }

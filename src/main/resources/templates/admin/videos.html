@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Add a video</h2></div>
+    <form th:action="@{/admin/videos}" method="post" class="pb">
+      <div class="form-grid">
+        <div class="field"><label>YouTube link</label><input name="url" type="text" required placeholder="https://youtube.com/watch?v=..."></div>
+        <div class="field"><label>Title (optional)</label><input name="title" type="text" maxlength="200" placeholder="For your own reference"></div>
+        <div class="field"><label>Expires (optional)</label><input name="expiresAt" type="datetime-local"></div>
+        <div class="field"><label>High priority for (hours, optional)</label><input name="priorityHours" type="number" min="1" placeholder="e.g. 4, or 48 for 2 days"></div>
+      </div>
+      <span class="help">The video must have "Allow embedding" turned on in YouTube Studio, or it won't play on the home page. Leave "Expires" blank to default to 24 hours from now.
+        Set "High priority" to make this the only video playing on the home page until that many hours pass — normal looping resumes automatically afterwards.</span>
+      <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Add to loop</button></div>
+    </form>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Home page video loop</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' video(s)'"></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>#</th><th>Preview</th><th>Title</th><th>Added</th><th>Expires</th><th>Priority</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="v, st : ${rows}">
+          <td class="mini" th:text="${st.count}"></td>
+          <td><img th:src="'https://img.youtube.com/vi/' + ${v.youtubeId} + '/mqdefault.jpg'" alt="" style="width:120px;border-radius:6px;display:block"></td>
+          <td><b th:text="${v.title != null} ? ${v.title} : ('Video ' + ${st.count})"></b><div class="mini muted" th:text="${v.youtubeId}"></div></td>
+          <td class="mini" th:text="${#temporals.format(v.createdAt, 'd MMM yyyy')}"></td>
+          <td class="mini">
+            <span class="pill" th:classappend="${v.expired} ? 'red' : ''" th:text="${#temporals.format(v.effectiveExpiresAt(), 'd MMM yyyy, h:mm a')}"></span>
+            <div class="mini muted" th:if="${v.expired}">expired — no longer plays</div>
+          </td>
+          <td class="mini">
+            <span class="pill gold" th:if="${v.priorityActive}" th:text="'until ' + ${#temporals.format(v.priorityUntil, 'd MMM, h:mm a')}"></span>
+            <span class="muted" th:unless="${v.priorityActive}">—</span>
+          </td>
+          <td class="no-print" style="white-space:nowrap">
+            <a class="btn secondary sm" th:href="@{/admin/videos/{id}/edit(id=${v.id})}">Edit</a>
+            <form th:action="@{/admin/videos/{id}/delete(id=${v.id})}" method="post" style="display:inline" onsubmit="return confirm('Remove this video from the home page loop?')">
+              <button class="btn sm danger" type="submit">Remove</button></form>
+          </td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="7" class="empty">No videos yet — add your first one above</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>
