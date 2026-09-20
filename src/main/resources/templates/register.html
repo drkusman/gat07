@@ -60,8 +60,42 @@
           <span class="help">You must be at least <span th:text="${ageRules.minAge()}">16</span> years old<th:block th:if="${ageRules.maxAge() != null}"> and not older than <span th:text="${ageRules.maxAge()}"></span></th:block> to register.</span></div>
         <div class="field"><label>Phone number <span class="req">*</span></label><input th:field="*{phone}" type="tel" required placeholder="0803 123 4567"><span class="help">Used to log in. One account per number.</span></div>
         <div class="field"><label>Email</label><input th:field="*{email}" type="email"></div>
-        <div class="field"><label>Occupation</label><input th:field="*{occupation}" placeholder="e.g. Trader, Teacher, Farmer"></div>
+        <div class="field"><label>Occupation</label>
+          <div style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;padding-top:.3rem">
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" id="occStudent" value="Student" style="width:auto"> Student</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Artisan" style="width:auto"> Artisan</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Corps Member" style="width:auto"> Corps Member</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Applicant" style="width:auto"> Applicant</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" id="occOthers" value="Others" style="width:auto"> Others</label>
+          </div>
+          <select id="occStudentLevel" class="hidden" style="margin-top:.6rem">
+            <option value="">Select institution type</option>
+            <option value="Secondary">Secondary</option>
+            <option value="College of Education">College of Education</option>
+            <option value="Polytechnic">Polytechnic</option>
+            <option value="University">University</option>
+            <option value="Others">Others</option>
+          </select>
+          <select id="occOwnership" class="hidden" style="margin-top:.6rem">
+            <option value="">Select ownership</option>
+            <option value="Federal">Federal</option>
+            <option value="State">State</option>
+            <option value="Private">Private</option>
+            <option value="Others">Others</option>
+          </select>
+          <select id="occCampus" class="hidden" style="margin-top:.6rem">
+            <option value="">Select campus</option>
+          </select>
+          <input id="occOthersText" class="hidden" style="margin-top:.6rem" placeholder="Please specify your occupation">
+          <input type="hidden" th:field="*{occupation}" id="occupationValue">
+        </div>
         <div class="field"><label>Highest education</label><select th:field="*{education}"><option value="">Select</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option><option value="OND/NCE">OND/NCE</option><option value="HND/Bachelor's">HND/Bachelor's</option><option value="Master's">Master's</option><option value="Doctorate">Doctorate</option><option value="Other">Other</option></select></div>
+        <div class="field"><label>Person with special needs?</label>
+          <div style="display:flex;gap:1.2rem;align-items:center;padding-top:.3rem">
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" th:field="*{specialNeeds}" th:value="true" style="width:auto"> Yes</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" th:field="*{specialNeeds}" th:value="false" style="width:auto"> No</label>
+          </div>
+        </div>
         <div class="field"><label>Voter Identification Number (VIN)</label><input th:field="*{vin}" placeholder="Optional — on your PVC"></div>
         <div class="field full"><label>Residential address</label><input th:field="*{address}" placeholder="House number, street, town"></div>
         <div class="field full"><label>Passport photograph</label><input type="file" id="photo" accept="image/*"><span class="help">Optional. JPG or PNG; it is resized automatically.</span>
@@ -74,13 +108,19 @@
     <section class="card hidden" data-panel="3">
       <h2>Account &amp; referral</h2>
       <div class="form-grid">
-        <div class="field"><label>Password <span class="req">*</span></label><input th:field="*{password}" type="password" minlength="6" required autocomplete="new-password"><span class="help">At least 6 characters.</span></div>
-        <div class="field"><label>Confirm password <span class="req">*</span></label><input th:field="*{password2}" type="password" minlength="6" required autocomplete="new-password"></div>
+        <div class="field"><label>Password <span class="req">*</span></label>
+          <div class="pw-field"><input th:field="*{password}" type="password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="pw-toggle" aria-label="Show password">👁</button></div>
+          <span class="help">At least 6 characters.</span></div>
+        <div class="field"><label>Confirm password <span class="req">*</span></label>
+          <div class="pw-field"><input th:field="*{password2}" type="password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="pw-toggle" aria-label="Show password">👁</button></div>
+          <span id="pwMismatch" class="help" style="color:var(--red);display:none">Passwords do not match</span></div>
         <div class="field full"><label>Referral code (who invited you?)</label><input th:field="*{referralCode}" id="referral_code" placeholder="e.g. GAT-7KQ2MX" style="text-transform:uppercase"><span class="help" id="refHelp">Leave blank if nobody referred you.</span></div>
       </div>
       <div class="card" style="margin-top:1rem;background:#f7f9fb"><h3>Review</h3><dl class="kv" id="review"></dl></div>
       <label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:1rem;font-weight:500"><input type="checkbox" th:field="*{consent}" required style="width:auto;margin-top:.25rem"> I confirm the information above is correct and I consent to GAT 2027 keeping it for membership and mobilisation purposes.</label>
-      <div class="btn-row" style="margin-top:1.2rem;justify-content:space-between"><button type="button" class="btn secondary" data-next="2">← Back</button><button type="submit" class="btn" id="submitBtn">Complete registration</button></div>
+      <div class="btn-row" style="margin-top:1.2rem;justify-content:space-between"><button type="button" class="btn secondary" data-next="2">← Back</button><button type="submit" class="btn" id="submitBtn" disabled>Complete registration</button></div>
     </section>
   </form>
 </main>

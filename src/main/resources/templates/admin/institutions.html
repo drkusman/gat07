@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Add an institution</h2></div>
+    <form th:action="@{/admin/institutions}" method="post" class="pb">
+      <div class="form-grid">
+        <div class="field full"><label>Institution name</label><input name="name" type="text" required placeholder="e.g. University of Lagos"></div>
+        <div class="field"><label>Type</label>
+          <select id="instTypeSelect">
+            <option value="University">University</option>
+            <option value="Polytechnic">Polytechnic</option>
+            <option value="College of Education">College of Education</option>
+            <option value="Others">Others</option>
+          </select>
+          <input id="instTypeOther" class="hidden" style="margin-top:.5rem" placeholder="Specify the type">
+          <input type="hidden" name="type" id="instTypeValue" value="University">
+        </div>
+        <div class="field"><label>Ownership</label>
+          <select id="instOwnershipSelect">
+            <option value="Federal">Federal</option>
+            <option value="State">State</option>
+            <option value="Others">Others</option>
+          </select>
+          <input id="instOwnershipOther" class="hidden" style="margin-top:.5rem" placeholder="Specify the ownership">
+          <input type="hidden" name="ownership" id="instOwnershipValue" value="Federal">
+        </div>
+      </div>
+      <span class="help">These populate the "Campus" dropdown on the registration form once an applicant picks Student → this institution type → this ownership. "Others" institutions won't appear there (registration only looks up Federal/State University, Polytechnic and College of Education), but are still kept here for your records.</span>
+      <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Add institution</button></div>
+    </form>
+  </div>
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Bulk import (CSV)</h2></div>
+    <div class="pb">
+      <span class="help">Columns: name, type, ownership — one institution per row, with or without a header row. Type accepts University / Polytechnic / "College of Education" (or COE); ownership accepts Federal / State. Unrecognised rows are skipped and listed after import.</span>
+      <form th:action="@{/admin/institutions/import}" method="post" enctype="multipart/form-data" style="margin-top:.8rem">
+        <input type="file" name="file" accept=".csv,text/csv" required>
+        <div class="btn-row" style="margin-top:.8rem"><button class="btn" type="submit" onclick="this.disabled=true;this.textContent='Importing…';this.form.submit()">Upload &amp; import</button></div>
+      </form>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><h2>Institutions</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Name</th><th>Type</th><th>Ownership</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <tr th:each="i : ${rows}">
+          <td><b th:text="${i.name}"></b></td>
+          <td class="mini"><span class="pill blue" th:text="${i.type}"></span></td>
+          <td class="mini"><span class="pill gold" th:text="${i.ownership}"></span></td>
+          <td class="no-print">
+            <form th:action="@{/admin/institutions/{id}/delete(id=${i.id})}" method="post" onsubmit="return confirm('Remove this institution?')">
+              <button class="btn sm danger" type="submit">Remove</button></form>
+          </td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="4" class="empty">No institutions yet — add your first one above</td></tr>
+      </tbody></table></div>
+  </div>
+  <script>
+  (function () {
+    function wireOthers(selectId, otherId, valueId) {
+      var sel = document.getElementById(selectId), other = document.getElementById(otherId), value = document.getElementById(valueId);
+      function sync() {
+        var isOthers = sel.value === 'Others';
+        other.classList.toggle('hidden', !isOthers);
+        value.value = isOthers ? other.value.trim() : sel.value;
+      }
+      sel.addEventListener('change', sync);
+      other.addEventListener('input', sync);
+      sync();
+    }
+    wireOthers('instTypeSelect', 'instTypeOther', 'instTypeValue');
+    wireOthers('instOwnershipSelect', 'instOwnershipOther', 'instOwnershipValue');
+  })();
+  </script>
+</div>
+</body>
+</html>

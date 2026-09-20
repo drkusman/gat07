@@ -1,0 +1,24 @@
+# systemd unit for the GAT 2027 Spring Boot app (Amazon Linux 2023, Amazon Corretto 17).
+# Install: sudo cp deploy/gat2027.service /etc/systemd/system/gat2027.service
+#          sudo systemctl daemon-reload && sudo systemctl enable --now gat2027
+#
+# Edit the paths and EnvironmentFile below to match your server before installing.
+# Confirm the java path first with `which java` (Corretto's dnf package normally symlinks
+# /usr/bin/java for you; only change ExecStart if that differs on your instance).
+
+[Unit]
+Description=GAT 2027 Grassroot Advocacy application
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=gat
+WorkingDirectory=/opt/gat2027
+EnvironmentFile=/opt/gat2027/.env
+ExecStart=/usr/bin/java -jar /opt/gat2027/app.jar
+SuccessExitStatus=143
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -3,6 +3,7 @@ package ng.gat2027.grassroot.web;
 import ng.gat2027.grassroot.domain.Announcement;
 import ng.gat2027.grassroot.domain.AnnouncementAudience;
 import ng.gat2027.grassroot.domain.Event;
+import ng.gat2027.grassroot.domain.Institution;
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.domain.MemberStatus;
 import ng.gat2027.grassroot.domain.PromotionStage;
@@ -41,13 +42,14 @@ public class AdminController {
     private final ZoneRepository zones; private final StateRepository states; private final LgaRepository lgas; private final WardRepository wards; private final PollingUnitRepository pus;
     private final AnnouncementService announcements;
     private final PromoVideoService promoVideos;
+    private final InstitutionService institutions;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
                            MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus,
-                           AnnouncementService announcements, PromoVideoService promoVideos) {
+                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
         this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.announcements = announcements;
-        this.promoVideos = promoVideos;
+        this.promoVideos = promoVideos; this.institutions = institutions;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -97,6 +99,7 @@ public class AdminController {
             nav.add(NavItem.of("/admin/announcements", "Announcements", "📣", "Operations"));
             nav.add(NavItem.of("/admin/members/suspended", "Suspended Members", "⛔", "Operations").withCount(members.countByStatus(MemberStatus.SUSPENDED)));
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
+            nav.add(NavItem.of("/admin/institutions", "Institutions", "🎓", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
         }
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
@@ -575,6 +578,37 @@ public class AdminController {
     /** Admin manages every video; a Media Coordinator only the ones they personally submitted. */
     private boolean canManageVideo(Member u, PromoVideo v) {
         return u.isAdmin() || Objects.equals(u.getId(), v.getCreatedBy());
+    }
+
+    @GetMapping("/institutions")
+    public String institutionsList(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Institutions", f);
+        model.addAttribute("rows", institutions.all());
+        return "admin/institutions";
+    }
+
+    @PostMapping("/institutions")
+    public String addInstitution(@RequestParam String name, @RequestParam String type, @RequestParam String ownership, RedirectAttributes ra) {
+        try { institutions.add(name, type, ownership); ra.addFlashAttribute("success", "Institution added."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/institutions";
+    }
+
+    @PostMapping("/institutions/import")
+    public String importInstitutions(@RequestParam("file") MultipartFile file, RedirectAttributes ra) {
+        try {
+            if (file.isEmpty()) throw new IllegalArgumentException("Choose a CSV file first");
+            var s = institutions.importCsv(new String(file.getBytes(), StandardCharsets.UTF_8));
+            ra.addFlashAttribute("success", s.text());
+        } catch (Exception e) { ra.addFlashAttribute("error", "Import failed: " + e.getMessage()); }
+        return "redirect:/admin/institutions";
+    }
+
+    @PostMapping("/institutions/{id}/delete")
+    public String deleteInstitution(@PathVariable Long id, RedirectAttributes ra) {
+        try { institutions.delete(id); ra.addFlashAttribute("success", "Institution removed."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/institutions";
     }
 
     @GetMapping("/settings")

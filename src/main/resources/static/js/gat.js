@@ -9,10 +9,93 @@ const GAT = (() => {
   function fillSelect(sel, rows, placeholder, labelFn) {
     sel.innerHTML = `<option value="">${placeholder}</option>` + rows.map((r) => `<option value="${r.id}">${esc(labelFn ? labelFn(r) : r.name)}</option>`).join("");
     sel.disabled = false;
+    syncSearchable(sel);
   }
-  function resetSelect(sel, placeholder) { sel.innerHTML = `<option value="">${placeholder}</option>`; sel.disabled = true; }
+  function resetSelect(sel, placeholder) { sel.innerHTML = `<option value="">${placeholder}</option>`; sel.disabled = true; syncSearchable(sel); }
   const label = (o) => (o.code ? o.code + " - " + o.name : o.name);
   const tick = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+
+  // Any <select> with more than 10 real options grows a search box instead of a plain long list.
+  const SEARCHABLE_THRESHOLD = 10;
+  function setupSearchable(select) {
+    if (select.dataset.ssInit) { syncSearchable(select); return; }
+    select.dataset.ssInit = "1";
+    const wrap = document.createElement("div"); wrap.className = "ss-wrap";
+    select.parentNode.insertBefore(wrap, select);
+    wrap.appendChild(select);
+    const input = document.createElement("input");
+    input.type = "text"; input.className = "ss-input"; input.autocomplete = "off";
+    const panel = document.createElement("div"); panel.className = "ss-panel";
+    wrap.appendChild(input); wrap.appendChild(panel);
+
+    const visibleOptions = () => $$(".ss-option", panel).filter((o) => o.style.display !== "none");
+    const highlight = (list, idx) => { list.forEach((o) => o.classList.remove("active")); if (list[idx]) { list[idx].classList.add("active"); list[idx].scrollIntoView({ block: "nearest" }); } };
+    function openPanel() { if (!select.disabled) { panel.classList.add("open"); filterPanel(""); } }
+    function closePanel() { panel.classList.remove("open"); }
+    function filterPanel(q) {
+      q = q.toLowerCase();
+      let first = -1;
+      $$(".ss-option", panel).forEach((o, i) => {
+        const show = o.textContent.toLowerCase().includes(q);
+        o.style.display = show ? "" : "none";
+        o.classList.remove("active");
+        if (show && first < 0) first = i;
+      });
+      highlight(visibleOptions(), 0);
+    }
+    function choose(optEl) {
+      select.value = optEl.dataset.value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+      closePanel();
+      syncLabel();
+    }
+    function syncLabel() {
+      const opt = select.options[select.selectedIndex];
+      input.value = opt && opt.value !== "" ? opt.textContent : "";
+    }
+    input.addEventListener("focus", openPanel);
+    input.addEventListener("input", () => { openPanel(); filterPanel(input.value); });
+    input.addEventListener("keydown", (e) => {
+      if (!panel.classList.contains("open")) { if (e.key === "ArrowDown" || e.key === "Enter") { e.preventDefault(); openPanel(); } return; }
+      const list = visibleOptions();
+      let idx = list.findIndex((o) => o.classList.contains("active"));
+      if (e.key === "ArrowDown") { e.preventDefault(); highlight(list, Math.min(list.length - 1, idx + 1)); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); highlight(list, Math.max(0, idx - 1)); }
+      else if (e.key === "Enter") { e.preventDefault(); const t = list[idx] || list[0]; if (t) choose(t); }
+      else if (e.key === "Escape") { closePanel(); syncLabel(); }
+    });
+    panel.addEventListener("mousedown", (e) => { const o = e.target.closest(".ss-option"); if (o) { e.preventDefault(); choose(o); } });
+    document.addEventListener("click", (e) => { if (!wrap.contains(e.target)) { closePanel(); syncLabel(); } });
+    select.addEventListener("change", syncLabel);
+    syncSearchable(select);
+  }
+  function syncSearchable(select) {
+    const wrap = select.closest(".ss-wrap"); if (!wrap) return;
+    const input = $(".ss-input", wrap), panel = $(".ss-panel", wrap);
+    const real = Array.from(select.options).filter((o) => o.value !== "");
+    wrap.classList.toggle("ss-active", real.length > SEARCHABLE_THRESHOLD);
+    input.disabled = select.disabled;
+    panel.innerHTML = real.map((o) => `<div class="ss-option" data-value="${esc(o.value)}">${esc(o.textContent)}</div>`).join("");
+    const opt = select.options[select.selectedIndex];
+    input.value = opt && opt.value !== "" ? opt.textContent : "";
+    input.placeholder = select.options[0] ? select.options[0].textContent : "";
+  }
+  function initSearchableSelects(root = document) { $$("select", root).forEach(setupSearchable); }
+
+  // Show/hide toggle for any password field wrapped in <div class="pw-field">...<button class="pw-toggle">.
+  function initPasswordToggles(root = document) {
+    $$(".pw-toggle", root).forEach((btn) => {
+      const input = btn.previousElementSibling;
+      if (!input || btn.dataset.pwInit) return;
+      btn.dataset.pwInit = "1";
+      btn.addEventListener("click", () => {
+        const show = input.type === "password";
+        input.type = show ? "text" : "password";
+        btn.textContent = show ? "🙈" : "👁";
+        btn.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      });
+    });
+  }
 
   // Cascading zone -> state -> LGA -> ward -> polling unit picker (selects by id).
   function locationPicker(ids, opts = {}) {
@@ -34,16 +117,16 @@ const GAT = (() => {
       if (!el.lga.value) return;
       const wards = await api("/api/locations/wards?lga_id=" + el.lga.value);
       fillSelect(el.ward, wards, wards.length ? "Select ward" : "No wards listed yet", label);
-      if (allowNew) el.ward.insertAdjacentHTML("beforeend", '<option value="__new">+ My ward is not listed (type it)</option>');
+      if (allowNew) { el.ward.insertAdjacentHTML("beforeend", '<option value="__new">+ My ward is not listed (type it)</option>'); syncSearchable(el.ward); }
     });
     el.ward.addEventListener("change", async () => {
       resetSelect(el.pu, "Select polling unit");
       el.newWard?.classList.toggle("hidden", el.ward.value !== "__new"); el.newPu?.classList.add("hidden");
       if (!el.ward.value) return;
-      if (el.ward.value === "__new") { el.pu.innerHTML = '<option value="__new">+ Type my polling unit</option>'; el.pu.disabled = false; el.pu.value = "__new"; el.newPu?.classList.remove("hidden"); opts.onPU?.(null); return; }
+      if (el.ward.value === "__new") { el.pu.innerHTML = '<option value="__new">+ Type my polling unit</option>'; el.pu.disabled = false; el.pu.value = "__new"; syncSearchable(el.pu); el.newPu?.classList.remove("hidden"); opts.onPU?.(null); return; }
       pus = await api("/api/locations/polling-units?ward_id=" + el.ward.value);
       fillSelect(el.pu, pus, pus.length ? "Select polling unit" : "No polling units listed yet", label);
-      if (allowNew) el.pu.insertAdjacentHTML("beforeend", '<option value="__new">+ My polling unit is not listed (type it)</option>');
+      if (allowNew) { el.pu.insertAdjacentHTML("beforeend", '<option value="__new">+ My polling unit is not listed (type it)</option>'); syncSearchable(el.pu); }
     });
     el.pu.addEventListener("change", () => { el.newPu?.classList.toggle("hidden", el.pu.value !== "__new"); opts.onPU?.(pus.find((p) => String(p.id) === el.pu.value) || null); });
     async function preset(v) {
@@ -106,7 +189,7 @@ const GAT = (() => {
   function shareBoxes() {
     $$(".refbox-wrap").forEach((w) => {
       const code = w.dataset.code, link = `${location.origin}/register?ref=${code}`;
-      const text = `Join me in Grassroot Advocacy for Tinubu (GAT) 2027 — Forward Together with PBAT! Register here: ${link}`;
+      const text = `Grassroots Advocacy for Tinubu (GAT) 2027 shall soon commence the implementation of its Integrated Empowerment Programmes, designed to support and empower millions of Nigerians across key sectors. The programmes will target:\n15 million students across 302 public tertiary institutions; 15 million youths, including artisans, National Youth Service Corps (NYSC) members, and unemployed youths; and 15 million vulnerable women.\n\nEligible individuals are encouraged to register through the link below to participate in these empowerment programmes. Register now and be part of the initiative.\n\n${link}`;
       $(".ref-link", w).value = link;
       $(".ref-wa", w).href = "https://wa.me/?text=" + encodeURIComponent(text);
       $(".ref-sms", w).href = "sms:?&body=" + encodeURIComponent(text);
@@ -124,10 +207,58 @@ const GAT = (() => {
     await picker.preset({ zone: d.zone, state: d.state, lga: d.lga, ward: d.ward, pu: d.pu });
     photoInput($("#photo"), $("[name=photo]"), $("#photoPreview"));
 
+    const occType = $$('input[name="occType"]'), occLevel = $("#occStudentLevel"), occOwnership = $("#occOwnership"), occCampus = $("#occCampus"), occOthersText = $("#occOthersText"), occValue = $("#occupationValue");
+    const OWNED_LEVELS = ["College of Education", "Polytechnic", "University"];
+    const CAMPUS_OWNERSHIP = ["Federal", "State"];
+    let campusReqId = 0;
+    async function loadCampuses(type, ownership) {
+      const reqId = ++campusReqId;
+      const rows = await api(`/api/institutions?type=${encodeURIComponent(type)}&ownership=${encodeURIComponent(ownership)}`);
+      if (reqId !== campusReqId) return; // a newer request superseded this one
+      fillSelect(occCampus, rows, "Select campus");
+    }
+    function syncOccupation() {
+      const type = occType.find((r) => r.checked)?.value;
+      const isStudent = type === "Student", isOthers = type === "Others";
+      const needsOwnership = isStudent && OWNED_LEVELS.includes(occLevel.value);
+      const needsCampus = needsOwnership && CAMPUS_OWNERSHIP.includes(occOwnership.value);
+      occLevel.classList.toggle("hidden", !isStudent); occLevel.required = isStudent;
+      occOwnership.classList.toggle("hidden", !needsOwnership); occOwnership.required = needsOwnership;
+      if (!needsOwnership) occOwnership.value = "";
+      occCampus.classList.toggle("hidden", !needsCampus); occCampus.required = needsCampus;
+      if (!needsCampus) { occCampus.innerHTML = '<option value="">Select campus</option>'; syncSearchable(occCampus); }
+      occOthersText.classList.toggle("hidden", !isOthers); occOthersText.required = isOthers;
+      const campusName = needsCampus && occCampus.selectedIndex > 0 ? occCampus.options[occCampus.selectedIndex].textContent : "";
+      occValue.value = isStudent
+        ? (occLevel.value ? `Student - ${occLevel.value}` + (needsOwnership && occOwnership.value ? ` (${occOwnership.value})` : "") + (campusName ? ` - ${campusName}` : "") : "")
+        : isOthers ? occOthersText.value.trim() : (type || "");
+    }
+    function refreshCampuses() {
+      if (!(CAMPUS_OWNERSHIP.includes(occOwnership.value) && OWNED_LEVELS.includes(occLevel.value))) return;
+      occCampus.innerHTML = '<option value="">Loading campuses…</option>'; syncSearchable(occCampus);
+      loadCampuses(occLevel.value, occOwnership.value).then(syncOccupation);
+    }
+    occType.forEach((r) => r.addEventListener("change", syncOccupation));
+    occLevel.addEventListener("change", () => { syncOccupation(); refreshCampuses(); });
+    occOwnership.addEventListener("change", () => { syncOccupation(); refreshCampuses(); });
+    occCampus.addEventListener("change", syncOccupation);
+    occOthersText.addEventListener("input", syncOccupation);
+
     const refInput = $("#referral_code"), refHelp = $("#refHelp");
     const checkRef = async () => { const v = refInput.value.trim().toUpperCase(); refInput.value = v; if (!v) { refHelp.textContent = "Leave blank if nobody referred you."; refHelp.style.color = ""; return; }
       try { const r = await api("/api/referral/" + encodeURIComponent(v)); refHelp.textContent = `✔ Referred by ${r.name} (${r.memberCode})`; refHelp.style.color = "var(--green-dark)"; } catch { refHelp.textContent = "✖ Referral code not found"; refHelp.style.color = "var(--red)"; } };
     refInput.addEventListener("change", checkRef); if (refInput.value) checkRef();
+
+    const pw1 = $("#password"), pw2 = $("#password2"), pwMismatch = $("#pwMismatch"), submitBtn = $("#submitBtn");
+    function checkPasswords() {
+      const bothFilled = pw1.value.length >= 6 && pw2.value.length >= 6;
+      const match = pw1.value === pw2.value;
+      pwMismatch.style.display = pw2.value.length > 0 && !match ? "block" : "none";
+      submitBtn.disabled = !(bothFilled && match);
+    }
+    pw1.addEventListener("input", checkPasswords);
+    pw2.addEventListener("input", checkPasswords);
+    checkPasswords();
 
     const msg = $("#msg");
     function show(step) {
@@ -191,5 +322,7 @@ const GAT = (() => {
   }
 
   document.addEventListener("DOMContentLoaded", shareBoxes);
-  return { $, $$, esc, api, csrf, locationPicker, coordPicker, photoInput, registerPage, profilePage, reportPage, pointMap, shareBoxes };
+  document.addEventListener("DOMContentLoaded", () => initSearchableSelects());
+  document.addEventListener("DOMContentLoaded", () => initPasswordToggles());
+  return { $, $$, esc, api, csrf, locationPicker, coordPicker, photoInput, registerPage, profilePage, reportPage, pointMap, shareBoxes, initSearchableSelects, initPasswordToggles };
 })();

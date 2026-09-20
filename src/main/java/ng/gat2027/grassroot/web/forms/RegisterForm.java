@@ -23,6 +23,7 @@ public class RegisterForm extends LocationForm {
     @Size(max = 100) private String occupation;
     @Size(max = 60) private String education;
     @Size(max = 30) private String vin;
+    private boolean specialNeeds;
     private String photo;
     @NotBlank(message = "Password is required") @Size(min = 6, max = 200, message = "Password must be at least 6 characters") private String password;
     private String password2;

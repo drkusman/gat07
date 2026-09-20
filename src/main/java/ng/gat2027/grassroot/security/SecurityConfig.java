@@ -37,8 +37,8 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/", "/events", "/events/*/video", "/news", "/register", "/login", "/forgot-password", "/reset-password", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
-                                 "/api/locations/**", "/api/referral/**", "/api/events/**", "/actuator/health").permitAll()
-                .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/announcements/**", "/api/admin/import", "/admin/members/suspended", "/admin/members/*/role",
+                                 "/api/locations/**", "/api/referral/**", "/api/events/**", "/api/institutions", "/actuator/health").permitAll()
+                .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/announcements/**", "/admin/institutions/**", "/api/admin/import", "/admin/members/suspended", "/admin/members/*/role",
                                  "/admin/members/*/status", "/admin/members/*/password", "/admin/events/*/approve", "/admin/videos/*/approve").hasRole("ADMIN")
                 .requestMatchers("/admin/promotions/**").hasAnyRole("ADMIN", "ZONAL_COORDINATOR")
                 .requestMatchers("/admin/events/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "MEDIA_COORDINATOR")
