@@ -60,35 +60,6 @@
           <span class="help">You must be at least <span th:text="${ageRules.minAge()}">16</span> years old<th:block th:if="${ageRules.maxAge() != null}"> and not older than <span th:text="${ageRules.maxAge()}"></span></th:block> to register.</span></div>
         <div class="field"><label>Phone number <span class="req">*</span></label><input th:field="*{phone}" type="tel" required placeholder="0803 123 4567"><span class="help">Used to log in. One account per number.</span></div>
         <div class="field"><label>Email</label><input th:field="*{email}" type="email"></div>
-        <div class="field"><label>Occupation</label>
-          <div style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;padding-top:.3rem">
-            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" id="occStudent" value="Student" style="width:auto"> Student</label>
-            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Artisan" style="width:auto"> Artisan</label>
-            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Corps Member" style="width:auto"> Corps Member</label>
-            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Applicant" style="width:auto"> Applicant</label>
-            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" id="occOthers" value="Others" style="width:auto"> Others</label>
-          </div>
-          <select id="occStudentLevel" class="hidden" style="margin-top:.6rem">
-            <option value="">Select institution type</option>
-            <option value="Secondary">Secondary</option>
-            <option value="College of Education">College of Education</option>
-            <option value="Polytechnic">Polytechnic</option>
-            <option value="University">University</option>
-            <option value="Others">Others</option>
-          </select>
-          <select id="occOwnership" class="hidden" style="margin-top:.6rem">
-            <option value="">Select ownership</option>
-            <option value="Federal">Federal</option>
-            <option value="State">State</option>
-            <option value="Private">Private</option>
-            <option value="Others">Others</option>
-          </select>
-          <select id="occCampus" class="hidden" style="margin-top:.6rem">
-            <option value="">Select campus</option>
-          </select>
-          <input id="occOthersText" class="hidden" style="margin-top:.6rem" placeholder="Please specify your occupation">
-          <input type="hidden" th:field="*{occupation}" id="occupationValue">
-        </div>
         <div class="field"><label>Highest education</label><select th:field="*{education}"><option value="">Select</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option><option value="OND/NCE">OND/NCE</option><option value="HND/Bachelor's">HND/Bachelor's</option><option value="Master's">Master's</option><option value="Doctorate">Doctorate</option><option value="Other">Other</option></select></div>
         <div class="field"><label>Person with special needs?</label>
           <div style="display:flex;gap:1.2rem;align-items:center;padding-top:.3rem">
@@ -97,7 +68,37 @@
           </div>
         </div>
         <div class="field"><label>Voter Identification Number (VIN)</label><input th:field="*{vin}" placeholder="Optional — on your PVC"></div>
-        <div class="field full"><label>Residential address</label><input th:field="*{address}" placeholder="House number, street, town"></div>
+        <div class="field full"><label>Occupation</label>
+          <div style="display:flex;gap:1.2rem;align-items:center;flex-wrap:wrap;padding-top:.3rem">
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" id="occStudent" value="Student" style="width:auto"> Student</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Artisan" style="width:auto"> Artisan</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Corps Member" style="width:auto"> Corps Member</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" value="Applicant" style="width:auto"> Applicant</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="occType" id="occOthers" value="Others" style="width:auto"> Others</label>
+          </div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap;margin-top:.6rem">
+            <select id="occStudentLevel" class="hidden" style="flex:1;min-width:220px">
+              <option value="">Select institution type</option>
+              <option value="Secondary">Secondary</option>
+              <option value="College of Education">College of Education</option>
+              <option value="Polytechnic">Polytechnic</option>
+              <option value="University">University</option>
+              <option value="Others">Others</option>
+            </select>
+            <select id="occOwnership" class="hidden" style="flex:1;min-width:220px">
+              <option value="">Select ownership</option>
+              <option value="Federal">Federal</option>
+              <option value="State">State</option>
+              <option value="Private">Private</option>
+              <option value="Others">Others</option>
+            </select>
+            <select id="occCampus" class="hidden" style="flex:1;min-width:220px">
+              <option value="">Select campus</option>
+            </select>
+          </div>
+          <input id="occOthersText" class="hidden" style="margin-top:.6rem" placeholder="Please specify your occupation">
+          <input type="hidden" th:field="*{occupation}" id="occupationValue">
+        </div>
         <div class="field full"><label>Passport photograph</label><input type="file" id="photo" accept="image/*"><span class="help">Optional. JPG or PNG; it is resized automatically.</span>
           <img id="photoPreview" class="avatar hidden" alt="Preview"><input type="hidden" th:field="*{photo}"></div>
       </div>
