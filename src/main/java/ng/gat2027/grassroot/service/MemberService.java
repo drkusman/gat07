@@ -61,6 +61,7 @@ public class MemberService {
         applyBiodata(m, f.getFirstName(), f.getLastName(), f.getOtherName(), f.getGender(), f.getDob(), phone, f.getEmail(), f.getAddress(), f.getOccupation(), f.getEducation(), f.getVin(), f.getPhoto());
         m.setSpecialNeeds(f.isSpecialNeeds());
         m.setMaritalStatus(Codes.blankToNull(f.getMaritalStatus()));
+        m.setInstitutionId(f.institutionIdNumber());
         m.setZoneId(loc.zoneId()); m.setStateId(loc.stateId()); m.setLgaId(loc.lgaId()); m.setWardId(loc.wardId()); m.setPollingUnitId(loc.pollingUnitId());
         m.setPuLatitude(loc.lat()); m.setPuLongitude(loc.lng());
         m.setPasswordHash(encoder.encode(f.getPassword()));

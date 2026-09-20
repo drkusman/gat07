@@ -99,6 +99,7 @@
           </div>
           <input id="occOthersText" class="hidden" style="margin-top:.6rem" placeholder="Please specify your occupation">
           <input type="hidden" th:field="*{occupation}" id="occupationValue">
+          <input type="hidden" th:field="*{institutionId}" id="institutionIdValue">
         </div>
         <div class="field full"><label>Passport photograph</label><input type="file" id="photo" accept="image/*"><span class="help">Optional. JPG or PNG; it is resized automatically.</span>
           <img id="photoPreview" class="avatar hidden" alt="Preview"><input type="hidden" th:field="*{photo}"></div>

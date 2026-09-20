@@ -21,6 +21,7 @@ public class RegisterForm extends LocationForm {
     @Email(message = "Enter a valid email address") @Size(max = 120) private String email;
     @Size(max = 300) private String address;
     @Size(max = 100) private String occupation;
+    private String institutionId; // numeric id, or blank when not a student at a Federal/State tertiary institution
     @Size(max = 60) private String education;
     @Size(max = 30) private String vin;
     @Size(max = 20) private String maritalStatus;
@@ -30,4 +31,9 @@ public class RegisterForm extends LocationForm {
     private String password2;
     @Size(max = 20) private String referralCode;
     private boolean consent;
+
+    public Long institutionIdNumber() {
+        try { return institutionId == null || institutionId.isBlank() ? null : Long.parseLong(institutionId.trim()); }
+        catch (NumberFormatException e) { return null; }
+    }
 }

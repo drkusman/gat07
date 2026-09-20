@@ -207,7 +207,7 @@ const GAT = (() => {
     await picker.preset({ zone: d.zone, state: d.state, lga: d.lga, ward: d.ward, pu: d.pu });
     photoInput($("#photo"), $("[name=photo]"), $("#photoPreview"));
 
-    const occType = $$('input[name="occType"]'), occLevel = $("#occStudentLevel"), occOwnership = $("#occOwnership"), occCampus = $("#occCampus"), occOthersText = $("#occOthersText"), occValue = $("#occupationValue");
+    const occType = $$('input[name="occType"]'), occLevel = $("#occStudentLevel"), occOwnership = $("#occOwnership"), occCampus = $("#occCampus"), occOthersText = $("#occOthersText"), occValue = $("#occupationValue"), occInstitutionId = $("#institutionIdValue");
     const OWNED_LEVELS = ["College of Education", "Polytechnic", "University"];
     const CAMPUS_OWNERSHIP = ["Federal", "State"];
     let campusReqId = 0;
@@ -232,6 +232,7 @@ const GAT = (() => {
       occValue.value = isStudent
         ? (occLevel.value ? `Student - ${occLevel.value}` + (needsOwnership && occOwnership.value ? ` (${occOwnership.value})` : "") + (campusName ? ` - ${campusName}` : "") : "")
         : isOthers ? occOthersText.value.trim() : (type || "");
+      occInstitutionId.value = needsCampus && occCampus.value ? occCampus.value : "";
     }
     function refreshCampuses() {
       if (!(CAMPUS_OWNERSHIP.includes(occOwnership.value) && OWNED_LEVELS.includes(occLevel.value))) return;

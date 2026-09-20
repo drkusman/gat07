@@ -31,6 +31,7 @@ public class Member {
     @Column(name = "marital_status") private String maritalStatus;
     @Column(name = "special_needs", nullable = false) private boolean specialNeeds;
     @Column(name = "position_id") private Long positionId;
+    @Column(name = "institution_id") private Long institutionId;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) private String photo;
     @Column(name = "zone_id") private Long zoneId;
     @Column(name = "state_id") private Long stateId;

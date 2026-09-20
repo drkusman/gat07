@@ -26,15 +26,16 @@ public class SeedService implements ApplicationRunner {
     private final MemberRepository members; private final PasswordEncoder encoder; private final CsvImportService importer; private final ResourceLoader resources;
     private final RoleResponsibilityRepository roleResponsibilities;
     private final CommitteeRepository committees;
+    private final InstitutionRepository institutions;
     @Value("${gat.admin.phone}") String adminPhone;
     @Value("${gat.admin.password}") String adminPassword;
     @Value("${gat.import.csv}") String csvLocation;
     @Value("${gat.import.on-startup}") boolean importOnStartup;
 
     public SeedService(ZoneRepository zones, StateRepository states, LgaRepository lgas, PollingUnitRepository pus, MemberRepository members, PasswordEncoder encoder, CsvImportService importer,
-                        ResourceLoader resources, RoleResponsibilityRepository roleResponsibilities, CommitteeRepository committees) {
+                        ResourceLoader resources, RoleResponsibilityRepository roleResponsibilities, CommitteeRepository committees, InstitutionRepository institutions) {
         this.zones = zones; this.states = states; this.lgas = lgas; this.pus = pus; this.members = members; this.encoder = encoder; this.importer = importer; this.resources = resources;
-        this.roleResponsibilities = roleResponsibilities; this.committees = committees;
+        this.roleResponsibilities = roleResponsibilities; this.committees = committees; this.institutions = institutions;
     }
 
     @Override
@@ -43,6 +44,7 @@ public class SeedService implements ApplicationRunner {
         seedAdmin();
         seedDemoAccounts();
         seedRoleResponsibilities();
+        backfillMemberInstitutions();
         seedCommittees();
         if (importOnStartup && pus.count() == 0) {
             Resource csv = resources.getResource(csvLocation);
@@ -223,5 +225,27 @@ public class SeedService implements ApplicationRunner {
             committees.save(e);
         }
         log.info("[seed] {} committees created", seed.size());
+    }
+
+    /** Registrations before institution_id existed only stored the campus name as the trailing segment of the
+     *  free-text occupation field (e.g. "Student - University (Federal) - Ahmadu Bello University"). Link any
+     *  such member to the matching Institution record by name, on every startup, so analytics can count them. */
+    @Transactional
+    public void backfillMemberInstitutions() {
+        var candidates = members.findAll().stream()
+            .filter(m -> m.getInstitutionId() == null && m.getOccupation() != null && m.getOccupation().startsWith("Student - ") && m.getOccupation().contains(" - "))
+            .toList();
+        if (candidates.isEmpty()) return;
+        Map<String, Long> byName = new HashMap<>();
+        for (Institution i : institutions.findAll()) byName.putIfAbsent(i.getName().trim().toLowerCase(java.util.Locale.ROOT), i.getId());
+        int updated = 0;
+        for (Member m : candidates) {
+            String occ = m.getOccupation();
+            int idx = occ.lastIndexOf(" - ");
+            String name = occ.substring(idx + 3).trim().toLowerCase(java.util.Locale.ROOT);
+            Long id = byName.get(name);
+            if (id != null) { m.setInstitutionId(id); members.save(m); updated++; }
+        }
+        if (updated > 0) log.info("[seed] backfilled institution_id for {} existing members", updated);
     }
 }
