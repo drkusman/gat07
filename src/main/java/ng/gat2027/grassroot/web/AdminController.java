@@ -604,6 +604,13 @@ public class AdminController {
         return "redirect:/admin/institutions";
     }
 
+    @PostMapping("/institutions/{id}/update")
+    public String updateInstitution(@PathVariable Long id, @RequestParam String name, @RequestParam String type, @RequestParam String ownership, RedirectAttributes ra) {
+        try { institutions.update(id, name, type, ownership); ra.addFlashAttribute("success", "Institution updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/institutions";
+    }
+
     @PostMapping("/institutions/{id}/delete")
     public String deleteInstitution(@PathVariable Long id, RedirectAttributes ra) {
         try { institutions.delete(id); ra.addFlashAttribute("success", "Institution removed."); }

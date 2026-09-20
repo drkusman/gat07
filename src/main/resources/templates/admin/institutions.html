@@ -42,20 +42,58 @@
     </div>
   </div>
   <div class="panel">
-    <div class="ph"><h2>Institutions</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span></div>
-    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+    <div class="ph"><h2>Institutions</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span>
+      <div class="act"><input id="instSearch" type="text" placeholder="Search institutions…" style="width:220px"></div>
+    </div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl" id="instTable">
       <thead><tr><th>Name</th><th>Type</th><th>Ownership</th><th class="no-print"></th></tr></thead>
       <tbody>
-        <tr th:each="i : ${rows}">
+        <th:block th:each="i : ${rows}">
+        <tr class="inst-row" th:attr="data-name=${#strings.toLowerCase(i.name)}">
           <td><b th:text="${i.name}"></b></td>
           <td class="mini"><span class="pill blue" th:text="${i.type}"></span></td>
           <td class="mini"><span class="pill gold" th:text="${i.ownership}"></span></td>
-          <td class="no-print">
+          <td class="no-print btn-row">
+            <button class="btn sm secondary" type="button" th:attr="data-edit-target='edit-' + ${i.id}" onclick="document.getElementById(this.dataset.editTarget).classList.toggle('hidden')">Edit</button>
             <form th:action="@{/admin/institutions/{id}/delete(id=${i.id})}" method="post" onsubmit="return confirm('Remove this institution?')">
               <button class="btn sm danger" type="submit">Remove</button></form>
           </td>
         </tr>
+        <tr class="edit-row hidden" th:id="'edit-' + ${i.id}">
+          <td colspan="4">
+            <form th:action="@{/admin/institutions/{id}/update(id=${i.id})}" method="post" class="form-grid" style="grid-template-columns:2fr 1fr 1fr auto;align-items:end">
+              <div class="field"><label>Institution name</label><input name="name" th:value="${i.name}" required></div>
+              <div class="field"><label>Type</label>
+                <select class="editTypeSelect">
+                  <option value="University" th:selected="${i.type == 'University'}">University</option>
+                  <option value="Polytechnic" th:selected="${i.type == 'Polytechnic'}">Polytechnic</option>
+                  <option value="College of Education" th:selected="${i.type == 'College of Education'}">College of Education</option>
+                  <option value="Others" th:selected="${i.type != 'University' and i.type != 'Polytechnic' and i.type != 'College of Education'}">Others</option>
+                </select>
+                <input class="editTypeOther hidden" placeholder="Specify the type" style="margin-top:.4rem"
+                       th:value="${i.type != 'University' and i.type != 'Polytechnic' and i.type != 'College of Education'} ? ${i.type} : ''">
+                <input type="hidden" name="type" class="editTypeValue" th:value="${i.type}">
+              </div>
+              <div class="field"><label>Ownership</label>
+                <select class="editOwnershipSelect">
+                  <option value="Federal" th:selected="${i.ownership == 'Federal'}">Federal</option>
+                  <option value="State" th:selected="${i.ownership == 'State'}">State</option>
+                  <option value="Others" th:selected="${i.ownership != 'Federal' and i.ownership != 'State'}">Others</option>
+                </select>
+                <input class="editOwnershipOther hidden" placeholder="Specify the ownership" style="margin-top:.4rem"
+                       th:value="${i.ownership != 'Federal' and i.ownership != 'State'} ? ${i.ownership} : ''">
+                <input type="hidden" name="ownership" class="editOwnershipValue" th:value="${i.ownership}">
+              </div>
+              <div class="field btn-row">
+                <button class="btn sm" type="submit">Save</button>
+                <button class="btn secondary sm" type="button" onclick="this.closest('tr').classList.add('hidden')">Cancel</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        </th:block>
         <tr th:if="${rows.isEmpty()}"><td colspan="4" class="empty">No institutions yet — add your first one above</td></tr>
+        <tr id="instNoMatch" class="hidden"><td colspan="4" class="empty">No institutions match your search</td></tr>
       </tbody></table></div>
   </div>
   <script>
@@ -73,6 +111,45 @@
     }
     wireOthers('instTypeSelect', 'instTypeOther', 'instTypeValue');
     wireOthers('instOwnershipSelect', 'instOwnershipOther', 'instOwnershipValue');
+
+    // Edit rows (one per institution) reuse the same select+Others pattern, wired by
+    // event delegation since there are too many rows to give each one its own listeners.
+    function syncEditOther(select) {
+      var field = select.closest('.field');
+      var other = field.querySelector('.editTypeOther, .editOwnershipOther');
+      var value = field.querySelector('.editTypeValue, .editOwnershipValue');
+      var isOthers = select.value === 'Others';
+      other.classList.toggle('hidden', !isOthers);
+      value.value = isOthers ? other.value.trim() : select.value;
+    }
+    document.addEventListener('change', function (e) {
+      if (e.target.classList.contains('editTypeSelect') || e.target.classList.contains('editOwnershipSelect')) syncEditOther(e.target);
+    });
+    document.addEventListener('input', function (e) {
+      if (e.target.classList.contains('editTypeOther') || e.target.classList.contains('editOwnershipOther')) {
+        var field = e.target.closest('.field');
+        var select = field.querySelector('.editTypeSelect, .editOwnershipSelect');
+        var value = field.querySelector('.editTypeValue, .editOwnershipValue');
+        value.value = e.target.value.trim();
+      }
+    });
+
+    // Live client-side search over the institutions table by name.
+    var searchBox = document.getElementById('instSearch');
+    if (searchBox) {
+      searchBox.addEventListener('input', function () {
+        var q = searchBox.value.trim().toLowerCase();
+        var anyVisible = false;
+        document.querySelectorAll('#instTable tbody tr.inst-row').forEach(function (tr) {
+          var match = !q || (tr.dataset.name || '').indexOf(q) !== -1;
+          tr.classList.toggle('hidden', !match);
+          var editBtn = tr.querySelector('[data-edit-target]');
+          if (!match && editBtn) { var edit = document.getElementById(editBtn.dataset.editTarget); if (edit) edit.classList.add('hidden'); }
+          if (match) anyVisible = true;
+        });
+        document.getElementById('instNoMatch').classList.toggle('hidden', anyVisible);
+      });
+    }
   })();
   </script>
 </div>

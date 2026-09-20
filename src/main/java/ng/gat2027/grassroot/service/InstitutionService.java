@@ -37,6 +37,15 @@ public class InstitutionService {
     }
 
     @Transactional
+    public Institution update(Long id, String name, String type, String ownership) {
+        Institution i = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Institution not found"));
+        i.setName(name.trim());
+        i.setType(type);
+        i.setOwnership(ownership);
+        return repo.save(i);
+    }
+
+    @Transactional
     public void delete(Long id) { repo.deleteById(id); }
 
     /** CSV columns: name, type, ownership (with or without a header row).
