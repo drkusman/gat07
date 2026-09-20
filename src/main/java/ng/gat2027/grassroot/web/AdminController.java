@@ -44,13 +44,14 @@ public class AdminController {
     private final PromoVideoService promoVideos;
     private final InstitutionService institutions;
     private final RoleResponsibilityService roleResponsibilities;
+    private final OrganizationService organization;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
                            MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus,
-                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions, RoleResponsibilityService roleResponsibilities) {
+                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions, RoleResponsibilityService roleResponsibilities, OrganizationService organization) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
         this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.announcements = announcements;
-        this.promoVideos = promoVideos; this.institutions = institutions; this.roleResponsibilities = roleResponsibilities;
+        this.promoVideos = promoVideos; this.institutions = institutions; this.roleResponsibilities = roleResponsibilities; this.organization = organization;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -102,6 +103,7 @@ public class AdminController {
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
             nav.add(NavItem.of("/admin/institutions", "Institutions", "🎓", "Operations"));
             nav.add(NavItem.of("/admin/roles", "Roles & Responsibilities", "🛡", "Operations"));
+            nav.add(NavItem.of("/admin/organization", "Organizational Structure", "🏛", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
         }
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
@@ -647,6 +649,67 @@ public class AdminController {
         try { roleResponsibilities.revoke(id); ra.addFlashAttribute("success", "Responsibility revoked."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/roles";
+    }
+
+    @GetMapping("/organization")
+    public String organizationList(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Organizational Structure", f);
+        model.addAttribute("committeeRows", organization.committees());
+        model.addAttribute("committeeOptions", organization.committeesList());
+        model.addAttribute("positionRows", organization.positions());
+        return "admin/organization";
+    }
+
+    @PostMapping("/organization/committees")
+    public String addCommittee(@RequestParam String code, @RequestParam String name, RedirectAttributes ra) {
+        try { organization.addCommittee(code, name); ra.addFlashAttribute("success", "Committee added."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/organization";
+    }
+
+    @PostMapping("/organization/committees/{id}/edit")
+    public String editCommittee(@PathVariable Long id, @RequestParam String code, @RequestParam String name, RedirectAttributes ra) {
+        try { organization.updateCommittee(id, code, name); ra.addFlashAttribute("success", "Committee updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/organization";
+    }
+
+    @PostMapping("/organization/committees/{id}/delete")
+    public String deleteCommittee(@PathVariable Long id, RedirectAttributes ra) {
+        try { organization.deleteCommittee(id); ra.addFlashAttribute("success", "Committee removed."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/organization";
+    }
+
+    @PostMapping("/organization/positions")
+    public String addPosition(@RequestParam String title, @RequestParam Long committeeId, RedirectAttributes ra) {
+        try { organization.addPosition(title, committeeId); ra.addFlashAttribute("success", "Position added."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/organization";
+    }
+
+    @PostMapping("/organization/positions/{id}/edit")
+    public String editPosition(@PathVariable Long id, @RequestParam String title, @RequestParam Long committeeId, RedirectAttributes ra) {
+        try { organization.updatePosition(id, title, committeeId); ra.addFlashAttribute("success", "Position updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/organization";
+    }
+
+    @PostMapping("/organization/positions/{id}/delete")
+    public String deletePosition(@PathVariable Long id, RedirectAttributes ra) {
+        try { organization.deletePosition(id); ra.addFlashAttribute("success", "Position removed."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/organization";
+    }
+
+    @PostMapping("/organization/positions/import")
+    public String importPositions(@RequestParam("file") MultipartFile file, RedirectAttributes ra) {
+        try {
+            if (file.isEmpty()) throw new IllegalArgumentException("Choose a CSV file first");
+            var s = organization.importCsv(new String(file.getBytes(), StandardCharsets.UTF_8));
+            ra.addFlashAttribute("success", s.text());
+        } catch (Exception e) { ra.addFlashAttribute("error", "Import failed: " + e.getMessage()); }
+        return "redirect:/admin/organization";
     }
 
     @GetMapping("/settings")

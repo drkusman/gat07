@@ -25,15 +25,16 @@ public class SeedService implements ApplicationRunner {
     private final ZoneRepository zones; private final StateRepository states; private final LgaRepository lgas; private final PollingUnitRepository pus;
     private final MemberRepository members; private final PasswordEncoder encoder; private final CsvImportService importer; private final ResourceLoader resources;
     private final RoleResponsibilityRepository roleResponsibilities;
+    private final CommitteeRepository committees;
     @Value("${gat.admin.phone}") String adminPhone;
     @Value("${gat.admin.password}") String adminPassword;
     @Value("${gat.import.csv}") String csvLocation;
     @Value("${gat.import.on-startup}") boolean importOnStartup;
 
     public SeedService(ZoneRepository zones, StateRepository states, LgaRepository lgas, PollingUnitRepository pus, MemberRepository members, PasswordEncoder encoder, CsvImportService importer,
-                        ResourceLoader resources, RoleResponsibilityRepository roleResponsibilities) {
+                        ResourceLoader resources, RoleResponsibilityRepository roleResponsibilities, CommitteeRepository committees) {
         this.zones = zones; this.states = states; this.lgas = lgas; this.pus = pus; this.members = members; this.encoder = encoder; this.importer = importer; this.resources = resources;
-        this.roleResponsibilities = roleResponsibilities;
+        this.roleResponsibilities = roleResponsibilities; this.committees = committees;
     }
 
     @Override
@@ -42,6 +43,7 @@ public class SeedService implements ApplicationRunner {
         seedAdmin();
         seedDemoAccounts();
         seedRoleResponsibilities();
+        seedCommittees();
         if (importOnStartup && pus.count() == 0) {
             Resource csv = resources.getResource(csvLocation);
             if (csv.exists()) {
@@ -198,5 +200,28 @@ public class SeedService implements ApplicationRunner {
             roleResponsibilities.save(e);
         }
         log.info("[seed] {} role responsibility entries created", seed.size());
+    }
+
+    /** The party's fixed committee tiers (Board of Trustees down to Polling Unit) - only seeded when the
+     *  table is empty. Admin can rename, add, or remove committees afterwards from Admin > Organizational Structure. */
+    @Transactional
+    public void seedCommittees() {
+        if (committees.count() > 0) return;
+        record C(String code, String name) {}
+        var seed = java.util.List.of(
+            new C("BOT", "Board of Trustees"),
+            new C("NWC", "National Working Committee"),
+            new C("ZEC", "Zonal Executive Committee"),
+            new C("SEC", "State Executive Committee"),
+            new C("SDEC", "Senatorial District Executive Committee"),
+            new C("LGEC", "Local Government Executive Committee"),
+            new C("PUEC", "Polling Unit Executive Committee")
+        );
+        for (C c : seed) {
+            Committee e = new Committee();
+            e.setCode(c.code()); e.setName(c.name());
+            committees.save(e);
+        }
+        log.info("[seed] {} committees created", seed.size());
     }
 }

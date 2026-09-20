@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Add a committee</h2></div>
+    <form th:action="@{/admin/organization/committees}" method="post" class="pb">
+      <div class="form-grid">
+        <div class="field"><label>Code</label><input name="code" required maxlength="20" placeholder="e.g. BOT" style="text-transform:uppercase"></div>
+        <div class="field full"><label>Name</label><input name="name" required maxlength="120" placeholder="e.g. Board of Trustees"></div>
+      </div>
+      <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Add committee</button></div>
+    </form>
+  </div>
+
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Committees</h2><span class="pill" th:text="${#lists.size(committeeRows)} + ' total'"></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Code</th><th>Name</th><th>Positions</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <th:block th:each="row : ${committeeRows}">
+        <tr class="committee-row">
+          <td><span class="pill blue" th:text="${row.committee().code}"></span></td>
+          <td><b th:text="${row.committee().name}"></b></td>
+          <td class="mini" th:text="${row.positionCount()}"></td>
+          <td class="no-print btn-row">
+            <button class="btn sm secondary" type="button" th:attr="data-edit-target='edit-committee-' + ${row.committee().id}" onclick="document.getElementById(this.dataset.editTarget).classList.toggle('hidden')">Edit</button>
+            <form th:action="@{/admin/organization/committees/{id}/delete(id=${row.committee().id})}" method="post" onsubmit="return confirm('Remove this committee? This only works if no positions belong to it.')" style="display:inline">
+              <button class="btn sm danger" type="submit">Remove</button></form>
+          </td>
+        </tr>
+        <tr class="edit-row hidden" th:id="'edit-committee-' + ${row.committee().id}">
+          <td colspan="4">
+            <form th:action="@{/admin/organization/committees/{id}/edit(id=${row.committee().id})}" method="post" class="form-grid" style="grid-template-columns:1fr 2fr auto;align-items:end">
+              <div class="field"><label>Code</label><input name="code" th:value="${row.committee().code}" required maxlength="20" style="text-transform:uppercase"></div>
+              <div class="field"><label>Name</label><input name="name" th:value="${row.committee().name}" required maxlength="120"></div>
+              <div class="field btn-row">
+                <button class="btn sm" type="submit">Save</button>
+                <button class="btn secondary sm" type="button" onclick="this.closest('tr').classList.add('hidden')">Cancel</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        </th:block>
+        <tr th:if="${committeeRows.isEmpty()}"><td colspan="4" class="empty">No committees yet — add your first one above</td></tr>
+      </tbody></table></div>
+  </div>
+
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Add a position</h2></div>
+    <form th:action="@{/admin/organization/positions}" method="post" class="pb">
+      <div class="form-grid">
+        <div class="field full"><label>Position title</label><input name="title" required maxlength="150" placeholder="e.g. State Coordinator"></div>
+        <div class="field"><label>Committee</label>
+          <select name="committeeId" required>
+            <option value="">Select committee</option>
+            <option th:each="c : ${committeeOptions}" th:value="${c.id}" th:text="${c.name} + ' (' + ${c.code} + ')'"></option>
+          </select>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Add position</button></div>
+    </form>
+  </div>
+
+  <div class="panel" style="margin-bottom:1.1rem">
+    <div class="ph"><h2>Bulk import positions (CSV)</h2></div>
+    <div class="pb">
+      <span class="help">Columns: position, committee_code — one position per row, with or without a header row. The committee code must already exist above (add it first if it doesn't). Unrecognised rows are skipped and listed after import.</span>
+      <form th:action="@{/admin/organization/positions/import}" method="post" enctype="multipart/form-data" style="margin-top:.8rem">
+        <input type="file" name="file" accept=".csv,text/csv" required>
+        <div class="btn-row" style="margin-top:.8rem"><button class="btn" type="submit" onclick="this.disabled=true;this.textContent='Importing…';this.form.submit()">Upload &amp; import</button></div>
+      </form>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph"><h2>Positions</h2><span class="pill" th:text="${#lists.size(positionRows)} + ' total'"></span>
+      <div class="act"><input id="posSearch" type="text" placeholder="Search positions…" style="width:220px"></div>
+    </div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl" id="posTable">
+      <thead><tr><th>Position</th><th>Committee</th><th class="no-print"></th></tr></thead>
+      <tbody>
+        <th:block th:each="row : ${positionRows}">
+        <tr class="pos-row" th:attr="data-name=${#strings.toLowerCase(row.position().title)}">
+          <td><b th:text="${row.position().title}"></b></td>
+          <td class="mini"><span class="pill gold" th:text="${row.committeeName} + ' (' + ${row.committeeCode} + ')'"></span></td>
+          <td class="no-print btn-row">
+            <button class="btn sm secondary" type="button" th:attr="data-edit-target='edit-pos-' + ${row.position().id}" onclick="document.getElementById(this.dataset.editTarget).classList.toggle('hidden')">Edit</button>
+            <form th:action="@{/admin/organization/positions/{id}/delete(id=${row.position().id})}" method="post" onsubmit="return confirm('Remove this position?')" style="display:inline">
+              <button class="btn sm danger" type="submit">Remove</button></form>
+          </td>
+        </tr>
+        <tr class="edit-row hidden" th:id="'edit-pos-' + ${row.position().id}">
+          <td colspan="3">
+            <form th:action="@{/admin/organization/positions/{id}/edit(id=${row.position().id})}" method="post" class="form-grid" style="grid-template-columns:2fr 1fr auto;align-items:end">
+              <div class="field"><label>Position title</label><input name="title" th:value="${row.position().title}" required maxlength="150"></div>
+              <div class="field"><label>Committee</label>
+                <select name="committeeId" required>
+                  <option th:each="c : ${committeeOptions}" th:value="${c.id}" th:text="${c.name} + ' (' + ${c.code} + ')'" th:selected="${c.id == row.position().committeeId}"></option>
+                </select>
+              </div>
+              <div class="field btn-row">
+                <button class="btn sm" type="submit">Save</button>
+                <button class="btn secondary sm" type="button" onclick="this.closest('tr').classList.add('hidden')">Cancel</button>
+              </div>
+            </form>
+          </td>
+        </tr>
+        </th:block>
+        <tr th:if="${positionRows.isEmpty()}"><td colspan="3" class="empty">No positions yet — add your first one above</td></tr>
+        <tr id="posNoMatch" class="hidden"><td colspan="3" class="empty">No positions match your search</td></tr>
+      </tbody></table></div>
+  </div>
+
+  <script>
+  (function () {
+    var searchBox = document.getElementById('posSearch');
+    if (searchBox) {
+      searchBox.addEventListener('input', function () {
+        var q = searchBox.value.trim().toLowerCase();
+        var anyVisible = false;
+        document.querySelectorAll('#posTable tbody tr.pos-row').forEach(function (tr) {
+          var match = !q || (tr.dataset.name || '').indexOf(q) !== -1;
+          tr.classList.toggle('hidden', !match);
+          var editBtn = tr.querySelector('[data-edit-target]');
+          if (!match && editBtn) { var edit = document.getElementById(editBtn.dataset.editTarget); if (edit) edit.classList.add('hidden'); }
+          if (match) anyVisible = true;
+        });
+        document.getElementById('posNoMatch').classList.toggle('hidden', anyVisible);
+      });
+    }
+  })();
+  </script>
+</div>
+</body>
+</html>
