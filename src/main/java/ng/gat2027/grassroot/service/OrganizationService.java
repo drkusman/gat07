@@ -2,6 +2,7 @@ package ng.gat2027.grassroot.service;
 
 import ng.gat2027.grassroot.domain.Committee;
 import ng.gat2027.grassroot.domain.Position;
+import ng.gat2027.grassroot.domain.Role;
 import ng.gat2027.grassroot.repo.CommitteeRepository;
 import ng.gat2027.grassroot.repo.PositionRepository;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -18,6 +20,24 @@ import java.util.stream.Collectors;
 public class OrganizationService {
     public record PositionRow(Position position, String committeeCode, String committeeName) {}
     public record CommitteeRow(Committee committee, long positionCount) {}
+    public record CommitteeGroup(Committee committee, List<Position> positions) {}
+
+    /** Positions whose title exactly matches one of the system's operational roles carry that role; every other
+     *  position (committee secretaries, treasurers, auditors, PWD leaders, etc.) leaves the member as a plain Member.
+     *  Keyed by the position title, lowercased/trimmed, so a rename that still matches keeps working. */
+    private static final Map<String, Role> ROLE_BY_POSITION_TITLE = Map.ofEntries(
+        Map.entry("local government/area council coordinator", Role.LGA_COORDINATOR),
+        Map.entry("ward coordinator", Role.WARD_COORDINATOR),
+        Map.entry("polling unit coordinator", Role.POLLING_UNIT_COORDINATOR),
+        Map.entry("state coordinator", Role.COORDINATOR),
+        Map.entry("zonal coordinator", Role.ZONAL_COORDINATOR),
+        Map.entry("national coordinator", Role.ADMIN),
+        Map.entry("national media/publicity secretary", Role.NATIONAL_PUBLICITY_SECRETARY)
+    );
+
+    public static Role roleForPositionTitle(String title) {
+        return ROLE_BY_POSITION_TITLE.getOrDefault(title == null ? "" : title.trim().toLowerCase(Locale.ROOT), Role.MEMBER);
+    }
 
     public static class ImportSummary {
         public int rows, created, skipped;
@@ -68,6 +88,17 @@ public class OrganizationService {
         long inUse = positions.countByCommitteeId(id);
         if (inUse > 0) throw new IllegalArgumentException("Can't remove this committee — " + inUse + " position(s) still belong to it. Remove or reassign them first.");
         committees.deleteById(id);
+    }
+
+    public Optional<Position> findPosition(Long id) { return positions.findById(id); }
+    public Optional<Committee> findCommittee(Long id) { return committees.findById(id); }
+
+    public List<CommitteeGroup> positionsGroupedByCommittee() {
+        Map<Long, List<Position>> byCommittee = positions.findAllByOrderByTitleAsc().stream()
+            .collect(Collectors.groupingBy(Position::getCommitteeId));
+        return committees.findAllByOrderByNameAsc().stream()
+            .map(c -> new CommitteeGroup(c, byCommittee.getOrDefault(c.getId(), List.of())))
+            .toList();
     }
 
     // ----- positions -----

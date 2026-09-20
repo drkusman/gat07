@@ -2,9 +2,11 @@ package ng.gat2027.grassroot.web;
 
 import ng.gat2027.grassroot.domain.Announcement;
 import ng.gat2027.grassroot.domain.AnnouncementAudience;
+import ng.gat2027.grassroot.domain.Committee;
 import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.Institution;
 import ng.gat2027.grassroot.domain.Member;
+import ng.gat2027.grassroot.domain.Position;
 import ng.gat2027.grassroot.domain.MemberStatus;
 import ng.gat2027.grassroot.domain.PromotionStage;
 import ng.gat2027.grassroot.domain.PromoVideo;
@@ -22,6 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -45,13 +49,15 @@ public class AdminController {
     private final InstitutionService institutions;
     private final RoleResponsibilityService roleResponsibilities;
     private final OrganizationService organization;
+    private final AppointmentLetterService letters;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
                            MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus,
-                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions, RoleResponsibilityService roleResponsibilities, OrganizationService organization) {
+                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions, RoleResponsibilityService roleResponsibilities, OrganizationService organization,
+                           AppointmentLetterService letters) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
         this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.announcements = announcements;
-        this.promoVideos = promoVideos; this.institutions = institutions; this.roleResponsibilities = roleResponsibilities; this.organization = organization;
+        this.promoVideos = promoVideos; this.institutions = institutions; this.roleResponsibilities = roleResponsibilities; this.organization = organization; this.letters = letters;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -227,6 +233,12 @@ public class AdminController {
             boolean canDecidePending = u.isAdmin() || (u.getRole() == Role.ZONAL_COORDINATOR && m.getPendingRoleStage() == PromotionStage.ZONAL && Objects.equals(u.getZoneId(), m.getZoneId()));
             model.addAttribute("canDecidePending", canDecidePending);
         }
+        if (u.isAdmin()) {
+            model.addAttribute("committeeGroups", organization.positionsGroupedByCommittee());
+            Position currentPosition = m.getPositionId() == null ? null : organization.findPosition(m.getPositionId()).orElse(null);
+            model.addAttribute("currentPositionLabel", currentPosition == null ? null
+                : currentPosition.getTitle() + " (" + organization.findCommittee(currentPosition.getCommitteeId()).map(Committee::getCode).orElse("?") + ")");
+        }
         return "admin/member";
     }
 
@@ -235,6 +247,31 @@ public class AdminController {
         try { memberService.setRole(currentUser.require(), id, Role.valueOf(role)); ra.addFlashAttribute("success", "Role updated."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/members/" + id;
+    }
+
+    @PostMapping("/members/{id}/position")
+    public String assignPosition(@PathVariable Long id, @RequestParam(required = false) Long positionId, RedirectAttributes ra) {
+        try { memberService.assignPosition(currentUser.require(), id, positionId); ra.addFlashAttribute("success", "Position updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/members/" + id;
+    }
+
+    @GetMapping("/members/{id}/appointment-letter")
+    public void appointmentLetter(@PathVariable Long id, HttpServletResponse response) throws IOException {
+        try {
+            Member m = members.findById(id).orElseThrow(() -> new MemberService.MemberException("Member not found"));
+            if (m.getPositionId() == null) throw new MemberService.MemberException("This member has no position assigned yet");
+            Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
+            Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
+            byte[] pdf = letters.generate(m, position, committee);
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=\"Appointment-Letter-" + m.getMemberCode() + ".pdf\"");
+            response.setContentLength(pdf.length);
+            response.getOutputStream().write(pdf);
+            response.getOutputStream().flush();
+        } catch (MemberService.MemberException e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        }
     }
 
     @PostMapping("/members/{id}/role/request")

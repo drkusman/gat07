@@ -1,14 +1,19 @@
 package ng.gat2027.grassroot.web;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import ng.gat2027.grassroot.domain.Committee;
 import ng.gat2027.grassroot.domain.Member;
+import ng.gat2027.grassroot.domain.Position;
 import ng.gat2027.grassroot.repo.FieldReportRepository;
 import ng.gat2027.grassroot.repo.MemberRepository;
 import ng.gat2027.grassroot.security.CurrentUser;
 import ng.gat2027.grassroot.service.AnalyticsService;
 import ng.gat2027.grassroot.service.AnnouncementService;
+import ng.gat2027.grassroot.service.AppointmentLetterService;
 import ng.gat2027.grassroot.service.LocationService;
 import ng.gat2027.grassroot.service.MemberService;
+import ng.gat2027.grassroot.service.OrganizationService;
 import ng.gat2027.grassroot.service.SettingsService;
 import ng.gat2027.grassroot.web.forms.ProfileForm;
 import org.springframework.stereotype.Controller;
@@ -17,6 +22,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,12 +31,12 @@ import java.util.List;
 public class DashboardController {
     private final CurrentUser currentUser; private final AnalyticsService analytics; private final MemberService memberService;
     private final MemberRepository members; private final FieldReportRepository reports; private final SettingsService settings;
-    private final AnnouncementService announcements;
+    private final AnnouncementService announcements; private final OrganizationService organization; private final AppointmentLetterService letters;
 
     public DashboardController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, MemberRepository members, FieldReportRepository reports, SettingsService settings,
-                               AnnouncementService announcements) {
+                               AnnouncementService announcements, OrganizationService organization, AppointmentLetterService letters) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.members = members; this.reports = reports; this.settings = settings;
-        this.announcements = announcements;
+        this.announcements = announcements; this.organization = organization; this.letters = letters;
     }
 
     /** Sidebar + common shell attributes for every member page. */
@@ -44,6 +50,7 @@ public class DashboardController {
         nav.add(NavItem.of("/dashboard/profile", "Profile & Settings", "✎", "Account"));
         nav.add(NavItem.of("/report", "File a Field Report", "✚", "Account"));
         if (m.isStaff()) nav.add(NavItem.of("/admin", "Coordination Dashboard", "★", "Account"));
+        if (m.getPositionId() != null) nav.add(NavItem.of("/dashboard/appointment-letter", "Download Appointment Letter", "📄", "Account").asExternal());
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
         nav.add(NavItem.of("/", "Public Website", "⌂", "Help"));
         model.addAttribute("nav", nav);
@@ -64,6 +71,24 @@ public class DashboardController {
         model.addAttribute("coverage", analytics.coverage(m));
         model.addAttribute("stateNews", announcements.memberNews(m.getStateId()));
         return "dashboard/overview";
+    }
+
+    @GetMapping("/appointment-letter")
+    public void appointmentLetter(HttpServletResponse response) throws IOException {
+        Member m = currentUser.require();
+        try {
+            if (m.getPositionId() == null) throw new MemberService.MemberException("No position assigned yet");
+            Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
+            Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
+            byte[] pdf = letters.generate(m, position, committee);
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=\"Appointment-Letter-" + m.getMemberCode() + ".pdf\"");
+            response.setContentLength(pdf.length);
+            response.getOutputStream().write(pdf);
+            response.getOutputStream().flush();
+        } catch (MemberService.MemberException e) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
+        }
     }
 
     @GetMapping("/referrals")

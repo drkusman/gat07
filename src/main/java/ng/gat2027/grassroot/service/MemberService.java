@@ -3,11 +3,13 @@ package ng.gat2027.grassroot.service;
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.domain.MemberStatus;
 import ng.gat2027.grassroot.domain.PasswordResetToken;
+import ng.gat2027.grassroot.domain.Position;
 import ng.gat2027.grassroot.domain.PromotionStage;
 import ng.gat2027.grassroot.domain.Role;
 import ng.gat2027.grassroot.repo.MemberRepository;
 import ng.gat2027.grassroot.repo.PasswordResetTokenRepository;
 import ng.gat2027.grassroot.repo.PollingUnitRepository;
+import ng.gat2027.grassroot.repo.PositionRepository;
 import ng.gat2027.grassroot.web.forms.ProfileForm;
 import ng.gat2027.grassroot.web.forms.RegisterForm;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -26,12 +28,12 @@ public class MemberService {
 
     private final MemberRepository members; private final PollingUnitRepository pus; private final LocationService locations;
     private final SettingsService settings; private final PasswordEncoder encoder; private final JdbcTemplate jdbc;
-    private final PasswordResetTokenRepository resetTokens; private final MailService mail;
+    private final PasswordResetTokenRepository resetTokens; private final MailService mail; private final PositionRepository positions;
 
     public MemberService(MemberRepository members, PollingUnitRepository pus, LocationService locations, SettingsService settings, PasswordEncoder encoder, JdbcTemplate jdbc,
-                          PasswordResetTokenRepository resetTokens, MailService mail) {
+                          PasswordResetTokenRepository resetTokens, MailService mail, PositionRepository positions) {
         this.members = members; this.pus = pus; this.locations = locations; this.settings = settings; this.encoder = encoder; this.jdbc = jdbc;
-        this.resetTokens = resetTokens; this.mail = mail;
+        this.resetTokens = resetTokens; this.mail = mail; this.positions = positions;
     }
 
     @Transactional
@@ -105,6 +107,22 @@ public class MemberService {
         if (admin.getId().equals(memberId) && role != Role.ADMIN) throw new MemberException("You cannot remove your own admin role");
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
         m.setRole(role);
+        clearPending(m);
+        members.save(m);
+    }
+
+    /** Assigns a member to an organisational Position (Admin-only, instant - the same as a direct role change).
+     *  The member's Role is derived from the position's title: positions that match one of the system's operational
+     *  roles (see OrganizationService.roleForPositionTitle) carry that role; every other position leaves them a
+     *  plain Member. Passing a null positionId clears the assignment without touching the member's current role. */
+    @Transactional
+    public void assignPosition(Member admin, Long memberId, Long positionId) {
+        if (admin.getId().equals(memberId)) throw new MemberException("You cannot change your own position");
+        Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
+        if (positionId == null) { m.setPositionId(null); members.save(m); return; }
+        Position position = positions.findById(positionId).orElseThrow(() -> new MemberException("Position not found"));
+        m.setPositionId(positionId);
+        m.setRole(OrganizationService.roleForPositionTitle(position.getTitle()));
         clearPending(m);
         members.save(m);
     }

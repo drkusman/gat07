@@ -16,6 +16,10 @@
           <dt>Occupation</dt><dd th:text="${m.occupation} ?: '—'"></dd><dt>Education</dt><dd th:text="${m.education} ?: '—'"></dd><dt>VIN</dt><dd th:text="${m.vin} ?: '—'"></dd><dt>Address</dt><dd th:text="${m.address} ?: '—'"></dd>
           <dt>Marital status</dt><dd th:text="${m.maritalStatus} ?: '—'"></dd>
           <dt>Special needs</dt><dd th:text="${m.specialNeeds} ? 'Yes' : 'No'"></dd>
+          <dt>Position</dt><dd>
+            <span th:text="${currentPositionLabel} ?: '—'"></span>
+            <a th:if="${m.positionId != null}" class="mini" style="margin-left:.5rem" th:href="@{/admin/members/{id}/appointment-letter(id=${m.id})}" target="_blank">Download appointment letter</a>
+          </dd>
           <dt>Referral code</dt><dd><span class="mono" th:text="${m.referralCode}"></span></dd><dt>Referred by</dt><dd th:text="${p.referrerName() != null} ? (${p.referrerName()} + ' (' + ${p.referrerCode()} + ')') : '—'"></dd>
           <dt>Direct referrals</dt><dd th:text="${p.directReferrals()}"></dd><dt>Total network</dt><dd th:text="${p.totalDownline()}"></dd><dt>Joined</dt><dd th:text="${#temporals.format(m.createdAt, 'd MMM yyyy, HH:mm')}"></dd>
         </dl>
@@ -52,7 +56,18 @@
         <form th:action="@{/admin/members/{id}/password(id=${m.id})}" method="post" class="btn-row">
           <input name="password" placeholder="New password" minlength="6" required style="width:170px"><button class="btn secondary sm">Reset password</button></form>
       </div>
-      <p class="mini muted" th:if="${self}" style="margin-top:.5rem">You cannot change your own role or status.</p>
+      <div class="btn-row no-print" th:if="${isAdmin}" style="margin-top:.7rem">
+        <form th:action="@{/admin/members/{id}/position(id=${m.id})}" method="post" class="btn-row">
+          <select name="positionId" style="width:auto" th:disabled="${self}">
+            <option value="">No position</option>
+            <optgroup th:each="group : ${committeeGroups}" th:label="${group.committee().name} + ' (' + ${group.committee().code} + ')'">
+              <option th:each="pos : ${group.positions()}" th:value="${pos.id}" th:text="${pos.title}" th:selected="${pos.id == m.positionId}"></option>
+            </optgroup>
+          </select>
+          <button class="btn sm" th:disabled="${self}">Save position</button></form>
+      </div>
+      <p class="mini muted" style="margin-top:.4rem">Assigning a position that matches one of the system roles (e.g. State Coordinator, Zonal Coordinator) updates the member's role to match; every other position leaves them a Member.</p>
+      <p class="mini muted" th:if="${self}" style="margin-top:.5rem">You cannot change your own role, position, or status.</p>
       <div class="no-print" th:if="${canPropose}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
         <form th:action="@{/admin/members/{id}/role/request(id=${m.id})}" method="post" class="btn-row">
           <select name="role" style="width:auto">
