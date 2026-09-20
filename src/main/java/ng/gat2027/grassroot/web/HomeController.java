@@ -37,7 +37,6 @@ public class HomeController {
     public String home(@RequestParam(required = false) String play, Model model) {
         model.addAttribute("stats", analytics.locationStats());
         model.addAttribute("totalMembers", analytics.totalMembersDisplay());
-        model.addAttribute("publicInfo", announcements.publicInfo());
         List<PromoVideo> active = promoVideos.activeVideos();
         List<PromoVideo> playlist = playlistFor(play, active);
         String currentId = playlist.isEmpty() ? null : playlist.get(0).getYoutubeId();
@@ -58,6 +57,12 @@ public class HomeController {
         List<PromoVideo> reordered = new ArrayList<>(active);
         reordered.add(0, reordered.remove(idx));
         return reordered;
+    }
+
+    @GetMapping("/news")
+    public String newsPage(Model model) {
+        model.addAttribute("publicInfo", announcements.publicInfo());
+        return "news";
     }
 
     @GetMapping("/events")

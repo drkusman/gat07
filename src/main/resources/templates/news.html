@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><th:block th:replace="~{fragments/site :: pageHead('News')}"></th:block></head>
+<body>
+<th:block th:replace="~{fragments/site :: siteHeader('/news')}"></th:block>
+
+<main class="container">
+  <div class="card" style="margin-bottom:1.5rem">
+    <h2 style="text-align:center">News</h2>
+    <p class="muted" style="text-align:center;margin-top:-.3rem">General information and updates from GAT 2027.</p>
+  </div>
+  <div class="card" th:if="${publicInfo.size() > 0}">
+    <div th:each="a, aStat : ${publicInfo}" th:style="${aStat.first} ? 'margin-top:1rem' : 'margin-top:1rem;border-top:1px solid var(--line);padding-top:1rem'">
+      <h3 style="margin-bottom:.3rem" th:text="${a.title}"></h3>
+      <p class="muted" style="white-space:pre-wrap" th:text="${a.body}"></p>
+      <div class="small muted" th:text="${#temporals.format(a.createdAt, 'd MMM yyyy')}"></div>
+    </div>
+  </div>
+  <div class="card" th:if="${publicInfo.size() == 0}" style="text-align:center">
+    <span class="muted">No news posted yet — check back soon.</span>
+  </div>
+</main>
+<th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>
+</body>
+</html>

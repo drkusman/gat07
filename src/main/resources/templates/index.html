@@ -64,14 +64,6 @@
       </div>
     </div>
   </div>
-  <div class="card" th:if="${publicInfo.size() > 0}">
-    <h2 style="text-align:center">General Information</h2>
-    <div th:each="a, aStat : ${publicInfo}" th:style="${aStat.first} ? 'margin-top:1rem' : 'margin-top:1rem;border-top:1px solid var(--line);padding-top:1rem'">
-      <h3 style="margin-bottom:.3rem" th:text="${a.title}"></h3>
-      <p class="muted" style="white-space:pre-wrap" th:text="${a.body}"></p>
-      <div class="small muted" th:text="${#temporals.format(a.createdAt, 'd MMM yyyy')}"></div>
-    </div>
-  </div>
 </main>
 <th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>
 </body>
