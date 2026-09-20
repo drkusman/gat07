@@ -37,6 +37,27 @@
       });
       document.addEventListener("DOMContentLoaded", syncToggleButtons);
     })();
+    (function () {
+      function closeAll() {
+        Array.prototype.forEach.call(document.querySelectorAll("[data-nav-dropdown].open"), function (d) {
+          d.classList.remove("open");
+          var btn = d.querySelector("[data-nav-toggle]");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        });
+      }
+      document.addEventListener("click", function (e) {
+        var toggle = e.target.closest && e.target.closest("[data-nav-toggle]");
+        if (toggle) {
+          var dropdown = toggle.closest("[data-nav-dropdown]");
+          var willOpen = !dropdown.classList.contains("open");
+          closeAll();
+          if (willOpen) { dropdown.classList.add("open"); toggle.setAttribute("aria-expanded", "true"); }
+          return;
+        }
+        if (!e.target.closest("[data-nav-dropdown]")) closeAll();
+      });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeAll(); });
+    })();
     </script>
     <link rel="stylesheet" href="/css/style.css">
     <meta name="_csrf" th:content="${_csrf != null} ? ${_csrf.token} : ''">
@@ -48,8 +69,58 @@
   </th:block>
 </head>
 <body>
+  <th:block th:fragment="socialIcons">
+    <a class="social-youtube" href="https://www.youtube.com/channel/UCWPl3OAAQoizbIEfhNE5NiA" target="_blank" rel="noopener" aria-label="YouTube" title="YouTube">
+      <span class="social-label">YouTube</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.6 31.6 0 0 0 0 12a31.6 31.6 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.6 31.6 0 0 0 24 12a31.6 31.6 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>
+    </a>
+    <a class="social-facebook" href="https://www.facebook.com/grassrootsadvocacyfortinubu2027" target="_blank" rel="noopener" aria-label="Facebook" title="Facebook">
+      <span class="social-label">Facebook</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.5 17.52 2 12 2S2 6.5 2 12.06C2 17.08 5.66 21.23 10.44 22v-7.03H7.9v-2.91h2.54V9.85c0-2.51 1.49-3.9 3.77-3.9 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.9h-2.34V22C18.34 21.23 22 17.08 22 12.06Z"/></svg>
+    </a>
+    <a class="social-whatsapp" href="#" target="_blank" rel="noopener" aria-label="WhatsApp" title="WhatsApp">
+      <span class="social-label">WhatsApp</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4c-.3-.1-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.1-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.3-.4.1-.2 0-.4 0-.5-.1-.1-.7-1.6-.9-2.2-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.4s1.1 2.8 1.2 3c.1.2 2.2 3.3 5.3 4.6.7.3 1.3.5 1.8.6.7.2 1.4.2 1.9.1.6-.1 1.7-.7 2-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.6-.3ZM12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2Z"/></svg>
+    </a>
+    <a class="social-x" href="https://x.com/GAT2027" target="_blank" rel="noopener" aria-label="X (Twitter)" title="X">
+      <span class="social-label">X</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.9 2H22l-7.6 8.7L23.3 22h-7.2l-5.6-7.3L4 22H1l8.1-9.3L1 2h7.4l5.1 6.7Zm-1.3 18h1.8L6.5 4h-1.9Z"/></svg>
+    </a>
+    <a class="social-tiktok" href="https://www.tiktok.com/@grassroots.advoca?_r=1&amp;_t=ZT-98n8FaB0iA1" target="_blank" rel="noopener" aria-label="TikTok" title="TikTok">
+      <span class="social-label">TikTok</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.8a4.6 4.6 0 0 1-3.8-4h-3.1v14.4a2.8 2.8 0 1 1-2-2.7v-3.2a5.9 5.9 0 1 0 5.1 5.9V9.7a7.6 7.6 0 0 0 3.8 1v-3.1a4.6 4.6 0 0 1 0 0Z"/></svg>
+    </a>
+    <a class="social-instagram" href="https://www.instagram.com/grassrootsadvocacyfortinubu?igsh=YXN4OXY3ZDR6MWd3" target="_blank" rel="noopener" aria-label="Instagram" title="Instagram">
+      <span class="social-label">Instagram</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2c-2.7 0-3.06.01-4.12.06-1.06.05-1.79.22-2.43.47a4.9 4.9 0 0 0-1.77 1.15A4.9 4.9 0 0 0 2.53 5.45c-.25.64-.42 1.37-.47 2.43C2.01 8.94 2 9.3 2 12s.01 3.06.06 4.12c.05 1.06.22 1.79.47 2.43.26.66.6 1.22 1.15 1.77.55.55 1.11.9 1.77 1.15.64.25 1.37.42 2.43.47C8.94 21.99 9.3 22 12 22s3.06-.01 4.12-.06c1.06-.05 1.79-.22 2.43-.47a4.9 4.9 0 0 0 1.77-1.15 4.9 4.9 0 0 0 1.15-1.77c.25-.64.42-1.37.47-2.43.05-1.06.06-1.42.06-4.12s-.01-3.06-.06-4.12c-.05-1.06-.22-1.79-.47-2.43a4.9 4.9 0 0 0-1.15-1.77A4.9 4.9 0 0 0 18.55 2.53c-.64-.25-1.37-.42-2.43-.47C15.06 2.01 14.7 2 12 2Zm0 1.8c2.65 0 2.97.01 4.01.06.97.04 1.5.2 1.85.34.46.18.79.4 1.14.75s.57.68.75 1.14c.14.35.3.88.34 1.85.05 1.04.06 1.36.06 4.01s-.01 2.97-.06 4.01c-.04.97-.2 1.5-.34 1.85-.18.46-.4.79-.75 1.14a3.1 3.1 0 0 1-1.14.75c-.35.14-.88.3-1.85.34-1.04.05-1.36.06-4.01.06s-2.97-.01-4.01-.06c-.97-.04-1.5-.2-1.85-.34a3.1 3.1 0 0 1-1.14-.75 3.1 3.1 0 0 1-.75-1.14c-.14-.35-.3-.88-.34-1.85C3.81 14.97 3.8 14.65 3.8 12s.01-2.97.06-4.01c.04-.97.2-1.5.34-1.85.18-.46.4-.79.75-1.14.35-.35.68-.57 1.14-.75.35-.14.88-.3 1.85-.34C9.03 3.81 9.35 3.8 12 3.8Zm0 3.05a5.15 5.15 0 1 0 0 10.3 5.15 5.15 0 0 0 0-10.3Zm0 8.5a3.35 3.35 0 1 1 0-6.7 3.35 3.35 0 0 1 0 6.7Zm5.35-8.7a1.2 1.2 0 1 1-2.4 0 1.2 1.2 0 0 1 2.4 0Z"/></svg>
+    </a>
+  </th:block>
+
+  <th:block th:fragment="socialDropdown">
+    <div class="nav-dropdown" data-nav-dropdown>
+      <button type="button" class="nav-dropdown-btn" data-nav-toggle aria-haspopup="true" aria-expanded="false">
+        Social Media <span class="caret">▾</span>
+      </button>
+      <div class="nav-dropdown-menu social-links" th:insert="~{::socialIcons}"></div>
+    </div>
+  </th:block>
+
+  <th:block th:fragment="eventsDropdown(active)">
+    <div class="nav-dropdown" data-nav-dropdown>
+      <button type="button" class="nav-dropdown-btn" data-nav-toggle aria-haspopup="true" aria-expanded="false" th:classappend="${active == '/events'} ? 'active'">
+        Events <span class="caret">▾</span>
+      </button>
+      <div class="nav-dropdown-menu">
+        <a href="/events?when=upcoming">Upcoming Events</a>
+        <a href="/events?when=past">Past Events</a>
+        <a href="/events">All Events</a>
+      </div>
+    </div>
+  </th:block>
+
   <th:block th:fragment="siteHeader(active)">
     <div class="stripe"></div>
+    <div class="social-topbar"><div class="inner social-links social-links-top" th:insert="~{::socialIcons}"></div></div>
     <header class="topbar"><div class="inner">
       <a class="brand" href="/">
         <img src="/img/logo.jpg" alt="GAT 2027 logo">
@@ -58,13 +129,15 @@
       <nav class="main">
         <th:block th:if="${currentUser == null}">
           <a href="/" th:classappend="${active == '/'} ? 'active'">Home</a>
-          <a href="/events" th:classappend="${active == '/events'} ? 'active'">Events</a>
+          <div th:replace="~{::eventsDropdown(${active})}"></div>
+          <div th:replace="~{::socialDropdown}"></div>
           <a href="/register" th:classappend="${active == '/register'} ? 'active'">Register</a>
           <a href="/login" th:classappend="${active == '/login'} ? 'active'">Log in</a>
         </th:block>
         <th:block th:if="${currentUser != null}">
           <a href="/dashboard" th:classappend="${active == '/dashboard'} ? 'active'">My Dashboard</a>
           <a href="/report" th:classappend="${active == '/report'} ? 'active'">File Report</a>
+          <div th:replace="~{::socialDropdown}"></div>
           <a th:if="${currentUser.staff}" href="/admin">Admin</a>
           <form th:action="@{/logout}" method="post" style="display:inline"><button type="submit" style="background:none;border:none;font:inherit;padding:.45rem .8rem;border-radius:8px;cursor:pointer;font-weight:500">Log out</button></form>
         </th:block>
@@ -74,6 +147,7 @@
   </th:block>
 
   <footer th:fragment="siteFooter(credit)" class="site-footer"><b>GAT</b><br>Grassroot Advocacy for Tinubu<br>GAT 2027 · Forward Together with PBAT
+    <div class="social-links" th:insert="~{::socialIcons}"></div>
     <th:block th:if="${credit}"><br><span class="small muted" style="font-size:.7rem">Presidential portrait: Nosa Asemota, CC BY-SA 4.0, via Wikimedia Commons</span></th:block>
   </footer>
 </body>

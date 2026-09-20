@@ -61,8 +61,17 @@ public class HomeController {
     }
 
     @GetMapping("/events")
-    public String eventsPage(Model model) {
-        model.addAttribute("allEvents", events.published());
+    public String eventsPage(@RequestParam(required = false) String when, Model model) {
+        List<Event> published = events.published();
+        boolean showUpcoming = !"past".equals(when);
+        boolean showPast = !"upcoming".equals(when);
+        List<Event> upcoming = showUpcoming ? published.stream().filter(Event::isUpcoming).toList() : List.of();
+        List<Event> past = showPast ? published.stream().filter(e -> !e.isUpcoming()).toList() : List.of();
+        model.addAttribute("upcomingEvents", upcoming);
+        model.addAttribute("pastEvents", past);
+        model.addAttribute("emptyMessage", "upcoming".equals(when) ? "No upcoming events right now — check back soon."
+            : "past".equals(when) ? "No past events to show yet."
+            : "No events published yet — check back soon.");
         model.addAttribute("galleryTabs", events.withPhotos().stream().map(e -> new GalleryTab(e, events.photosFor(e.getId()))).toList());
         return "events";
     }

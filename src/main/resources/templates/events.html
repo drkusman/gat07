@@ -28,14 +28,20 @@
       <div class="slide-caption" th:text="${tab.event().title}"></div>
     </div>
   </div>
-  <div th:if="${allEvents.size() > 0}" style="margin-top:1rem">
-    <h3>All events</h3>
+  <div id="upcoming" th:if="${!upcomingEvents.isEmpty()}" style="margin-top:1rem">
+    <h3>Upcoming Events</h3>
     <div class="grid cols-3">
-      <th:block th:each="e : ${allEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>
+      <th:block th:each="e : ${upcomingEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>
     </div>
   </div>
-  <div class="card" th:if="${allEvents.size() == 0}" style="margin-top:1rem;text-align:center">
-    <span class="muted">No events published yet — check back soon.</span>
+  <div id="past" th:if="${!pastEvents.isEmpty()}" style="margin-top:1.5rem">
+    <h3>Past Events</h3>
+    <div class="grid cols-3">
+      <th:block th:each="e : ${pastEvents}"><div th:replace="~{fragments/eventcard :: card(${e})}"></div></th:block>
+    </div>
+  </div>
+  <div class="card" th:if="${upcomingEvents.isEmpty() and pastEvents.isEmpty()}" style="margin-top:1rem;text-align:center">
+    <span class="muted" th:text="${emptyMessage}"></span>
   </div>
 </main>
 <th:block th:replace="~{fragments/site :: siteFooter(true)}"></th:block>
