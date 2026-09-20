@@ -14,6 +14,7 @@
         <dl class="facts">
           <dt>Phone</dt><dd th:text="${m.phone}"></dd><dt>Email</dt><dd th:text="${m.email} ?: '—'"></dd><dt>Gender</dt><dd th:text="${m.gender} ?: '—'"></dd><dt>Date of birth</dt><dd th:text="${m.dob} ?: '—'"></dd>
           <dt>Occupation</dt><dd th:text="${m.occupation} ?: '—'"></dd><dt>Education</dt><dd th:text="${m.education} ?: '—'"></dd><dt>VIN</dt><dd th:text="${m.vin} ?: '—'"></dd><dt>Address</dt><dd th:text="${m.address} ?: '—'"></dd>
+          <dt>Marital status</dt><dd th:text="${m.maritalStatus} ?: '—'"></dd>
           <dt>Special needs</dt><dd th:text="${m.specialNeeds} ? 'Yes' : 'No'"></dd>
           <dt>Referral code</dt><dd><span class="mono" th:text="${m.referralCode}"></span></dd><dt>Referred by</dt><dd th:text="${p.referrerName() != null} ? (${p.referrerName()} + ' (' + ${p.referrerCode()} + ')') : '—'"></dd>
           <dt>Direct referrals</dt><dd th:text="${p.directReferrals()}"></dd><dt>Total network</dt><dd th:text="${p.totalDownline()}"></dd><dt>Joined</dt><dd th:text="${#temporals.format(m.createdAt, 'd MMM yyyy, HH:mm')}"></dd>

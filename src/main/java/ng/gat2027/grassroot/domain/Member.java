@@ -28,6 +28,7 @@ public class Member {
     private String occupation;
     private String education;
     private String vin;
+    @Column(name = "marital_status") private String maritalStatus;
     @Column(name = "special_needs", nullable = false) private boolean specialNeeds;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) private String photo;
     @Column(name = "zone_id") private Long zoneId;
