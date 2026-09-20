@@ -30,7 +30,7 @@
         </dl>
       </div>
       <div class="alert info no-print" th:if="${m.pendingRole != null}" style="margin-top:1.2rem">
-        Promotion to <b th:text="${#strings.toLowerCase(m.pendingRole).replace('_',' ')}"></b> proposed by <b th:text="${pendingRequestedBy}"></b> — awaiting approval from <b th:text="${pendingStageLabel}"></b>.
+        Promotion to <b th:text="${#strings.toLowerCase(m.pendingRole).replace('_',' ')}"></b> recommended by <b th:text="${pendingRequestedBy}"></b> — awaiting final approval from <b>the National Coordinator (Admin)</b>.
         <span th:if="${canDecidePending}" class="btn-row" style="margin-top:.5rem">
           <form th:action="@{/admin/promotions/{id}/approve(id=${m.id})}" method="post"><button class="btn sm">Approve</button></form>
           <form th:action="@{/admin/promotions/{id}/reject(id=${m.id})}" method="post"><button class="btn secondary sm">Reject</button></form>
@@ -73,8 +73,8 @@
           <select name="role" style="width:auto">
             <option th:each="r : ${proposableRoles}" th:value="${r}" th:text="${#strings.toLowerCase(r).replace('_',' ')}"></option>
           </select>
-          <button class="btn secondary sm">Propose promotion</button></form>
-        <p class="help" style="margin-top:.4rem">A State Coordinator's proposal needs Zonal then National approval; a Zonal Coordinator's proposal needs only National approval.</p>
+          <button class="btn secondary sm">Recommend promotion</button></form>
+        <p class="help" style="margin-top:.4rem">Every recommendation goes straight to the National Coordinator (Admin) for final approval.</p>
       </div>
     </div>
   </div>

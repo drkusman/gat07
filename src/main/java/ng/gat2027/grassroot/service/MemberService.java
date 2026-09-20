@@ -128,57 +128,46 @@ public class MemberService {
     }
 
     /**
-     * A State or Zonal Coordinator proposes a coordinator promotion, strictly below their own rank, for a member in
-     * their own area. A State Coordinator's proposal must first pass the Zonal Coordinator overseeing that state's
-     * zone, then the Admin (National Coordinator); a Zonal Coordinator's own proposal skips straight to the Admin.
+     * A Zonal, State, or LGA Coordinator recommends a coordinator promotion, strictly below their own rank, for a
+     * member within their own area (zone/state/LGA respectively). Every recommendation goes straight to the Admin
+     * (National Coordinator) for final approval - there is no intermediate approval stage.
      */
     @Transactional
     public void requestPromotion(Member requester, Long memberId, Role proposedRole) {
         int requesterRank = requester.getRole().coordinatorRank();
         int targetRank = proposedRole.coordinatorRank();
-        if (requesterRank == 0) throw new MemberException("Only State or Zonal Coordinators can propose promotions");
-        if (targetRank == 0 || targetRank >= requesterRank) throw new MemberException("You can only propose a role below your own position");
+        if (targetRank == 0 || targetRank >= requesterRank) throw new MemberException("You can only recommend a role below your own position");
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
-        PromotionStage stage;
         if (requester.getRole() == Role.ZONAL_COORDINATOR) {
-            if (!requester.getZoneId().equals(m.getZoneId())) throw new MemberException("You can only propose promotions for members in your own zone");
-            stage = PromotionStage.NATIONAL;
+            if (!requester.getZoneId().equals(m.getZoneId())) throw new MemberException("You can only recommend members in your own zone");
         } else if (requester.getRole() == Role.COORDINATOR) {
-            if (!requester.getStateId().equals(m.getStateId())) throw new MemberException("You can only propose promotions for members in your own state");
-            stage = PromotionStage.ZONAL;
+            if (!requester.getStateId().equals(m.getStateId())) throw new MemberException("You can only recommend members in your own state");
+        } else if (requester.getRole() == Role.LGA_COORDINATOR) {
+            if (!requester.getLgaId().equals(m.getLgaId())) throw new MemberException("You can only recommend members in your own LGA");
         } else {
-            throw new MemberException("Only State or Zonal Coordinators can propose promotions");
+            throw new MemberException("Only LGA, State, or Zonal Coordinators can recommend promotions");
         }
         m.setPendingRole(proposedRole);
         m.setPendingRoleRequestedBy(requester.getId());
-        m.setPendingRoleStage(stage);
+        m.setPendingRoleStage(PromotionStage.NATIONAL);
         m.setPendingRoleZonalApprovedBy(null);
         members.save(m);
     }
 
-    /** Admin can approve a pending promotion at any stage; a Zonal Coordinator can only advance one of their own zone's ZONAL-stage requests to NATIONAL. */
+    /** Only the Admin (National Coordinator) gives final approval on a recommended promotion. */
     @Transactional
     public void approvePromotion(Member approver, Long memberId) {
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
         if (m.getPendingRole() == null) throw new MemberException("This member has no pending promotion");
-        if (approver.isAdmin()) { applyPendingRole(m); return; }
-        if (approver.getRole() == Role.ZONAL_COORDINATOR && m.getPendingRoleStage() == PromotionStage.ZONAL) {
-            if (!approver.getZoneId().equals(m.getZoneId())) throw new MemberException("You can only approve promotions for members in your own zone");
-            m.setPendingRoleStage(PromotionStage.NATIONAL);
-            m.setPendingRoleZonalApprovedBy(approver.getId());
-            members.save(m);
-            return;
-        }
-        throw new MemberException("You are not authorized to approve this promotion");
+        if (!approver.isAdmin()) throw new MemberException("Only the National Coordinator (Admin) can approve promotions");
+        applyPendingRole(m);
     }
 
     @Transactional
     public void rejectPromotion(Member approver, Long memberId) {
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
         if (m.getPendingRole() == null) throw new MemberException("This member has no pending promotion");
-        boolean allowed = approver.isAdmin() || (approver.getRole() == Role.ZONAL_COORDINATOR
-            && m.getPendingRoleStage() == PromotionStage.ZONAL && approver.getZoneId().equals(m.getZoneId()));
-        if (!allowed) throw new MemberException("You are not authorized to reject this promotion");
+        if (!approver.isAdmin()) throw new MemberException("Only the National Coordinator (Admin) can reject promotions");
         clearPending(m);
         members.save(m);
     }

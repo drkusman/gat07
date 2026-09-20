@@ -93,10 +93,8 @@ public class AdminController {
             if (admin) eventsNav = eventsNav.withCount(events.countPendingApproval());
             nav.add(eventsNav);
         }
-        if (admin || zonalCoordinator) {
-            long pendingCount = admin ? members.countByPendingRoleIsNotNull()
-                : members.countByPendingRoleIsNotNullAndZoneIdAndPendingRoleStage(u.getZoneId(), PromotionStage.ZONAL);
-            nav.add(NavItem.of("/admin/promotions", "Pending Promotions", "★", "Operations").withCount(pendingCount));
+        if (admin) {
+            nav.add(NavItem.of("/admin/promotions", "Pending Promotions", "★", "Operations").withCount(members.countByPendingRoleIsNotNull()));
         }
         if (admin || mediaCoordinator) {
             NavItem videosNav = NavItem.of("/admin/videos", "Home Videos", "▶", "Operations");
@@ -222,16 +220,14 @@ public class AdminController {
         model.addAttribute("p", analytics.profile(m));
         model.addAttribute("refs", analytics.referrals(m.getId()));
         model.addAttribute("self", u.getId().equals(m.getId()));
-        boolean canRecommend = u.getRole() == Role.ZONAL_COORDINATOR || u.getRole() == Role.COORDINATOR;
+        boolean canRecommend = u.getRole() == Role.ZONAL_COORDINATOR || u.getRole() == Role.COORDINATOR || u.getRole() == Role.LGA_COORDINATOR;
         List<Role> proposableRoles = !canRecommend ? List.of()
             : Arrays.stream(Role.values()).filter(r -> r.coordinatorRank() > 0 && r.coordinatorRank() < u.getRole().coordinatorRank()).toList();
         model.addAttribute("canPropose", !proposableRoles.isEmpty() && !u.getId().equals(m.getId()) && m.getPendingRole() == null);
         model.addAttribute("proposableRoles", proposableRoles);
         if (m.getPendingRole() != null) {
             model.addAttribute("pendingRequestedBy", members.findById(m.getPendingRoleRequestedBy()).map(Member::getDisplayName).orElse("someone"));
-            model.addAttribute("pendingStageLabel", m.getPendingRoleStage() == PromotionStage.ZONAL ? "the Zonal Coordinator" : "the National Coordinator");
-            boolean canDecidePending = u.isAdmin() || (u.getRole() == Role.ZONAL_COORDINATOR && m.getPendingRoleStage() == PromotionStage.ZONAL && Objects.equals(u.getZoneId(), m.getZoneId()));
-            model.addAttribute("canDecidePending", canDecidePending);
+            model.addAttribute("canDecidePending", u.isAdmin());
         }
         if (u.isAdmin()) {
             model.addAttribute("committeeGroups", organization.positionsGroupedByCommittee());
@@ -284,9 +280,8 @@ public class AdminController {
     @GetMapping("/promotions")
     public String promotionsList(@ModelAttribute AdminFilter f, Model model) {
         Member u = shell(model, "Pending Promotions", f);
-        if (!u.isAdmin() && u.getRole() != Role.ZONAL_COORDINATOR) return "redirect:/admin";
-        List<Member> pending = u.isAdmin() ? members.findByPendingRoleIsNotNullOrderByIdDesc()
-            : members.findByPendingRoleIsNotNullAndZoneIdAndPendingRoleStageOrderByIdDesc(u.getZoneId(), PromotionStage.ZONAL);
+        if (!u.isAdmin()) return "redirect:/admin";
+        List<Member> pending = members.findByPendingRoleIsNotNullOrderByIdDesc();
         model.addAttribute("rows", pending.stream().map(m -> new PromotionRow(m, members.findById(m.getPendingRoleRequestedBy()).map(Member::getDisplayName).orElse("Unknown"))).toList());
         return "admin/promotions";
     }
