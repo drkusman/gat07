@@ -6,7 +6,7 @@
     <div class="ph"><h2>Events</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span>
       <div class="act"><a class="btn sm" href="/admin/events/new">+ New event</a></div></div>
     <div class="pb flush" style="overflow-x:auto"><table class="tbl">
-      <thead><tr><th>Date</th><th>Title</th><th>Location</th><th>Scope</th><th>Media</th><th>Status</th><th class="no-print"></th></tr></thead>
+      <thead><tr><th>Date</th><th>Title</th><th>Location</th><th>Scope</th><th>Media</th><th>Status</th><th>Approval</th><th class="no-print"></th></tr></thead>
       <tbody>
         <tr th:each="row : ${rows}" th:with="e=${row.event()}">
           <td class="mini" th:text="${#temporals.format(e.eventDate, 'd MMM yyyy')}"></td>
@@ -18,13 +18,19 @@
             <span th:if="${!e.hasUploadedVideo()}">—</span>
           </td>
           <td><span class="pill" th:classappend="${e.published} ? '' : 'red'" th:text="${e.published} ? 'published' : 'draft'"></span></td>
+          <td class="mini">
+            <span class="pill gold" th:if="${!e.approved}">pending approval</span>
+            <span class="muted" th:if="${e.approved}">—</span>
+          </td>
           <td class="no-print" style="white-space:nowrap">
+            <form th:if="${isAdmin and !e.approved}" th:action="@{/admin/events/{id}/approve(id=${e.id})}" method="post" style="display:inline">
+              <button class="btn sm" type="submit">Approve</button></form>
             <a class="btn secondary sm" th:href="@{/admin/events/{id}/edit(id=${e.id})}">Edit</a>
             <form th:action="@{/admin/events/{id}/delete(id=${e.id})}" method="post" style="display:inline" onsubmit="return confirm('Delete this event?')">
               <button class="btn sm danger" type="submit">Delete</button></form>
           </td>
         </tr>
-        <tr th:if="${rows.isEmpty()}"><td colspan="7" class="empty">No events yet — add your first one</td></tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="8" class="empty">No events yet — add your first one</td></tr>
       </tbody></table></div>
   </div>
 </div>

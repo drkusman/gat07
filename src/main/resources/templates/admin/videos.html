@@ -12,14 +12,15 @@
         <div class="field"><label>High priority for (hours, optional)</label><input name="priorityHours" type="number" min="1" placeholder="e.g. 4, or 48 for 2 days"></div>
       </div>
       <span class="help">The video must have "Allow embedding" turned on in YouTube Studio, or it won't play on the home page. Leave "Expires" blank to default to 24 hours from now.
-        Set "High priority" to make this the only video playing on the home page until that many hours pass — normal looping resumes automatically afterwards.</span>
+        Set "High priority" to make this the only video playing on the home page until that many hours pass — normal looping resumes automatically afterwards.
+        Videos submitted by a Media Coordinator are held for Admin approval before joining the loop.</span>
       <div class="btn-row" style="margin-top:1rem"><button class="btn" type="submit">Add to loop</button></div>
     </form>
   </div>
   <div class="panel">
     <div class="ph"><h2>Home page video loop</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' video(s)'"></span></div>
     <div class="pb flush" style="overflow-x:auto"><table class="tbl">
-      <thead><tr><th>#</th><th>Preview</th><th>Title</th><th>Added</th><th>Expires</th><th>Priority</th><th class="no-print"></th></tr></thead>
+      <thead><tr><th>#</th><th>Preview</th><th>Title</th><th>Added</th><th>Expires</th><th>Priority</th><th>Approval</th><th class="no-print"></th></tr></thead>
       <tbody>
         <tr th:each="v, st : ${rows}">
           <td class="mini" th:text="${st.count}"></td>
@@ -34,13 +35,19 @@
             <span class="pill gold" th:if="${v.priorityActive}" th:text="'until ' + ${#temporals.format(v.priorityUntil, 'd MMM, h:mm a')}"></span>
             <span class="muted" th:unless="${v.priorityActive}">—</span>
           </td>
+          <td class="mini">
+            <span class="pill gold" th:if="${!v.approved}">pending approval</span>
+            <span class="muted" th:if="${v.approved}">—</span>
+          </td>
           <td class="no-print" style="white-space:nowrap">
+            <form th:if="${isAdmin and !v.approved}" th:action="@{/admin/videos/{id}/approve(id=${v.id})}" method="post" style="display:inline">
+              <button class="btn sm" type="submit">Approve</button></form>
             <a class="btn secondary sm" th:href="@{/admin/videos/{id}/edit(id=${v.id})}">Edit</a>
             <form th:action="@{/admin/videos/{id}/delete(id=${v.id})}" method="post" style="display:inline" onsubmit="return confirm('Remove this video from the home page loop?')">
               <button class="btn sm danger" type="submit">Remove</button></form>
           </td>
         </tr>
-        <tr th:if="${rows.isEmpty()}"><td colspan="7" class="empty">No videos yet — add your first one above</td></tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="8" class="empty">No videos yet — add your first one above</td></tr>
       </tbody></table></div>
   </div>
 </div>

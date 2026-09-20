@@ -40,6 +40,7 @@
             <option value="COORDINATOR" th:selected="${m.role.name() == 'COORDINATOR'}">coordinator (state)</option>
             <option value="ZONAL_COORDINATOR" th:selected="${m.role.name() == 'ZONAL_COORDINATOR'}">zonal coordinator (zone)</option>
             <option value="GRAND_PATRON" th:selected="${m.role.name() == 'GRAND_PATRON'}">grand patron (zone)</option>
+            <option value="MEDIA_COORDINATOR" th:selected="${m.role.name() == 'MEDIA_COORDINATOR'}">media coordinator</option>
             <option value="ADMIN" th:selected="${m.role.name() == 'ADMIN'}">admin</option>
           </select>
           <button class="btn sm" th:disabled="${self}">Save role</button></form>

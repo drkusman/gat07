@@ -11,9 +11,11 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findAllByOrderByEventDateDesc();
     List<Event> findByZoneIdOrderByEventDateDesc(Long zoneId);
     List<Event> findByStateIdOrderByEventDateDesc(Long stateId);
-    List<Event> findByPublishedTrueOrderByEventDateDesc();
+    List<Event> findByCreatedByOrderByEventDateDesc(Long createdBy);
+    List<Event> findByPublishedTrueAndApprovedTrueOrderByEventDateDesc();
     Optional<Event> findBySlug(String slug);
     boolean existsBySlug(String slug);
-    long countByPublishedTrue();
-    long countByPublishedTrueAndEventDateGreaterThanEqual(LocalDate date);
+    long countByPublishedTrueAndApprovedTrue();
+    long countByPublishedTrueAndApprovedTrueAndEventDateGreaterThanEqual(LocalDate date);
+    long countByApprovedFalse();
 }

@@ -23,11 +23,13 @@ public class PromoVideoService {
     public PromoVideoService(PromoVideoRepository repo) { this.repo = repo; }
 
     public List<PromoVideo> list() { return repo.findAllByOrderByIdAsc(); }
+    public List<PromoVideo> listByCreator(Long createdBy) { return repo.findByCreatedByOrderByIdAsc(createdBy); }
     public Optional<PromoVideo> find(Long id) { return repo.findById(id); }
+    public long countPendingApproval() { return repo.countByApprovedFalse(); }
 
-    /** Unexpired videos in the order they were added. */
+    /** Unexpired, approved videos in the order they were added. */
     public List<PromoVideo> activeVideos() {
-        return repo.findAllByOrderByIdAsc().stream().filter(v -> !v.isExpired()).toList();
+        return repo.findAllByOrderByIdAsc().stream().filter(v -> !v.isExpired() && v.isApproved()).toList();
     }
 
     /** What actually plays on the home page right now: any video(s) still flagged high priority play
@@ -39,24 +41,35 @@ public class PromoVideoService {
     }
 
     @Transactional
-    public PromoVideo add(String urlOrId, String title, LocalDateTime expiresAt, Integer priorityHours, Long adminId) {
+    public PromoVideo add(String urlOrId, String title, LocalDateTime expiresAt, Integer priorityHours, Long creatorId, boolean approved) {
         PromoVideo v = new PromoVideo();
         v.setYoutubeId(extractId(urlOrId));
         v.setTitle(blankToNull(title));
-        v.setCreatedBy(adminId);
+        v.setCreatedBy(creatorId);
         v.setExpiresAt(expiresAt != null ? expiresAt : defaultExpiry());
         v.setPriorityUntil(priorityUntilFrom(priorityHours));
+        v.setApproved(approved);
         return repo.save(v);
     }
 
+    /** approved is set every save from the caller's role: Admin edits always approve; a Media Coordinator's
+     *  own edit always resets it to pending. */
     @Transactional
-    public PromoVideo update(Long id, String urlOrId, String title, LocalDateTime expiresAt, Integer priorityHours) {
+    public PromoVideo update(Long id, String urlOrId, String title, LocalDateTime expiresAt, Integer priorityHours, boolean approved) {
         PromoVideo v = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Video not found"));
         v.setYoutubeId(extractId(urlOrId));
         v.setTitle(blankToNull(title));
         v.setExpiresAt(expiresAt != null ? expiresAt : defaultExpiry());
         v.setPriorityUntil(priorityUntilFrom(priorityHours));
+        v.setApproved(approved);
         return repo.save(v);
+    }
+
+    @Transactional
+    public void approve(Long id) {
+        PromoVideo v = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Video not found"));
+        v.setApproved(true);
+        repo.save(v);
     }
 
     @Transactional

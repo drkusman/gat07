@@ -25,7 +25,9 @@ public class EventService {
     public List<Event> all() { return repo.findAllByOrderByEventDateDesc(); }
     public List<Event> forZone(Long zoneId) { return repo.findByZoneIdOrderByEventDateDesc(zoneId); }
     public List<Event> forState(Long stateId) { return repo.findByStateIdOrderByEventDateDesc(stateId); }
-    public List<Event> published() { return repo.findByPublishedTrueOrderByEventDateDesc(); }
+    public List<Event> forCreator(Long createdBy) { return repo.findByCreatedByOrderByEventDateDesc(createdBy); }
+    public List<Event> published() { return repo.findByPublishedTrueAndApprovedTrueOrderByEventDateDesc(); }
+    public long countPendingApproval() { return repo.countByApprovedFalse(); }
     public Optional<Event> find(Long id) { return repo.findById(id); }
     public List<EventPhoto> photosFor(Long eventId) { return photoRepo.findByEventIdOrderBySortOrderAsc(eventId); }
     public long photoCount(Long eventId) { return photoRepo.countByEventId(eventId); }
@@ -68,18 +70,21 @@ public class EventService {
 
     public Stats stats() {
         long total = repo.count();
-        long published = repo.countByPublishedTrue();
-        long upcoming = repo.countByPublishedTrueAndEventDateGreaterThanEqual(LocalDate.now());
-        Event next = repo.findByPublishedTrueOrderByEventDateDesc().stream()
+        long published = repo.countByPublishedTrueAndApprovedTrue();
+        long upcoming = repo.countByPublishedTrueAndApprovedTrueAndEventDateGreaterThanEqual(LocalDate.now());
+        Event next = repo.findByPublishedTrueAndApprovedTrueOrderByEventDateDesc().stream()
             .filter(Event::isUpcoming)
             .min((a, b) -> a.getEventDate().compareTo(b.getEventDate()))
             .orElse(null);
         return new Stats(total, published, upcoming, next);
     }
 
-    /** Zone/state scope is only set when the event is created (from the creator's own scope) - editing never changes it. */
+    /** Zone/state scope and creator are only set when the event is created - editing never changes them.
+     *  approved is set every save from the caller's role: Admin/Coordinator/Zonal edits always approve;
+     *  a Media Coordinator's own save (create or edit) always resets it to pending. */
     @Transactional
-    public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published, Long creatorZoneId, Long creatorStateId) {
+    public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published,
+                       Long creatorZoneId, Long creatorStateId, Long creatorId, boolean approved) {
         Event e = id == null ? new Event() : repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
         boolean isNew = e.getId() == null;
         e.setTitle(title);
@@ -87,10 +92,18 @@ public class EventService {
         e.setLocation(blankToNull(location));
         e.setDescription(description);
         e.setPublished(published);
+        e.setApproved(approved);
         e.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
-        if (isNew) { e.setZoneId(creatorZoneId); e.setStateId(creatorStateId); }
+        if (isNew) { e.setZoneId(creatorZoneId); e.setStateId(creatorStateId); e.setCreatedBy(creatorId); }
         if (isNew || e.getSlug() == null || e.getSlug().isBlank()) e.setSlug(uniqueSlug(title, id));
         return repo.save(e);
+    }
+
+    @Transactional
+    public void approve(Long id) {
+        Event e = repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
+        e.setApproved(true);
+        repo.save(e);
     }
 
     @Transactional

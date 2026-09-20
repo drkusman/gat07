@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface PromoVideoRepository extends JpaRepository<PromoVideo, Long> {
     List<PromoVideo> findAllByOrderByIdAsc();
+    List<PromoVideo> findByCreatedByOrderByIdAsc(Long createdBy);
+    long countByApprovedFalse();
 }

@@ -60,11 +60,12 @@ public class AdminController {
         boolean lgaCoordinator = u.getRole() == Role.LGA_COORDINATOR;
         boolean wardCoordinator = u.getRole() == Role.WARD_COORDINATOR;
         boolean puCoordinator = u.getRole() == Role.POLLING_UNIT_COORDINATOR;
+        boolean mediaCoordinator = u.getRole() == Role.MEDIA_COORDINATOR;
         boolean stateLocked = stateCoordinator || lgaCoordinator || wardCoordinator || puCoordinator;
         boolean lgaLocked = lgaCoordinator || wardCoordinator || puCoordinator;
         boolean wardLocked = wardCoordinator || puCoordinator;
         boolean puLocked = puCoordinator;
-        boolean canManageEvents = admin || zonalCoordinator || stateCoordinator;
+        boolean canManageEvents = admin || zonalCoordinator || stateCoordinator || mediaCoordinator;
         if (stateLocked) { f.setZoneId(u.getZoneId()); f.setStateId(u.getStateId()); }
         else if (grandPatron || zonalCoordinator) { f.setZoneId(u.getZoneId()); }
         if (lgaLocked) f.setLgaId(u.getLgaId());
@@ -77,15 +78,23 @@ public class AdminController {
         nav.add(NavItem.of("/admin/referrals", "Referral Leaderboard", "⇄", "Analytics"));
         nav.add(NavItem.of("/admin/members", "Members", "☷", "Operations").withCount(analytics.countMembers(u, new AdminFilter())));
         nav.add(NavItem.of("/admin/reports", "Field Reports", "▤", "Operations").withCount(analytics.openReportsFor(u)));
-        if (canManageEvents) nav.add(NavItem.of("/admin/events", "Events", "◈", "Operations"));
+        if (canManageEvents) {
+            NavItem eventsNav = NavItem.of("/admin/events", "Events", "◈", "Operations");
+            if (admin) eventsNav = eventsNav.withCount(events.countPendingApproval());
+            nav.add(eventsNav);
+        }
         if (admin || zonalCoordinator) {
             long pendingCount = admin ? members.countByPendingRoleIsNotNull()
                 : members.countByPendingRoleIsNotNullAndZoneIdAndPendingRoleStage(u.getZoneId(), PromotionStage.ZONAL);
             nav.add(NavItem.of("/admin/promotions", "Pending Promotions", "★", "Operations").withCount(pendingCount));
         }
+        if (admin || mediaCoordinator) {
+            NavItem videosNav = NavItem.of("/admin/videos", "Home Videos", "▶", "Operations");
+            if (admin) videosNav = videosNav.withCount(promoVideos.countPendingApproval());
+            nav.add(videosNav);
+        }
         if (admin) {
             nav.add(NavItem.of("/admin/announcements", "Announcements", "📣", "Operations"));
-            nav.add(NavItem.of("/admin/videos", "Home Videos", "▶", "Operations"));
             nav.add(NavItem.of("/admin/members/suspended", "Suspended Members", "⛔", "Operations").withCount(members.countByStatus(MemberStatus.SUSPENDED)));
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
@@ -101,13 +110,14 @@ public class AdminController {
         model.addAttribute("nav", nav);
         model.addAttribute("shellTitle", title);
         model.addAttribute("shellCrumb", admin ? "Coordination centre · All states"
+            : mediaCoordinator ? "Coordination centre · Your submissions"
             : (grandPatron || zonalCoordinator) ? "Coordination centre · " + (zoneName == null ? "Your zone" : zoneName) + " only"
             : puCoordinator ? "Coordination centre · " + (puName == null ? "Your polling unit" : puName) + " only"
             : wardCoordinator ? "Coordination centre · " + (wardName == null ? "Your ward" : wardName) + " only"
             : lgaCoordinator ? "Coordination centre · " + (lgaName == null ? "Your LGA" : lgaName) + " only"
             : "Coordination centre · " + (stateName == null ? "Your state" : stateName) + " only");
         model.addAttribute("shellSubtitle", "Coordination Centre · 2027");
-        model.addAttribute("shellUserLine", admin ? "National administrator" : grandPatron ? "Grand Patron" : zonalCoordinator ? "Zonal Coordinator"
+        model.addAttribute("shellUserLine", admin ? "National administrator" : mediaCoordinator ? "Media Coordinator" : grandPatron ? "Grand Patron" : zonalCoordinator ? "Zonal Coordinator"
             : puCoordinator ? "Polling Unit Coordinator" : wardCoordinator ? "Ward Coordinator" : lgaCoordinator ? "LGA Coordinator" : "State coordinator");
         model.addAttribute("me", u);
         model.addAttribute("isAdmin", admin);
@@ -320,9 +330,17 @@ public class AdminController {
         List<Event> list = u.isAdmin() ? events.all()
             : u.getRole() == Role.ZONAL_COORDINATOR ? events.forZone(u.getZoneId())
             : u.getRole() == Role.COORDINATOR ? events.forState(u.getStateId())
+            : u.getRole() == Role.MEDIA_COORDINATOR ? events.forCreator(u.getId())
             : List.of();
         model.addAttribute("rows", list.stream().map(e -> new EventRow(e, scopeLabel(e))).toList());
         return "admin/events";
+    }
+
+    @PostMapping("/events/{id}/approve")
+    public String approveEvent(@PathVariable Long id, RedirectAttributes ra) {
+        try { events.approve(id); ra.addFlashAttribute("success", "Event approved and now visible on the public site."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/events";
     }
 
     @GetMapping("/events/new")
@@ -351,11 +369,12 @@ public class AdminController {
         Member u = currentUser.require();
         Long zoneId = u.isAdmin() ? null : u.getRole() == Role.ZONAL_COORDINATOR ? u.getZoneId() : u.getRole() == Role.COORDINATOR ? u.getZoneId() : null;
         Long stateId = u.getRole() == Role.COORDINATOR ? u.getStateId() : null;
+        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
         try {
-            Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId);
+            Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId, u.getId(), approved);
             events.addPhotos(e.getId(), photosFrom(request));
             events.setVideo(e.getId(), videoData);
-            ra.addFlashAttribute("success", "Event created.");
+            ra.addFlashAttribute("success", approved ? "Event created." : "Event submitted — it will appear on the public site once Admin approves it.");
         } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events";
     }
@@ -367,11 +386,12 @@ public class AdminController {
         Member u = currentUser.require();
         Event existing = events.find(id).orElse(null);
         if (existing == null || !canManage(u, existing)) { ra.addFlashAttribute("error", "You don't have permission to edit this event."); return "redirect:/admin/events"; }
+        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
         try {
-            events.save(id, title, eventDate, location, description, published != null, null, null);
+            events.save(id, title, eventDate, location, description, published != null, null, null, null, approved);
             events.addPhotos(id, photosFrom(request));
             events.setVideo(id, videoData);
-            ra.addFlashAttribute("success", "Event updated.");
+            ra.addFlashAttribute("success", approved ? "Event updated." : "Event updated — it will need Admin re-approval before it's visible again.");
         } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events/" + id + "/edit";
     }
@@ -413,11 +433,13 @@ public class AdminController {
         return "redirect:/admin/events";
     }
 
-    /** Admins manage every event; a Zonal Coordinator only events in their own zone; a State Coordinator only events in their own state. */
+    /** Admins manage every event; a Zonal Coordinator only events in their own zone; a State Coordinator only events in
+     *  their own state; a Media Coordinator only the events they personally submitted. */
     private boolean canManage(Member u, Event e) {
         if (u.isAdmin()) return true;
         if (u.getRole() == Role.ZONAL_COORDINATOR) return Objects.equals(u.getZoneId(), e.getZoneId());
         if (u.getRole() == Role.COORDINATOR) return Objects.equals(u.getStateId(), e.getStateId());
+        if (u.getRole() == Role.MEDIA_COORDINATOR) return Objects.equals(u.getId(), e.getCreatedBy());
         return false;
     }
 
@@ -491,8 +513,8 @@ public class AdminController {
 
     @GetMapping("/videos")
     public String videosList(@ModelAttribute AdminFilter f, Model model) {
-        shell(model, "Home Videos", f);
-        model.addAttribute("rows", promoVideos.list());
+        Member u = shell(model, "Home Videos", f);
+        model.addAttribute("rows", u.isAdmin() ? promoVideos.list() : promoVideos.listByCreator(u.getId()));
         return "admin/videos";
     }
 
@@ -500,16 +522,20 @@ public class AdminController {
     public String addVideo(@RequestParam String url, @RequestParam(required = false) String title,
                             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime expiresAt,
                             @RequestParam(required = false) Integer priorityHours, RedirectAttributes ra) {
-        try { promoVideos.add(url, title, expiresAt, priorityHours, currentUser.require().getId()); ra.addFlashAttribute("success", "Video added to the home page loop."); }
-        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        Member u = currentUser.require();
+        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
+        try {
+            promoVideos.add(url, title, expiresAt, priorityHours, u.getId(), approved);
+            ra.addFlashAttribute("success", approved ? "Video added to the home page loop." : "Video submitted — it will join the loop once Admin approves it.");
+        } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/videos";
     }
 
     @GetMapping("/videos/{id}/edit")
     public String editVideoForm(@PathVariable Long id, @ModelAttribute AdminFilter f, Model model) {
-        shell(model, "Edit video", f);
+        Member u = shell(model, "Edit video", f);
         PromoVideo v = promoVideos.find(id).orElse(null);
-        if (v == null) return "redirect:/admin/videos";
+        if (v == null || !canManageVideo(u, v)) return "redirect:/admin/videos";
         model.addAttribute("v", v);
         return "admin/video-form";
     }
@@ -518,16 +544,37 @@ public class AdminController {
     public String updateVideo(@PathVariable Long id, @RequestParam String url, @RequestParam(required = false) String title,
                                @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime expiresAt,
                                @RequestParam(required = false) Integer priorityHours, RedirectAttributes ra) {
-        try { promoVideos.update(id, url, title, expiresAt, priorityHours); ra.addFlashAttribute("success", "Video updated."); }
+        Member u = currentUser.require();
+        PromoVideo existing = promoVideos.find(id).orElse(null);
+        if (existing == null || !canManageVideo(u, existing)) { ra.addFlashAttribute("error", "You don't have permission to edit this video."); return "redirect:/admin/videos"; }
+        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
+        try {
+            promoVideos.update(id, url, title, expiresAt, priorityHours, approved);
+            ra.addFlashAttribute("success", approved ? "Video updated." : "Video updated — it will need Admin re-approval before it plays again.");
+        } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/videos";
+    }
+
+    @PostMapping("/videos/{id}/approve")
+    public String approveVideo(@PathVariable Long id, RedirectAttributes ra) {
+        try { promoVideos.approve(id); ra.addFlashAttribute("success", "Video approved and now in the home page loop."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/videos";
     }
 
     @PostMapping("/videos/{id}/delete")
     public String deleteVideo(@PathVariable Long id, RedirectAttributes ra) {
+        Member u = currentUser.require();
+        PromoVideo v = promoVideos.find(id).orElse(null);
+        if (v == null || !canManageVideo(u, v)) { ra.addFlashAttribute("error", "You don't have permission to remove this video."); return "redirect:/admin/videos"; }
         try { promoVideos.delete(id); ra.addFlashAttribute("success", "Video removed."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/videos";
+    }
+
+    /** Admin manages every video; a Media Coordinator only the ones they personally submitted. */
+    private boolean canManageVideo(Member u, PromoVideo v) {
+        return u.isAdmin() || Objects.equals(u.getId(), v.getCreatedBy());
     }
 
     @GetMapping("/settings")

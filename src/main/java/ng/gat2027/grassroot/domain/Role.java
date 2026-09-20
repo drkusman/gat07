@@ -1,7 +1,7 @@
 package ng.gat2027.grassroot.domain;
 
 public enum Role {
-    MEMBER, POLLING_UNIT_COORDINATOR, WARD_COORDINATOR, LGA_COORDINATOR, COORDINATOR, ZONAL_COORDINATOR, GRAND_PATRON, ADMIN;
+    MEMBER, POLLING_UNIT_COORDINATOR, WARD_COORDINATOR, LGA_COORDINATOR, COORDINATOR, ZONAL_COORDINATOR, GRAND_PATRON, MEDIA_COORDINATOR, ADMIN;
 
     /** Seniority within the operational coordinator ladder (higher = more senior); 0 for roles outside that ladder (MEMBER, GRAND_PATRON, ADMIN). */
     public int coordinatorRank() {

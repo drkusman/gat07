@@ -22,6 +22,9 @@ public class Event {
     @Column(name = "zone_id") private Long zoneId;
     @Column(name = "state_id") private Long stateId;
     @Column(nullable = false) private boolean published = true;
+    /** False while a Media Coordinator's submission awaits Admin approval; everyone else's events are auto-approved. */
+    @Column(nullable = false) private boolean approved = true;
+    @Column(name = "created_by") private Long createdBy;
     @Column(name = "created_at", nullable = false) private LocalDateTime createdAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
     @Column(name = "updated_at", nullable = false) private LocalDateTime updatedAt = LocalDateTime.now(java.time.ZoneOffset.UTC);
 

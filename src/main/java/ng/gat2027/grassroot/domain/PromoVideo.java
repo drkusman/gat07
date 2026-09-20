@@ -18,6 +18,8 @@ public class PromoVideo {
     @Column(name = "expires_at") private LocalDateTime expiresAt;
     /** While this is in the future, the video plays exclusively (no other video in the loop) until it passes. */
     @Column(name = "priority_until") private LocalDateTime priorityUntil;
+    /** False while a Media Coordinator's submission awaits Admin approval; everyone else's videos are auto-approved. */
+    @Column(nullable = false) private boolean approved = true;
 
     public LocalDateTime effectiveExpiresAt() { return expiresAt != null ? expiresAt : createdAt.plusHours(24); }
     public boolean isExpired() { return effectiveExpiresAt().isBefore(LocalDateTime.now(ZoneOffset.UTC)); }
