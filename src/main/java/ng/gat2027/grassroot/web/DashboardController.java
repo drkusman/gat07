@@ -80,7 +80,7 @@ public class DashboardController {
             if (m.getPositionId() == null) throw new MemberService.MemberException("No position assigned yet");
             Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
             Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
-            byte[] pdf = letters.generate(m, position, committee);
+            byte[] pdf = letters.generate(m, position, committee, analytics.profile(m).stateName());
             response.setContentType("application/pdf");
             response.setHeader("Content-Disposition", "attachment; filename=\"Appointment-Letter-" + m.getMemberCode() + ".pdf\"");
             response.setContentLength(pdf.length);
