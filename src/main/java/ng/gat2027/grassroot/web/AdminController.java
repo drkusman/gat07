@@ -43,13 +43,14 @@ public class AdminController {
     private final AnnouncementService announcements;
     private final PromoVideoService promoVideos;
     private final InstitutionService institutions;
+    private final RoleResponsibilityService roleResponsibilities;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
                            MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus,
-                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions) {
+                           AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions, RoleResponsibilityService roleResponsibilities) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
         this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.announcements = announcements;
-        this.promoVideos = promoVideos; this.institutions = institutions;
+        this.promoVideos = promoVideos; this.institutions = institutions; this.roleResponsibilities = roleResponsibilities;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -100,6 +101,7 @@ public class AdminController {
             nav.add(NavItem.of("/admin/members/suspended", "Suspended Members", "⛔", "Operations").withCount(members.countByStatus(MemberStatus.SUSPENDED)));
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
             nav.add(NavItem.of("/admin/institutions", "Institutions", "🎓", "Operations"));
+            nav.add(NavItem.of("/admin/roles", "Roles & Responsibilities", "🛡", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
         }
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
@@ -616,6 +618,34 @@ public class AdminController {
         try { institutions.delete(id); ra.addFlashAttribute("success", "Institution removed."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/institutions";
+    }
+
+    @GetMapping("/roles")
+    public String rolesList(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Roles & Responsibilities", f);
+        model.addAttribute("sections", roleResponsibilities.byRole());
+        return "admin/roles";
+    }
+
+    @PostMapping("/roles")
+    public String addResponsibility(@RequestParam Role role, @RequestParam String description, RedirectAttributes ra) {
+        try { roleResponsibilities.add(role, description); ra.addFlashAttribute("success", "Responsibility added."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/roles";
+    }
+
+    @PostMapping("/roles/{id}/edit")
+    public String editResponsibility(@PathVariable Long id, @RequestParam String description, RedirectAttributes ra) {
+        try { roleResponsibilities.update(id, description); ra.addFlashAttribute("success", "Responsibility updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/roles";
+    }
+
+    @PostMapping("/roles/{id}/revoke")
+    public String revokeResponsibility(@PathVariable Long id, RedirectAttributes ra) {
+        try { roleResponsibilities.revoke(id); ra.addFlashAttribute("success", "Responsibility revoked."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/roles";
     }
 
     @GetMapping("/settings")

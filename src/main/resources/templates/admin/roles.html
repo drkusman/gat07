@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <p class="help" style="margin-bottom:1.1rem">Record what each role is currently responsible for. Admins can add, edit, or revoke any entry here at any time — this does not change what a role can actually do in the system, it's a reference for the team.</p>
+  <div class="panel" th:each="section : ${sections}" style="margin-bottom:1.1rem">
+    <div class="ph"><h2 th:text="${#strings.toLowerCase(section.role().name()).replace('_',' ')}"></h2>
+      <span class="pill" th:text="${#lists.size(section.items())} + ' responsibilities'"></span>
+    </div>
+    <div class="pb">
+      <ul class="resp-list" style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:.7rem">
+        <li th:each="item : ${section.items()}" class="resp-item" style="border-bottom:1px solid var(--line);padding-bottom:.7rem">
+          <div class="resp-view" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.8rem">
+            <span th:text="${item.description}"></span>
+            <div class="btn-row" style="flex:none">
+              <button class="btn sm secondary resp-edit-btn" type="button" th:attr="data-id=${item.id}">Edit</button>
+              <form th:action="@{/admin/roles/{id}/revoke(id=${item.id})}" method="post" onsubmit="return confirm('Revoke this responsibility?')" style="display:inline">
+                <button class="btn sm danger" type="submit">Revoke</button></form>
+            </div>
+          </div>
+          <form class="resp-edit-form hidden" th:action="@{/admin/roles/{id}/edit(id=${item.id})}" method="post" style="margin-top:.6rem;display:flex;gap:.5rem">
+            <input name="description" th:value="${item.description}" style="flex:1" required maxlength="500">
+            <button class="btn sm" type="submit">Save</button>
+            <button class="btn secondary sm resp-cancel-btn" type="button">Cancel</button>
+          </form>
+        </li>
+        <li th:if="${section.items().isEmpty()}" class="empty">No responsibilities recorded yet for this role.</li>
+      </ul>
+      <form th:action="@{/admin/roles}" method="post" style="margin-top:1rem;display:flex;gap:.5rem">
+        <input type="hidden" name="role" th:value="${section.role().name()}">
+        <input name="description" placeholder="Add a responsibility…" style="flex:1" required maxlength="500">
+        <button class="btn sm" type="submit">Add</button>
+      </form>
+    </div>
+  </div>
+  <script>
+  (function () {
+    document.addEventListener('click', function (e) {
+      if (e.target.classList.contains('resp-edit-btn')) {
+        var li = e.target.closest('.resp-item');
+        li.querySelector('.resp-view').classList.add('hidden');
+        li.querySelector('.resp-edit-form').classList.remove('hidden');
+      }
+      if (e.target.classList.contains('resp-cancel-btn')) {
+        var li = e.target.closest('.resp-item');
+        li.querySelector('.resp-edit-form').classList.add('hidden');
+        li.querySelector('.resp-view').classList.remove('hidden');
+      }
+    });
+  })();
+  </script>
+</div>
+</body>
+</html>
