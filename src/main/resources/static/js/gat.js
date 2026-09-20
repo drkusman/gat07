@@ -215,7 +215,7 @@ const GAT = (() => {
       const reqId = ++campusReqId;
       const rows = await api(`/api/institutions?type=${encodeURIComponent(type)}&ownership=${encodeURIComponent(ownership)}`);
       if (reqId !== campusReqId) return; // a newer request superseded this one
-      fillSelect(occCampus, rows, "Select campus");
+      fillSelect(occCampus, rows, "Select school name");
     }
     function syncOccupation() {
       const type = occType.find((r) => r.checked)?.value;
@@ -226,7 +226,7 @@ const GAT = (() => {
       occOwnership.classList.toggle("hidden", !needsOwnership); occOwnership.required = needsOwnership;
       if (!needsOwnership) occOwnership.value = "";
       occCampus.classList.toggle("hidden", !needsCampus); occCampus.required = needsCampus;
-      if (!needsCampus) { occCampus.innerHTML = '<option value="">Select campus</option>'; syncSearchable(occCampus); }
+      if (!needsCampus) { occCampus.innerHTML = '<option value="">Select school name</option>'; syncSearchable(occCampus); }
       occOthersText.classList.toggle("hidden", !isOthers); occOthersText.required = isOthers;
       const campusName = needsCampus && occCampus.selectedIndex > 0 ? occCampus.options[occCampus.selectedIndex].textContent : "";
       occValue.value = isStudent
@@ -235,7 +235,7 @@ const GAT = (() => {
     }
     function refreshCampuses() {
       if (!(CAMPUS_OWNERSHIP.includes(occOwnership.value) && OWNED_LEVELS.includes(occLevel.value))) return;
-      occCampus.innerHTML = '<option value="">Loading campuses…</option>'; syncSearchable(occCampus);
+      occCampus.innerHTML = '<option value="">Loading school names…</option>'; syncSearchable(occCampus);
       loadCampuses(occLevel.value, occOwnership.value).then(syncOccupation);
     }
     occType.forEach((r) => r.addEventListener("change", syncOccupation));
