@@ -182,6 +182,10 @@ public class SeedService implements ApplicationRunner {
             new R(Role.MEDIA_COORDINATOR, "Create and submit Home Page promotional videos for Admin approval."),
             new R(Role.MEDIA_COORDINATOR, "Coordination Centre access is limited to your own event and video submissions."),
 
+            new R(Role.NATIONAL_PUBLICITY_SECRETARY, "Create and submit Events for Admin approval."),
+            new R(Role.NATIONAL_PUBLICITY_SECRETARY, "Create and submit Home Page promotional videos for Admin approval."),
+            new R(Role.NATIONAL_PUBLICITY_SECRETARY, "Coordination Centre access is limited to your own event and video submissions."),
+
             new R(Role.ADMIN, "Full national visibility across all Coordination Centre data (members, field reports, coverage, referrals)."),
             new R(Role.ADMIN, "Manage member roles, account status (suspend/reactivate), and reset member passwords."),
             new R(Role.ADMIN, "Approve or reject promotion requests at any stage; can directly promote or demote any member."),

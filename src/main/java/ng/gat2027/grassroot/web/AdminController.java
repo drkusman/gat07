@@ -63,7 +63,7 @@ public class AdminController {
         boolean lgaCoordinator = u.getRole() == Role.LGA_COORDINATOR;
         boolean wardCoordinator = u.getRole() == Role.WARD_COORDINATOR;
         boolean puCoordinator = u.getRole() == Role.POLLING_UNIT_COORDINATOR;
-        boolean mediaCoordinator = u.getRole() == Role.MEDIA_COORDINATOR;
+        boolean mediaCoordinator = u.getRole().isMediaTeam();
         boolean stateLocked = stateCoordinator || lgaCoordinator || wardCoordinator || puCoordinator;
         boolean lgaLocked = lgaCoordinator || wardCoordinator || puCoordinator;
         boolean wardLocked = wardCoordinator || puCoordinator;
@@ -122,7 +122,8 @@ public class AdminController {
             : lgaCoordinator ? "Coordination centre · " + (lgaName == null ? "Your LGA" : lgaName) + " only"
             : "Coordination centre · " + (stateName == null ? "Your state" : stateName) + " only");
         model.addAttribute("shellSubtitle", "Coordination Centre · 2027");
-        model.addAttribute("shellUserLine", admin ? "National administrator" : mediaCoordinator ? "Media Coordinator" : grandPatron ? "Grand Patron" : zonalCoordinator ? "Zonal Coordinator"
+        model.addAttribute("shellUserLine", admin ? "National administrator" : u.getRole() == Role.NATIONAL_PUBLICITY_SECRETARY ? "National Publicity Secretary"
+            : mediaCoordinator ? "Media Coordinator" : grandPatron ? "Grand Patron" : zonalCoordinator ? "Zonal Coordinator"
             : puCoordinator ? "Polling Unit Coordinator" : wardCoordinator ? "Ward Coordinator" : lgaCoordinator ? "LGA Coordinator" : "State coordinator");
         model.addAttribute("me", u);
         model.addAttribute("isAdmin", admin);
@@ -335,7 +336,7 @@ public class AdminController {
         List<Event> list = u.isAdmin() ? events.all()
             : u.getRole() == Role.ZONAL_COORDINATOR ? events.forZone(u.getZoneId())
             : u.getRole() == Role.COORDINATOR ? events.forState(u.getStateId())
-            : u.getRole() == Role.MEDIA_COORDINATOR ? events.forCreator(u.getId())
+            : u.getRole().isMediaTeam() ? events.forCreator(u.getId())
             : List.of();
         model.addAttribute("rows", list.stream().map(e -> new EventRow(e, scopeLabel(e))).toList());
         return "admin/events";
@@ -374,7 +375,7 @@ public class AdminController {
         Member u = currentUser.require();
         Long zoneId = u.isAdmin() ? null : u.getRole() == Role.ZONAL_COORDINATOR ? u.getZoneId() : u.getRole() == Role.COORDINATOR ? u.getZoneId() : null;
         Long stateId = u.getRole() == Role.COORDINATOR ? u.getStateId() : null;
-        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
+        boolean approved = !u.getRole().isMediaTeam();
         try {
             Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId, u.getId(), approved);
             events.addPhotos(e.getId(), photosFrom(request));
@@ -391,7 +392,7 @@ public class AdminController {
         Member u = currentUser.require();
         Event existing = events.find(id).orElse(null);
         if (existing == null || !canManage(u, existing)) { ra.addFlashAttribute("error", "You don't have permission to edit this event."); return "redirect:/admin/events"; }
-        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
+        boolean approved = !u.getRole().isMediaTeam();
         try {
             events.save(id, title, eventDate, location, description, published != null, null, null, null, approved);
             events.addPhotos(id, photosFrom(request));
@@ -439,12 +440,12 @@ public class AdminController {
     }
 
     /** Admins manage every event; a Zonal Coordinator only events in their own zone; a State Coordinator only events in
-     *  their own state; a Media Coordinator only the events they personally submitted. */
+     *  their own state; a Media Coordinator or National Publicity Secretary only the events they personally submitted. */
     private boolean canManage(Member u, Event e) {
         if (u.isAdmin()) return true;
         if (u.getRole() == Role.ZONAL_COORDINATOR) return Objects.equals(u.getZoneId(), e.getZoneId());
         if (u.getRole() == Role.COORDINATOR) return Objects.equals(u.getStateId(), e.getStateId());
-        if (u.getRole() == Role.MEDIA_COORDINATOR) return Objects.equals(u.getId(), e.getCreatedBy());
+        if (u.getRole().isMediaTeam()) return Objects.equals(u.getId(), e.getCreatedBy());
         return false;
     }
 
@@ -528,7 +529,7 @@ public class AdminController {
                             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd'T'HH:mm") LocalDateTime expiresAt,
                             @RequestParam(required = false) Integer priorityHours, RedirectAttributes ra) {
         Member u = currentUser.require();
-        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
+        boolean approved = !u.getRole().isMediaTeam();
         try {
             promoVideos.add(url, title, expiresAt, priorityHours, u.getId(), approved);
             ra.addFlashAttribute("success", approved ? "Video added to the home page loop." : "Video submitted — it will join the loop once Admin approves it.");
@@ -552,7 +553,7 @@ public class AdminController {
         Member u = currentUser.require();
         PromoVideo existing = promoVideos.find(id).orElse(null);
         if (existing == null || !canManageVideo(u, existing)) { ra.addFlashAttribute("error", "You don't have permission to edit this video."); return "redirect:/admin/videos"; }
-        boolean approved = u.getRole() != Role.MEDIA_COORDINATOR;
+        boolean approved = !u.getRole().isMediaTeam();
         try {
             promoVideos.update(id, url, title, expiresAt, priorityHours, approved);
             ra.addFlashAttribute("success", approved ? "Video updated." : "Video updated — it will need Admin re-approval before it plays again.");

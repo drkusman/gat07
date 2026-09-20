@@ -41,10 +41,10 @@ public class SecurityConfig {
                 .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/announcements/**", "/admin/institutions/**", "/api/admin/import", "/admin/members/suspended", "/admin/members/*/role",
                                  "/admin/members/*/status", "/admin/members/*/password", "/admin/events/*/approve", "/admin/videos/*/approve").hasRole("ADMIN")
                 .requestMatchers("/admin/promotions/**").hasAnyRole("ADMIN", "ZONAL_COORDINATOR")
-                .requestMatchers("/admin/events/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "MEDIA_COORDINATOR")
-                .requestMatchers("/admin/videos/**").hasAnyRole("ADMIN", "MEDIA_COORDINATOR")
+                .requestMatchers("/admin/events/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
+                .requestMatchers("/admin/videos/**").hasAnyRole("ADMIN", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
                 .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "GRAND_PATRON",
-                                 "LGA_COORDINATOR", "WARD_COORDINATOR", "POLLING_UNIT_COORDINATOR", "MEDIA_COORDINATOR")
+                                 "LGA_COORDINATOR", "WARD_COORDINATOR", "POLLING_UNIT_COORDINATOR", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
                 .anyRequest().authenticated())
             .formLogin(f -> f
                 .loginPage("/login")
