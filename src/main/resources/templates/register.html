@@ -120,7 +120,7 @@
           <span id="pwMismatch" class="help" style="color:var(--red);display:none">Passwords do not match</span></div>
         <div class="field full"><label>Referral code (who invited you?)</label><input th:field="*{referralCode}" id="referral_code" placeholder="e.g. GAT-7KQ2MX" style="text-transform:uppercase"><span class="help" id="refHelp">Leave blank if nobody referred you.</span></div>
       </div>
-      <div class="card" style="margin-top:1rem;background:#f7f9fb"><h3>Review</h3><dl class="kv" id="review"></dl></div>
+      <div class="card" style="margin-top:1rem"><h3>Review</h3><dl class="kv" id="review"></dl></div>
       <label style="display:flex;gap:.5rem;align-items:flex-start;margin-top:1rem;font-weight:500"><input type="checkbox" th:field="*{consent}" required style="width:auto;margin-top:.25rem"> I confirm the information above is correct and I consent to GAT 2027 keeping it for membership and mobilisation purposes.</label>
       <div class="btn-row" style="margin-top:1.2rem;justify-content:space-between"><button type="button" class="btn secondary" data-next="2">← Back</button><button type="submit" class="btn" id="submitBtn" disabled>Complete registration</button></div>
     </section>
