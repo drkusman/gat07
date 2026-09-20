@@ -18,7 +18,10 @@
           <td class="mini"><a th:if="${r.lat() != null}" target="_blank" rel="noopener" th:href="'https://www.google.com/maps?q=' + ${r.lat()} + ',' + ${r.lng()}" th:text="${#numbers.formatDecimal(r.lat(),1,4)} + ', ' + ${#numbers.formatDecimal(r.lng(),1,4)}"></a><span th:if="${r.lat() == null}">—</span></td>
           <td class="mini"><th:block th:if="${r.referrerName() != null}"><span th:text="${r.referrerName()}"></span><br><span th:text="${r.referrerCode()}"></span></th:block><span th:if="${r.referrerName() == null}">—</span></td>
           <td class="num" th:text="${r.referrals()}"></td><td class="mini" th:text="${#temporals.format(r.createdAt(), 'd MMM yyyy')}"></td>
-          <td class="no-print"><a class="btn secondary sm" th:href="@{/admin/members/{id}(id=${r.id()})}">View</a></td>
+          <td class="no-print btn-row">
+            <a class="btn secondary sm" th:href="@{/admin/members/{id}(id=${r.id()})}">View</a>
+            <a th:if="${r.positionId() != null}" class="btn secondary sm" th:href="@{/admin/members/{id}/appointment-letter(id=${r.id()})}" target="_blank">Letter</a>
+          </td>
         </tr>
         <tr th:if="${rows.isEmpty()}"><td colspan="10" class="empty">No members match this selection</td></tr>
       </tbody></table></div>
