@@ -31,7 +31,7 @@ public class AnalyticsService {
     public record Summary(long members, long today, long week, long male, long female, long referred, long withCoords,
                           long pusCovered, long wardsCovered, long lgasCovered, long statesCovered, long openReports,
                           List<NameCount> byZone, List<NameCount> byState, List<NameCount> topLgas, List<NameCount> topWards, List<NameCount> topPus,
-                          List<Daily> daily, List<Referrer> topReferrers, List<NameCount> ageBands, List<NameCount> topInstitutions) {}
+                          List<Daily> daily, List<Referrer> topReferrers, List<NameCount> ageBands, List<NameCount> topInstitutions, List<NameCount> topVulnerableWomen) {}
     public record AreaRow(long id, String name, String code, long members, long male, long female) {}
     public record MemberRow(long id, String memberCode, String role, String status, String firstName, String lastName, String gender, String phone,
                             Double lat, Double lng, LocalDateTime createdAt, String location, String referrerName, String referrerCode, long referrals) {}
@@ -119,7 +119,26 @@ public class AnalyticsService {
         List<NameCount> ageBands = bands.entrySet().stream().filter(e -> e.getValue() > 0).map(e -> new NameCount(e.getKey(), e.getValue())).toList();
         List<NameCount> topInstitutions = jdbc.query("SELECT i.name || ' (' || i.type || ', ' || i.ownership || ')', COUNT(*) FROM members m JOIN institutions i ON i.id = m.institution_id WHERE " + w.sql + " GROUP BY i.id, i.name, i.type, i.ownership ORDER BY 2 DESC LIMIT 10",
             (rs, i) -> new NameCount(rs.getString(1), rs.getLong(2)), w.params.toArray());
-        return new Summary(members, today, week, male, female, referred, withCoords, pus, wards, lgas, statesN, open, byZone, byState, topLgas, topWards, topPus, daily, topReferrers, ageBands, topInstitutions);
+        List<NameCount> topVulnerableWomen = vulnerableWomenByState(w);
+        return new Summary(members, today, week, male, female, referred, withCoords, pus, wards, lgas, statesN, open, byZone, byState, topLgas, topWards, topPus, daily, topReferrers, ageBands, topInstitutions, topVulnerableWomen);
+    }
+
+    /** Vulnerable women (by GAT's definition): female members who are divorced, widowed, have special needs, or are
+     *  over 60 - ranked by state. Age needs Java-side computation from dob (portable across H2/Postgres), so this
+     *  reads matching female members once and aggregates counts per state rather than doing it all in SQL. */
+    private List<NameCount> vulnerableWomenByState(Where w) {
+        Map<String, Long> counts = new LinkedHashMap<>();
+        jdbc.query("SELECT s.name, m.marital_status, m.special_needs, m.dob FROM members m LEFT JOIN states s ON s.id = m.state_id WHERE " + w.sql() + " AND m.gender = 'Female'", rs -> {
+            String state = rs.getString(1);
+            if (state == null) return;
+            String marital = rs.getString(2);
+            boolean special = rs.getBoolean(3);
+            java.sql.Date dob = rs.getDate(4);
+            boolean over60 = dob != null && Period.between(dob.toLocalDate(), LocalDate.now()).getYears() > 60;
+            if ("Divorced".equals(marital) || "Widow".equals(marital) || special || over60) counts.merge(state, 1L, Long::sum);
+        }, w.params().toArray());
+        return counts.entrySet().stream().sorted((a, b) -> Long.compare(b.getValue(), a.getValue())).limit(10)
+            .map(e -> new NameCount(e.getKey(), e.getValue())).toList();
     }
 
     public List<AreaRow> breakdown(Member user, AdminFilter f, String level) {

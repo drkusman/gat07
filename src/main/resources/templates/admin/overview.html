@@ -37,6 +37,7 @@
     <div class="panel"><div class="ph"><h3>Top polling units</h3></div><div class="pb"><div th:replace="~{admin/bars :: bars(${s.topPus()}, '')}"></div></div></div>
   </div>
   <div class="panel" style="margin-top:1.1rem"><div class="ph"><h3>Top tertiary institutions</h3><span class="sub">Students, by campus</span></div><div class="pb"><div th:replace="~{admin/bars :: bars(${s.topInstitutions()}, 'blue')}"></div></div></div>
+  <div class="panel" style="margin-top:1.1rem"><div class="ph"><h3>States with the most vulnerable women</h3><span class="sub">Divorced, widowed, special needs, or above 60</span></div><div class="pb"><div th:replace="~{admin/bars :: bars(${s.topVulnerableWomen()}, 'red')}"></div></div></div>
   <div class="panel" style="margin-top:1.1rem"><div class="ph"><h2>Members by state</h2><span class="sub">All 36 states and the FCT</span></div>
     <div class="pb two"><div th:replace="~{admin/bars :: bars(${s.byState().subList(0, halfState)}, '')}"></div><div th:replace="~{admin/bars :: bars(${s.byState().subList(halfState, s.byState().size())}, '')}"></div></div></div>
 </div>
