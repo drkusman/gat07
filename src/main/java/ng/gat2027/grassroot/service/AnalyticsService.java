@@ -31,7 +31,8 @@ public class AnalyticsService {
     public record Summary(long members, long today, long week, long male, long female, long referred, long withCoords,
                           long pusCovered, long wardsCovered, long lgasCovered, long statesCovered, long openReports,
                           List<NameCount> byZone, List<NameCount> byState, List<NameCount> topLgas, List<NameCount> topWards, List<NameCount> topPus,
-                          List<Daily> daily, List<Referrer> topReferrers, List<NameCount> ageBands, List<NameCount> topInstitutions, List<NameCount> topVulnerableWomen, List<NameCount> topArtisans) {}
+                          List<Daily> daily, List<Referrer> topReferrers, List<NameCount> ageBands, List<NameCount> topInstitutions, List<NameCount> topVulnerableWomen, List<NameCount> topArtisans,
+                          List<NameCount> topCorpsMembers, List<NameCount> topApplicants) {}
     public record AreaRow(long id, String name, String code, long members, long male, long female) {}
     public record MemberRow(long id, String memberCode, String role, String status, String firstName, String lastName, String gender, String phone,
                             Double lat, Double lng, LocalDateTime createdAt, String location, String referrerName, String referrerCode, long referrals) {}
@@ -120,9 +121,16 @@ public class AnalyticsService {
         List<NameCount> topInstitutions = jdbc.query("SELECT i.name || ' (' || i.type || ', ' || i.ownership || ')', COUNT(*) FROM members m JOIN institutions i ON i.id = m.institution_id WHERE " + w.sql + " GROUP BY i.id, i.name, i.type, i.ownership ORDER BY 2 DESC LIMIT 10",
             (rs, i) -> new NameCount(rs.getString(1), rs.getLong(2)), w.params.toArray());
         List<NameCount> topVulnerableWomen = vulnerableWomenByState(w);
-        List<NameCount> topArtisans = jdbc.query("SELECT s.name, COUNT(*) FROM members m LEFT JOIN states s ON s.id = m.state_id WHERE " + w.sql + " AND m.occupation = 'Artisan' GROUP BY s.id, s.name ORDER BY 2 DESC LIMIT 10",
-            (rs, i) -> new NameCount(rs.getString(1), rs.getLong(2)), w.params.toArray());
-        return new Summary(members, today, week, male, female, referred, withCoords, pus, wards, lgas, statesN, open, byZone, byState, topLgas, topWards, topPus, daily, topReferrers, ageBands, topInstitutions, topVulnerableWomen, topArtisans);
+        List<NameCount> topArtisans = occupationByState(w, "Artisan");
+        List<NameCount> topCorpsMembers = occupationByState(w, "Corps Member");
+        List<NameCount> topApplicants = occupationByState(w, "Applicant");
+        return new Summary(members, today, week, male, female, referred, withCoords, pus, wards, lgas, statesN, open, byZone, byState, topLgas, topWards, topPus, daily, topReferrers, ageBands, topInstitutions, topVulnerableWomen, topArtisans,
+            topCorpsMembers, topApplicants);
+    }
+
+    private List<NameCount> occupationByState(Where w, String occupation) {
+        return jdbc.query("SELECT s.name, COUNT(*) FROM members m LEFT JOIN states s ON s.id = m.state_id WHERE " + w.sql() + " AND m.occupation = ? GROUP BY s.id, s.name ORDER BY 2 DESC LIMIT 10",
+            (rs, i) -> new NameCount(rs.getString(1), rs.getLong(2)), plus(w.params(), occupation).toArray());
     }
 
     /** Vulnerable women (by GAT's definition): female members who are divorced, widowed, have special needs, or are
