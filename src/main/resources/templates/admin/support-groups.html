@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Support Groups / Associations / Unions</h2><span class="pill" th:text="${#numbers.formatInteger(rows.size(),1,'COMMA')} + ' total'"></span></div>
+    <div class="pb flush" style="overflow-x:auto"><table class="tbl">
+      <thead><tr><th>Group name</th><th>Head</th><th>Designation</th><th>Head office</th><th>Contact</th><th class="num">Member strength</th><th>Registered</th></tr></thead>
+      <tbody>
+        <tr th:each="g : ${rows}">
+          <td><b th:text="${g.groupName}"></b></td>
+          <td th:text="${g.headName}"></td>
+          <td class="mini" th:text="${g.headTitle}"></td>
+          <td class="mini" th:text="${g.headOffice}"></td>
+          <td th:text="${g.contactPhone}"></td>
+          <td class="num" th:text="${#numbers.formatInteger(g.memberStrength,1,'COMMA')}"></td>
+          <td class="mini" th:text="${#temporals.format(g.createdAt, 'd MMM yyyy')}"></td>
+        </tr>
+        <tr th:if="${rows.isEmpty()}"><td colspan="7" class="empty">No support groups registered yet</td></tr>
+      </tbody></table></div>
+  </div>
+</div>
+</body>
+</html>

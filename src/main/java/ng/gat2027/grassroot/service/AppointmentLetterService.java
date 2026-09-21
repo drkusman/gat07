@@ -22,12 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Generates the official GAT 2027 appointment-letter PDF. Two page-one styles share one document:
- * the standard committee-position letter (letterhead: appointment-letterhead.png, "Scope of
- * Responsibilities" bullets) for operational/committee positions, and the ceremonial honorary letter
- * (letterhead: patron-letterhead.png) for Patrons, Grand Patrons, and Board of Trustees members - see
- * {@link OrganizationService#isHonoraryPosition(String)}. Every letter ends with a second, plain
- * "Acceptance of Appointment" page for the appointee to sign and return.
+ * Generates the official GAT 2027 appointment-letter PDF. Three page-one styles: the standard
+ * committee-position letter (letterhead: appointment-letterhead.png, "Scope of Responsibilities"
+ * bullets) for operational/committee positions; the ceremonial honorary letter (letterhead:
+ * patron-letterhead.png) for Patrons, Grand Patrons, and Board of Trustees members - see
+ * {@link OrganizationService#isHonoraryPosition(String)}; and the "Others" letter for admin-defined
+ * ad hoc appointments with a numbered, admin-written Terms of Reference (see {@link #generateOther}),
+ * which paginates automatically. Every letter ends with a second, plain "Acceptance of Appointment"
+ * page for the appointee to sign and return.
  */
 @Service
 public class AppointmentLetterService {
@@ -59,12 +61,15 @@ public class AppointmentLetterService {
     }
 
     /** "Others" category: an ad hoc appointment outside the standing organisational structure, where the admin
-     *  supplies both the position title and the free-text Terms of Reference printed on the letter. */
+     *  supplies both the position title and the free-text Terms of Reference printed on the letter. Modelled on
+     *  GAT's own "Head of Department" letter format (National Executive Council decision, numbered Terms of
+     *  Reference, "Yours faithfully" closing); paginates automatically since a full Terms of Reference list
+     *  routinely runs to several pages. */
     public byte[] generateOther(Member m, String positionTitle, String termsOfReference, String stateName) throws IOException {
         try (PDDocument doc = new PDDocument()) {
             String title = positionTitle.trim();
             otherPage(doc, m, title, termsOfReference, stateName);
-            acceptancePage(doc, m, title);
+            otherAcceptancePage(doc, m, title);
 
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             doc.save(out);
@@ -134,63 +139,106 @@ public class AppointmentLetterService {
         }
     }
 
-    /** "Others" category letter: same letterhead and tone as the committee-position letter, but with an
-     *  admin-written "Terms of Reference" section instead of the fixed committee bullets, and no committee line. */
+    /** "Others" category letter, following GAT's "Head of Department" format: a National Executive Council
+     *  decision, a numbered Terms of Reference list, and a "Yours faithfully" closing (no phone line). Uses the
+     *  standard letterhead on every page and paginates automatically as the admin-supplied Terms of Reference
+     *  can easily run past one page. */
     private void otherPage(PDDocument doc, Member m, String positionTitle, String termsOfReference, String stateName) throws IOException {
-        PDPage page = new PDPage(new PDRectangle(PAGE_WIDTH, PAGE_HEIGHT));
-        doc.addPage(page);
         PDImageXObject background = loadImage(doc, "letters/appointment-letterhead.png");
         PDImageXObject signature = loadImage(doc, "letters/coordinator-signature.png");
         PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
         PDType1Font regular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+        float width = PAGE_WIDTH - 2 * MARGIN;
 
-        try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
-            cs.drawImage(background, 0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+        Flow f = new Flow(doc, background);
+        f.newPage(630);
+        try {
+            y(f.cs, regular, 11, 448, 657, LocalDate.now().format(DateTimeFormatter.ofPattern("d MMMM yyyy")));
 
-            y(cs, regular, 11, 448, 657, LocalDate.now().format(DateTimeFormatter.ofPattern("d MMMM yyyy")));
+            f.cy = flowText(f, bold, 11, m.getFullName()) - 17;
+            if (stateName != null && !stateName.isBlank()) f.cy = flowText(f, bold, 11, stateName) - 17;
+            f.cy -= 10;
 
-            float width = PAGE_WIDTH - 2 * MARGIN;
-            float cy = 630;
+            f.cy = flowParagraph(f, bold, 11, width, 14,
+                "APPOINTMENT AS " + positionTitle.toUpperCase() + ", GRASSROOTS ADVOCACY FOR TINUBU (GAT) 2027");
+            f.cy -= 12;
 
-            cy = paragraph(cs, bold, 11, MARGIN, cy, width, 14,
-                "SUBJECT: LETTER OF APPOINTMENT AS " + positionTitle.toUpperCase());
-            cy -= 12;
-            cy = y(cs, bold, 11, MARGIN, cy, "Dear " + m.getFullName() + ",") - 14;
-            if (stateName != null && !stateName.isBlank()) cy = y(cs, bold, 11, MARGIN, cy, stateName) - 14;
-            else cy -= 4;
+            f.cy = flowMixedParagraph(f, regular, bold, 11, width, 14, List.of(
+                new Run("I am pleased to formally convey to you the decision of the ", false),
+                new Run("National Executive Council ", true),
+                new Run("of Grassroots Advocacy for Tinubu (GAT) 2027 appointing you as " + positionTitle
+                    + " of the Organisation, effective from the date of this letter.", false)
+            ));
+            f.cy -= 6;
+            f.cy = flowParagraph(f, regular, 11, width, 14,
+                "This appointment is in recognition of your competence, experience and capacity, and reflects our "
+                + "confidence in your ability to discharge the responsibilities of this office effectively in support "
+                + "of GAT's mission, structures and programmes.");
+            f.cy -= 6;
+            f.cy = flowParagraph(f, regular, 11, width, 14,
+                "In this capacity, you shall report to the National Coordinator, GAT 2027, and work closely with the "
+                + "relevant units and structures of the Organisation as required in the discharge of your responsibilities.");
+            f.cy -= 10;
 
-            cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
-                "The National Leadership of the Grassroots Advocacy for Tinubu (GAT) 2027 is pleased to formally offer you "
-                + "an appointment as " + positionTitle + ".");
-            cy -= 6;
-            cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
-                "This appointment is effective immediately and is a reflection of your demonstrated commitment, unwavering "
-                + "loyalty to the ideals of the All Progressives Congress (APC), and your proactive dedication to the Renewed "
-                + "Hope Agenda of His Excellency, President Bola Ahmed Tinubu.");
-            cy -= 10;
-
-            cy = y(cs, bold, 11, MARGIN, cy, "1. Terms of Reference") - 14;
+            f.cy = flowText(f, bold, 11, "TERMS OF REFERENCE") - 14;
+            f.cy = flowParagraph(f, regular, 11, width, 14, "Your responsibilities shall include, but not be limited to, the following:");
+            f.cy -= 4;
+            int n = 1;
             if (termsOfReference != null && !termsOfReference.isBlank()) {
-                for (String para : termsOfReference.split("\\r?\\n+")) {
-                    if (para.isBlank()) continue;
-                    cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14, para.trim());
-                    cy -= 6;
+                for (String item : termsOfReference.split("\\r?\\n+")) {
+                    if (item.isBlank()) continue;
+                    f.cy = flowNumberedItem(f, regular, n++, width, item.trim());
                 }
             }
-            cy -= 2;
+            f.cy -= 6;
 
-            cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
-                "Please signify your acceptance of this appointment by signing the space provided below and returning a copy "
-                + "to the National Secretariat within seven (7) days of receipt.");
-            cy -= 6;
-            cy = y(cs, regular, 11, MARGIN, cy, "Congratulations on your appointment. We look forward to working with you.") - 16;
-            cy = y(cs, regular, 11, MARGIN, cy, "Sincerely,") - 4;
+            f.cy = flowParagraph(f, regular, 11, width, 14,
+                "You will be expected to work collaboratively with all departments and structures of GAT and to "
+                + "demonstrate professionalism, innovation, integrity, confidentiality and commitment in the discharge "
+                + "of your responsibilities.");
+            f.cy -= 6;
+            f.cy = flowParagraph(f, regular, 11, width, 14,
+                "We congratulate you on your appointment and look forward to your valuable contributions to the growth "
+                + "and effectiveness of Grassroots Advocacy for Tinubu (GAT) 2027.");
+            f.cy -= 6;
+            f.cy = flowParagraph(f, regular, 11, width, 14, "Please accept the assurances of our highest regards.");
+            f.cy -= 4;
+            f.cy = flowText(f, bold, 11, "Yours faithfully,") - 4;
 
-            cs.drawImage(signature, MARGIN, cy - 45, 70, 45);
-            cy -= 55;
-            cy = y(cs, bold, 11, MARGIN, cy, "Prof. Ochugudu Achoda Ipuele") - 14;
-            cy = y(cs, regular, 10, MARGIN, cy, "National Coordinator") - 13;
-            y(cs, bold, 10, MARGIN, cy, "07038960277, 08085653558");
+            f.ensureSpace(100);
+            f.cs.drawImage(signature, MARGIN, f.cy - 45, 70, 45);
+            f.cy -= 55;
+            f.cy = flowText(f, bold, 11, "Prof. Ochugudu Achoda Ipuele,") - 14;
+            f.cy = flowText(f, regular, 10, "National Coordinator") - 13;
+            flowText(f, regular, 10, "Grassroots Advocacy for Tinubu (GAT) 2027");
+        } finally {
+            f.close();
+        }
+    }
+
+    /** "Others"-category acceptance page, matching GAT's "Head of Department" acceptance wording, which differs
+     *  from the standard {@link #acceptancePage}. */
+    private void otherAcceptancePage(PDDocument doc, Member m, String positionTitle) throws IOException {
+        PDPage page = new PDPage(new PDRectangle(PAGE_WIDTH, PAGE_HEIGHT));
+        doc.addPage(page);
+        PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+        PDType1Font regular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+            float width = PAGE_WIDTH - 2 * MARGIN;
+            float cy = 708;
+            cy = y(cs, bold, 12, MARGIN, cy, "ACCEPTANCE OF APPOINTMENT") - 24;
+            cy = mixedParagraph(cs, regular, bold, 11, MARGIN, cy, width, 17, List.of(
+                new Run("I, ", false),
+                new Run(m.getFullName() + ", ", true),
+                new Run("hereby accept my appointment as ", false),
+                new Run(positionTitle + ", Grassroots Advocacy for Tinubu (GAT) 2027, ", true),
+                new Run("and undertake to discharge the responsibilities attached to the position diligently, "
+                    + "professionally and in accordance with the objectives and directives of the Organization.", false)
+            ));
+            cy -= 22;
+            cy = y(cs, bold, 12, MARGIN, cy, "Signature: ________________________") - 29;
+            y(cs, bold, 12, MARGIN, cy, "Date: ________________________");
         }
     }
 
@@ -347,6 +395,24 @@ public class AppointmentLetterService {
     /** Wraps and draws a paragraph made of mixed bold/regular runs (e.g. "I, <b>Name</b>, hereby accept..."),
      *  word-wrapping across the whole paragraph regardless of which run each word came from. */
     private static float mixedParagraph(PDPageContentStream cs, PDType1Font regular, PDType1Font bold, float size, float x, float startY, float maxWidth, float lineHeight, List<Run> runs) throws IOException {
+        float spaceWidth = regular.getStringWidth(" ") / 1000 * size;
+        float cy = startY;
+        for (List<Object[]> ln : buildMixedLines(regular, bold, size, maxWidth, runs)) {
+            float cx = x;
+            for (Object[] w : ln) {
+                String text = (String) w[0];
+                PDType1Font f = ((Boolean) w[1]) ? bold : regular;
+                y(cs, f, size, cx, cy, text);
+                cx += f.getStringWidth(text) / 1000 * size + spaceWidth;
+            }
+            cy -= lineHeight;
+        }
+        return cy;
+    }
+
+    /** Splits mixed bold/regular runs into word-wrapped lines (shared by {@link #mixedParagraph} and the
+     *  pagination-aware {@link #flowMixedParagraph}); each word is tagged [text, isBold]. */
+    private static List<List<Object[]>> buildMixedLines(PDType1Font regular, PDType1Font bold, float size, float maxWidth, List<Run> runs) throws IOException {
         List<Object[]> words = new ArrayList<>();
         for (Run r : runs) {
             for (String word : r.text().split(" ")) {
@@ -371,19 +437,80 @@ public class AppointmentLetterService {
             lineWidth += added;
         }
         if (!line.isEmpty()) lines.add(line);
+        return lines;
+    }
 
-        float cy = startY;
-        for (List<Object[]> ln : lines) {
-            float cx = x;
+    /** Tracks the current page/cursor for a paginated letter, drawing the same letterhead on every page and
+     *  starting a fresh page automatically ({@link #ensureSpace}) whenever content would run past the margin. */
+    private static final class Flow {
+        private final PDDocument doc;
+        private final PDImageXObject background;
+        private static final float CONTINUATION_TOP = 630f;
+        private static final float BOTTOM_SAFE = MARGIN + 30f;
+        PDPageContentStream cs;
+        float cy;
+
+        Flow(PDDocument doc, PDImageXObject background) { this.doc = doc; this.background = background; }
+
+        void newPage(float startCy) throws IOException {
+            if (cs != null) cs.close();
+            PDPage page = new PDPage(new PDRectangle(PAGE_WIDTH, PAGE_HEIGHT));
+            doc.addPage(page);
+            cs = new PDPageContentStream(doc, page);
+            cs.drawImage(background, 0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+            cy = startCy;
+        }
+
+        void ensureSpace(float needed) throws IOException {
+            if (cy - needed < BOTTOM_SAFE) newPage(CONTINUATION_TOP);
+        }
+
+        void close() throws IOException { if (cs != null) cs.close(); }
+    }
+
+    private static float flowText(Flow f, PDType1Font font, float size, String text) throws IOException {
+        f.ensureSpace(size);
+        y(f.cs, font, size, MARGIN, f.cy, text);
+        return f.cy;
+    }
+
+    private static float flowParagraph(Flow f, PDType1Font font, float size, float maxWidth, float lineHeight, String text) throws IOException {
+        for (String line : wrap(text, font, size, maxWidth)) {
+            f.ensureSpace(lineHeight);
+            y(f.cs, font, size, MARGIN, f.cy, line);
+            f.cy -= lineHeight;
+        }
+        return f.cy;
+    }
+
+    private static float flowMixedParagraph(Flow f, PDType1Font regular, PDType1Font bold, float size, float maxWidth, float lineHeight, List<Run> runs) throws IOException {
+        float spaceWidth = regular.getStringWidth(" ") / 1000 * size;
+        for (List<Object[]> ln : buildMixedLines(regular, bold, size, maxWidth, runs)) {
+            f.ensureSpace(lineHeight);
+            float cx = MARGIN;
             for (Object[] w : ln) {
                 String text = (String) w[0];
-                PDType1Font f = ((Boolean) w[1]) ? bold : regular;
-                y(cs, f, size, cx, cy, text);
-                cx += f.getStringWidth(text) / 1000 * size + spaceWidth;
+                PDType1Font fnt = ((Boolean) w[1]) ? bold : regular;
+                y(f.cs, fnt, size, cx, f.cy, text);
+                cx += fnt.getStringWidth(text) / 1000 * size + spaceWidth;
             }
-            cy -= lineHeight;
+            f.cy -= lineHeight;
         }
-        return cy;
+        return f.cy;
+    }
+
+    /** A numbered Terms of Reference item ("12. Reporting: Submit regular reports..."), wrapped and indented
+     *  under the number, pagination-aware. */
+    private static float flowNumberedItem(Flow f, PDType1Font regular, int number, float maxWidth, String text) throws IOException {
+        float indent = 20;
+        List<String> lines = wrap(text, regular, 11, maxWidth - indent);
+        for (int i = 0; i < lines.size(); i++) {
+            f.ensureSpace(14);
+            if (i == 0) y(f.cs, regular, 11, MARGIN + 2, f.cy, number + ".");
+            y(f.cs, regular, 11, MARGIN + indent, f.cy, lines.get(i));
+            f.cy -= 14;
+        }
+        return f.cy;
     }
 
     private static List<String> wrap(String text, PDType1Font font, float size, float maxWidth) throws IOException {

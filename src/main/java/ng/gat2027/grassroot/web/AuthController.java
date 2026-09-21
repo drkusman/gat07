@@ -10,7 +10,9 @@ import ng.gat2027.grassroot.security.MemberPrincipal;
 import ng.gat2027.grassroot.service.LocationService;
 import ng.gat2027.grassroot.service.MemberService;
 import ng.gat2027.grassroot.service.SettingsService;
+import ng.gat2027.grassroot.service.SupportGroupService;
 import ng.gat2027.grassroot.web.forms.RegisterForm;
+import ng.gat2027.grassroot.web.forms.SupportGroupForm;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,10 +26,11 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 @Controller
 public class AuthController {
     private final MemberService memberService; private final MemberRepository members; private final SettingsService settings; private final CurrentUser currentUser;
+    private final SupportGroupService supportGroups;
     private final HttpSessionSecurityContextRepository contextRepo = new HttpSessionSecurityContextRepository();
 
-    public AuthController(MemberService memberService, MemberRepository members, SettingsService settings, CurrentUser currentUser) {
-        this.memberService = memberService; this.members = members; this.settings = settings; this.currentUser = currentUser;
+    public AuthController(MemberService memberService, MemberRepository members, SettingsService settings, CurrentUser currentUser, SupportGroupService supportGroups) {
+        this.memberService = memberService; this.members = members; this.settings = settings; this.currentUser = currentUser; this.supportGroups = supportGroups;
     }
 
     @GetMapping("/login")
@@ -111,6 +114,28 @@ public class AuthController {
             model.addAttribute("error", e.getMessage());
             return "register";
         }
+    }
+
+    @GetMapping("/register-group")
+    public String registerGroupForm(Model model) {
+        if (!model.containsAttribute("form")) model.addAttribute("form", new SupportGroupForm());
+        return "register-group";
+    }
+
+    @PostMapping("/register-group")
+    public String registerGroup(@Valid @ModelAttribute("form") SupportGroupForm form, BindingResult binding, Model model) {
+        if (binding.hasErrors()) {
+            model.addAttribute("error", binding.getAllErrors().get(0).getDefaultMessage());
+            return "register-group";
+        }
+        try {
+            supportGroups.register(form);
+            model.addAttribute("sent", true);
+            model.addAttribute("form", new SupportGroupForm());
+        } catch (SupportGroupService.SupportGroupException e) {
+            model.addAttribute("error", e.getMessage());
+        }
+        return "register-group";
     }
 
     /** Log the freshly registered member in without a second form. */

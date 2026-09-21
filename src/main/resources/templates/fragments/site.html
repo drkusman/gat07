@@ -105,6 +105,18 @@
     </div>
   </th:block>
 
+  <th:block th:fragment="registerDropdown(active)">
+    <div class="nav-dropdown" data-nav-dropdown>
+      <button type="button" class="nav-dropdown-btn" data-nav-toggle aria-haspopup="true" aria-expanded="false" th:classappend="${active == '/register' or active == '/register-group'} ? 'active'">
+        Register <span class="caret">▾</span>
+      </button>
+      <div class="nav-dropdown-menu">
+        <a href="/register">Individual Member</a>
+        <a href="/register-group">Support Group / Association / Union</a>
+      </div>
+    </div>
+  </th:block>
+
   <th:block th:fragment="eventsDropdown(active)">
     <div class="nav-dropdown" data-nav-dropdown>
       <button type="button" class="nav-dropdown-btn" data-nav-toggle aria-haspopup="true" aria-expanded="false" th:classappend="${active == '/events'} ? 'active'">
@@ -132,7 +144,7 @@
           <div th:replace="~{::eventsDropdown(${active})}"></div>
           <a href="/podcast" th:classappend="${active == '/podcast'} ? 'active'">Podcast</a>
           <div th:replace="~{::socialDropdown}"></div>
-          <a href="/register" th:classappend="${active == '/register'} ? 'active'">Register</a>
+          <div th:replace="~{::registerDropdown(${active})}"></div>
           <a href="/login" th:classappend="${active == '/login'} ? 'active'">Log in</a>
         </th:block>
         <th:block th:if="${currentUser != null}">
@@ -148,6 +160,7 @@
   </th:block>
 
   <footer th:fragment="siteFooter(credit)" class="site-footer"><b>GAT</b><br>Grassroot Advocacy for Tinubu<br>GAT 2027 · Forward Together with PBAT
+    <div class="small muted" style="margin-top:.4rem">National Coordinator, Prof. Ochugudu Achoda Ipuele<br>+234-7038960277, +234-8085653558</div>
     <div class="social-links" th:insert="~{::socialIcons}"></div>
     <th:block th:if="${credit}"><br><span class="small muted" style="font-size:.7rem">Presidential portrait: Nosa Asemota, CC BY-SA 4.0, via Wikimedia Commons</span></th:block>
   </footer>

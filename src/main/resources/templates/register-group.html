@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head><th:block th:replace="~{fragments/site :: pageHead('Register a Support Group')}"></th:block></head>
+<body>
+<th:block th:replace="~{fragments/site :: siteHeader('/register-group')}"></th:block>
+<main class="container narrow" style="max-width:460px">
+  <div class="card">
+    <h1>Register a Support Group / Association / Union</h1>
+    <p class="muted">Register your support group, association, or union's affiliation with Grassroots Advocacy for Tinubu (GAT) 2027.</p>
+    <div class="alert error" th:if="${error}" th:text="${error}"></div>
+    <div class="alert success" th:if="${sent}">Thank you — your group has been registered successfully.</div>
+    <form th:action="@{/register-group}" th:object="${form}" method="post">
+      <div class="field"><label>Name of the Group</label><input th:field="*{groupName}" type="text" maxlength="200" required></div>
+      <div class="field"><label>Name of the Head</label><input th:field="*{headName}" type="text" maxlength="150" required></div>
+      <div class="field"><label>Designation of the Head</label><input th:field="*{headTitle}" type="text" maxlength="150" required placeholder="e.g. National Chairman, President, National Coordinator"></div>
+      <div class="field"><label>Head Office</label><input th:field="*{headOffice}" type="text" maxlength="300" required placeholder="Address of the group's head office"></div>
+      <div class="field"><label>Contact No</label><input th:field="*{contactPhone}" type="tel" placeholder="0803 123 4567" required></div>
+      <div class="field"><label>Member Strength</label><input th:field="*{memberStrength}" type="number" min="1" required></div>
+      <button class="btn" type="submit" style="width:100%;margin-top:1rem">Register Group</button>
+    </form>
+  </div>
+</main>
+<th:block th:replace="~{fragments/site :: siteFooter(false)}"></th:block>
+</body>
+</html>

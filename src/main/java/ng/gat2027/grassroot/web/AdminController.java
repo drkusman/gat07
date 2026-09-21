@@ -51,14 +51,16 @@ public class AdminController {
     private final RoleResponsibilityService roleResponsibilities;
     private final OrganizationService organization;
     private final AppointmentLetterService letters;
+    private final SupportGroupService supportGroups;
 
     public AdminController(CurrentUser currentUser, AnalyticsService analytics, MemberService memberService, ReportService reportService, SettingsService settings, CsvImportService importer,
                            MemberRepository members, EventService events, ZoneRepository zones, StateRepository states, LgaRepository lgas, WardRepository wards, PollingUnitRepository pus,
                            AnnouncementService announcements, PromoVideoService promoVideos, InstitutionService institutions, RoleResponsibilityService roleResponsibilities, OrganizationService organization,
-                           AppointmentLetterService letters) {
+                           AppointmentLetterService letters, SupportGroupService supportGroups) {
         this.currentUser = currentUser; this.analytics = analytics; this.memberService = memberService; this.reportService = reportService; this.settings = settings; this.importer = importer;
         this.members = members; this.events = events; this.zones = zones; this.states = states; this.lgas = lgas; this.wards = wards; this.pus = pus; this.announcements = announcements;
         this.promoVideos = promoVideos; this.institutions = institutions; this.roleResponsibilities = roleResponsibilities; this.organization = organization; this.letters = letters;
+        this.supportGroups = supportGroups;
     }
 
     /** Shell (sidebar, filter bar options) for every coordination-centre page. */
@@ -107,6 +109,7 @@ public class AdminController {
             nav.add(NavItem.of("/admin/members/suspended", "Suspended Members", "⛔", "Operations").withCount(members.countByStatus(MemberStatus.SUSPENDED)));
             nav.add(NavItem.of("/admin/locations", "Location Data", "⌖", "Operations"));
             nav.add(NavItem.of("/admin/institutions", "Institutions", "🎓", "Operations"));
+            nav.add(NavItem.of("/admin/support-groups", "Support Groups", "🤝", "Operations"));
             nav.add(NavItem.of("/admin/roles", "Roles & Responsibilities", "🛡", "Operations"));
             nav.add(NavItem.of("/admin/organization", "Organizational Structure", "🏛", "Operations"));
             nav.add(NavItem.of("/admin/settings", "Settings & Age Limit", "⚙", "Operations"));
@@ -652,6 +655,13 @@ public class AdminController {
         shell(model, "Institutions", f);
         model.addAttribute("rows", institutions.all());
         return "admin/institutions";
+    }
+
+    @GetMapping("/support-groups")
+    public String supportGroupsList(@ModelAttribute AdminFilter f, Model model) {
+        shell(model, "Support Groups", f);
+        model.addAttribute("rows", supportGroups.all());
+        return "admin/support-groups";
     }
 
     @PostMapping("/institutions")
