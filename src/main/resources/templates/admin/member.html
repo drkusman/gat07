@@ -20,6 +20,14 @@
             <span th:text="${currentPositionLabel} ?: '—'"></span>
             <a th:if="${m.positionId != null}" class="mini" style="margin-left:.5rem" th:href="@{/admin/members/{id}/appointment-letter(id=${m.id})}" target="_blank">Download appointment letter</a>
           </dd>
+          <dt th:if="${m.positionId != null}">Signed acceptance</dt>
+          <dd th:if="${m.positionId != null}">
+            <span th:if="${m.hasAcceptance()}">
+              Submitted <span th:text="${#temporals.format(m.acceptanceUploadedAt, 'd MMM yyyy')}"></span> —
+              <a class="mini" th:href="@{/admin/members/{id}/acceptance-letter(id=${m.id})}" target="_blank">view</a>
+            </span>
+            <span th:unless="${m.hasAcceptance()}" class="muted">Not yet submitted</span>
+          </dd>
           <dt>Referral code</dt><dd><span class="mono" th:text="${m.referralCode}"></span></dd><dt>Referred by</dt><dd th:text="${p.referrerName() != null} ? (${p.referrerName()} + ' (' + ${p.referrerCode()} + ')') : '—'"></dd>
           <dt>Direct referrals</dt><dd th:text="${p.directReferrals()}"></dd><dt>Total network</dt><dd th:text="${p.totalDownline()}"></dd><dt>Joined</dt><dd th:text="${#temporals.format(m.createdAt, 'd MMM yyyy, HH:mm')}"></dd>
         </dl>

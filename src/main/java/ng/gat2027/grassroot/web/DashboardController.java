@@ -50,7 +50,7 @@ public class DashboardController {
         nav.add(NavItem.of("/dashboard/profile", "Profile & Settings", "✎", "Account"));
         nav.add(NavItem.of("/report", "File a Field Report", "✚", "Account"));
         if (m.isStaff()) nav.add(NavItem.of("/admin", "Coordination Dashboard", "★", "Account"));
-        if (m.getPositionId() != null) nav.add(NavItem.of("/dashboard/appointment-letter", "Download Appointment Letter", "📄", "Account").asExternal());
+        if (m.getPositionId() != null) nav.add(NavItem.of("/dashboard/appointment", "Appointment Letter", "📄", "Account"));
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
         nav.add(NavItem.of("/", "Public Website", "⌂", "Help"));
         model.addAttribute("nav", nav);
@@ -73,6 +73,16 @@ public class DashboardController {
         return "dashboard/overview";
     }
 
+    @GetMapping("/appointment")
+    public String appointmentPage(Model model) {
+        Member m = shell(model, "Appointment Letter");
+        if (m.getPositionId() == null) return "redirect:/dashboard";
+        Position position = organization.findPosition(m.getPositionId()).orElse(null);
+        model.addAttribute("positionLabel", position == null ? null
+            : position.getTitle() + organization.findCommittee(position.getCommitteeId()).map(c -> " (" + c.getCode() + ")").orElse(""));
+        return "dashboard/appointment";
+    }
+
     @GetMapping("/appointment-letter")
     public void appointmentLetter(HttpServletResponse response) throws IOException {
         Member m = currentUser.require();
@@ -89,6 +99,31 @@ public class DashboardController {
         } catch (MemberService.MemberException e) {
             response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
         }
+    }
+
+    @PostMapping("/appointment/acceptance")
+    public String uploadAcceptance(@RequestParam String acceptanceData, RedirectAttributes ra) {
+        try { memberService.uploadAcceptanceLetter(currentUser.require(), acceptanceData); ra.addFlashAttribute("success", "Thanks - your signed acceptance letter has been submitted."); }
+        catch (MemberService.MemberException e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/dashboard/appointment";
+    }
+
+    @GetMapping("/appointment/acceptance")
+    public void viewOwnAcceptance(HttpServletResponse response) throws IOException {
+        Member m = currentUser.require();
+        if (!m.hasAcceptance()) { response.sendError(HttpServletResponse.SC_NOT_FOUND, "Nothing submitted yet"); return; }
+        writeDataUrl(response, m.getAcceptanceData());
+    }
+
+    private void writeDataUrl(HttpServletResponse response, String dataUrl) throws IOException {
+        int comma = dataUrl.indexOf(',');
+        String meta = dataUrl.substring(5, comma); // "image/jpeg;base64"
+        String contentType = meta.split(";")[0];
+        byte[] bytes = java.util.Base64.getDecoder().decode(dataUrl.substring(comma + 1));
+        response.setContentType(contentType);
+        response.setContentLength(bytes.length);
+        response.getOutputStream().write(bytes);
+        response.getOutputStream().flush();
     }
 
     @GetMapping("/referrals")

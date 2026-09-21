@@ -271,6 +271,20 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/members/{id}/acceptance-letter")
+    public void acceptanceLetter(@PathVariable Long id, HttpServletResponse response) throws IOException {
+        Member m = members.findById(id).orElse(null);
+        if (m == null || !m.hasAcceptance()) { response.sendError(HttpServletResponse.SC_NOT_FOUND, "Nothing submitted yet"); return; }
+        String dataUrl = m.getAcceptanceData();
+        int comma = dataUrl.indexOf(',');
+        String contentType = dataUrl.substring(5, comma).split(";")[0];
+        byte[] bytes = java.util.Base64.getDecoder().decode(dataUrl.substring(comma + 1));
+        response.setContentType(contentType);
+        response.setContentLength(bytes.length);
+        response.getOutputStream().write(bytes);
+        response.getOutputStream().flush();
+    }
+
     @PostMapping("/members/{id}/role/request")
     public String requestPromotion(@PathVariable Long id, @RequestParam String role, RedirectAttributes ra) {
         try { memberService.requestPromotion(currentUser.require(), id, Role.valueOf(role)); ra.addFlashAttribute("success", "Promotion proposed."); }

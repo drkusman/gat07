@@ -32,11 +32,19 @@ public class OrganizationService {
         Map.entry("state coordinator", Role.COORDINATOR),
         Map.entry("zonal coordinator", Role.ZONAL_COORDINATOR),
         Map.entry("national coordinator", Role.ADMIN),
-        Map.entry("national media/publicity secretary", Role.NATIONAL_PUBLICITY_SECRETARY)
+        Map.entry("national media/publicity secretary", Role.NATIONAL_PUBLICITY_SECRETARY),
+        Map.entry("grand patron", Role.GRAND_PATRON)
     );
 
     public static Role roleForPositionTitle(String title) {
         return ROLE_BY_POSITION_TITLE.getOrDefault(title == null ? "" : title.trim().toLowerCase(Locale.ROOT), Role.MEMBER);
+    }
+
+    /** Patrons, Grand Patrons, and Board of Trustees members get the ceremonial honorary appointment-letter
+     *  format (see AppointmentLetterService) instead of the standard committee-position one. */
+    public static boolean isHonoraryPosition(String title) {
+        String t = title == null ? "" : title.trim().toLowerCase(Locale.ROOT);
+        return t.contains("patron") || t.contains("trustee");
     }
 
     public static class ImportSummary {

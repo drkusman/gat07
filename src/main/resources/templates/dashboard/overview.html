@@ -10,7 +10,7 @@
       <span class="mini muted" style="margin-left:.4rem">Member since <span th:text="${#temporals.format(me.createdAt, 'd MMM yyyy')}"></span></span>
       <div class="muted" style="margin-top:.4rem;font-size:.88rem" th:text="${profile.locationLine()}"></div></div>
     <div class="no-print btn-row">
-      <a th:if="${me.positionId != null}" class="btn" href="/dashboard/appointment-letter" target="_blank">Download Appointment Letter</a>
+      <a th:if="${me.positionId != null}" class="btn" href="/dashboard/appointment">Appointment Letter</a>
       <a class="btn secondary" href="/dashboard/profile">Edit profile</a>
     </div>
   </div></div>

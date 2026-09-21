@@ -33,6 +33,10 @@ public class Member {
     @Column(name = "position_id") private Long positionId;
     @Column(name = "institution_id") private Long institutionId;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) private String photo;
+    /** A photo/scan of the appointee's signed "Acceptance of Appointment" page, returned after they receive
+     *  their appointment letter (see AppointmentLetterService). Null until they upload one. */
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(name = "acceptance_data") private String acceptanceData;
+    @Column(name = "acceptance_uploaded_at") private LocalDateTime acceptanceUploadedAt;
     @Column(name = "zone_id") private Long zoneId;
     @Column(name = "state_id") private Long stateId;
     @Column(name = "lga_id") private Long lgaId;
@@ -63,4 +67,5 @@ public class Member {
     }
     public boolean isAdmin() { return role == Role.ADMIN; }
     public boolean isActive() { return status == MemberStatus.ACTIVE; }
+    public boolean hasAcceptance() { return acceptanceData != null && !acceptanceData.isBlank(); }
 }

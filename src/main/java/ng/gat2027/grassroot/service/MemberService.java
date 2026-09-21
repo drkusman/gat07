@@ -94,6 +94,18 @@ public class MemberService {
         if (photo != null && photo.startsWith("data:image/") && photo.length() < 700_000) m.setPhoto(photo);
     }
 
+    /** Stores a photo/scan of the appointee's signed "Acceptance of Appointment" page (the second page of
+     *  their appointment letter - see AppointmentLetterService). Re-uploading replaces the previous copy. */
+    @Transactional
+    public void uploadAcceptanceLetter(Member m, String dataUrl) {
+        if (m.getPositionId() == null) throw new MemberException("No position assigned yet");
+        if (dataUrl == null || !dataUrl.startsWith("data:image/") || dataUrl.length() > 4_000_000)
+            throw new MemberException("Please upload a clear photo or scan of the signed acceptance page (image, under a few MB)");
+        m.setAcceptanceData(dataUrl);
+        m.setAcceptanceUploadedAt(LocalDateTime.now(ZoneOffset.UTC));
+        members.save(m);
+    }
+
     @Transactional
     public void changePassword(Member m, String current, String next) {
         if (!encoder.matches(current == null ? "" : current, m.getPasswordHash())) throw new MemberException("Current password is incorrect");

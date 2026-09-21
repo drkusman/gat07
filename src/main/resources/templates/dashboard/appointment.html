@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:replace="~{fragments/shell :: layout(~{::#page})}">
+<body>
+<div id="page">
+  <div class="panel">
+    <div class="ph"><h2>Appointment Letter</h2></div>
+    <div class="pb">
+      <p th:if="${positionLabel != null}">Your position: <b th:text="${positionLabel}"></b></p>
+      <a class="btn" href="/dashboard/appointment-letter" target="_blank">⬇ Download Appointment Letter (PDF)</a>
+      <p class="help" style="margin-top:.6rem">
+        Your letter includes a second page, <b>Acceptance of Appointment</b> — please print it, sign it, and
+        upload a clear photo or scan of the signed page below.
+      </p>
+    </div>
+  </div>
+
+  <div class="panel" style="margin-top:1.1rem">
+    <div class="ph"><h2>Signed Acceptance Letter</h2></div>
+    <div class="pb">
+      <div th:if="${me.hasAcceptance()}" class="alert success" style="margin-bottom:1rem">
+        Submitted on <span th:text="${#temporals.format(me.acceptanceUploadedAt, 'd MMM yyyy, HH:mm')}"></span> —
+        <a href="/dashboard/appointment/acceptance" target="_blank">view what you uploaded</a>.
+      </div>
+      <form method="post" action="/dashboard/appointment/acceptance" id="acceptanceForm">
+        <div class="field">
+          <label for="acceptanceFile" th:text="${me.hasAcceptance()} ? 'Replace with a new photo/scan' : 'Photo or scan of your signed acceptance page'"></label>
+          <input type="file" id="acceptanceFile" accept="image/*" capture="environment">
+        </div>
+        <span id="acceptanceStatus" class="help" style="display:block;margin:.4rem 0"></span>
+        <img id="acceptancePreview" style="display:none;max-width:220px;border-radius:8px;border:1px solid var(--line);margin-bottom:.6rem">
+        <button type="submit" class="btn" id="acceptanceSubmit" disabled>Submit signed acceptance</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+(function () {
+  var input = document.getElementById('acceptanceFile');
+  var form = document.getElementById('acceptanceForm');
+  var status = document.getElementById('acceptanceStatus');
+  var preview = document.getElementById('acceptancePreview');
+  var submitBtn = document.getElementById('acceptanceSubmit');
+
+  input.addEventListener('change', function () {
+    var file = input.files[0];
+    submitBtn.disabled = true;
+    preview.style.display = 'none';
+    if (!file) return;
+    status.textContent = 'Processing…';
+    var reader = new FileReader();
+    reader.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var scale = Math.min(1, 1600 / Math.max(img.width, img.height));
+        var c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        var dataUrl = c.toDataURL('image/jpeg', 0.85);
+        var hidden = form.querySelector('input[name=acceptanceData]');
+        if (!hidden) {
+          hidden = document.createElement('input');
+          hidden.type = 'hidden'; hidden.name = 'acceptanceData';
+          form.appendChild(hidden);
+        }
+        hidden.value = dataUrl;
+        preview.src = dataUrl; preview.style.display = 'block';
+        submitBtn.disabled = false;
+        status.textContent = 'Ready — you can submit now.';
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+})();
+  </script>
+</div>
+</body>
+</html>
