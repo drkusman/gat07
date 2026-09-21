@@ -11,8 +11,8 @@
           <div class="field">
             <label>Show to</label>
             <select name="audience" id="audienceSelect">
-              <option value="PUBLIC" th:selected="${a.audience == null or a.audience.name() == 'PUBLIC'}">Public — home page (General Information)</option>
-              <option value="MEMBERS" th:selected="${a.audience != null and a.audience.name() == 'MEMBERS'}">Registered members (Breaking News)</option>
+              <option value="PUBLIC" th:selected="${a.audience == null or a.audience.name() == 'PUBLIC'}">Public — (Breaking News)</option>
+              <option value="MEMBERS" th:selected="${a.audience != null and a.audience.name() == 'MEMBERS'}">Registered Member — (Announcement)</option>
             </select>
           </div>
           <div class="field" id="stateField">
@@ -33,8 +33,8 @@
     </div>
     <div class="panel"><div class="ph"><h2>About announcements</h2></div><div class="pb">
       <ul class="muted" style="font-size:.9rem;padding-left:1.2rem;line-height:1.7">
-        <li><b>Public</b> announcements appear in a "General Information" section on the public home page — anyone can see them.</li>
-        <li><b>Registered members</b> announcements appear as "State Breaking News" on members' own dashboards.</li>
+        <li><b>Public</b> announcements scroll in the Breaking News marquee on the public home page — anyone can see them.</li>
+        <li><b>Registered Member</b> announcements scroll in the same marquee style on members' own dashboards, under "Announcement".</li>
         <li>Leaving the state blank for a members announcement shows it to every member nationwide; picking a state shows it only to members registered there.</li>
         <li>Unpublish (uncheck "Published") to hide an announcement without deleting it.</li>
       </ul></div></div>
