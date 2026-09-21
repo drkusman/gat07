@@ -1,0 +1,14 @@
+node_modules/
+android/local.properties
+android/.gradle/
+android/build/
+android/app/build/
+android/app/release/
+android/captures/
+android/*.iml
+android/.idea/
+ios/App/Pods/
+ios/App/build/
+ios/App/App.xcworkspace/xcuserdata/
+*.apk
+*.aab

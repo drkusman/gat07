@@ -1,0 +1,36 @@
+{
+  "appId": "ng.gat2027.grassroot",
+  "appName": "GAT 2027",
+  "webDir": "www",
+  "server": {
+    "url": "https://gat2027.org.ng",
+    "androidScheme": "https",
+    "allowNavigation": [
+      "*.gat2027.org.ng",
+      "youtube.com",
+      "*.youtube.com",
+      "youtu.be",
+      "facebook.com",
+      "*.facebook.com",
+      "whatsapp.com",
+      "*.whatsapp.com",
+      "wa.me",
+      "x.com",
+      "*.x.com",
+      "twitter.com",
+      "*.twitter.com",
+      "tiktok.com",
+      "*.tiktok.com",
+      "instagram.com",
+      "*.instagram.com",
+      "google.com",
+      "*.google.com",
+      "maps.google.com",
+      "gmail.com",
+      "mail.google.com"
+    ]
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
