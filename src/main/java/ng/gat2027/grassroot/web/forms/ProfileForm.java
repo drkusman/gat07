@@ -21,7 +21,7 @@ public class ProfileForm extends LocationForm {
     @NotBlank(message = "Phone number is required") private String phone;
     @Email(message = "Enter a valid email address") @Size(max = 120) private String email;
     @Size(max = 300) private String address;
-    @Size(max = 100) private String occupation;
+    @Size(max = 200, message = "Occupation is too long (200 characters max)") private String occupation;
     @Size(max = 60) private String education;
     @Size(max = 30) private String vin;
     private String photo;

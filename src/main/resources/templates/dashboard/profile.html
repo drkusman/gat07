@@ -14,7 +14,7 @@
         <div class="field"><label>Date of birth</label><input th:field="*{dob}" type="date" th:max="${ageRules.maxDob()}" th:required="${ageRules.requireDob()}"><span class="help">Members must be at least <span th:text="${ageRules.minAge()}">16</span> years old.</span></div>
         <div class="field"><label>Phone</label><input th:field="*{phone}" type="tel" required></div>
         <div class="field"><label>Email</label><input th:field="*{email}" type="email"></div>
-        <div class="field"><label>Occupation</label><input th:field="*{occupation}"></div>
+        <div class="field"><label>Occupation</label><input th:field="*{occupation}" maxlength="200"></div>
         <div class="field"><label>Education</label><select th:field="*{education}"><option value="">Select</option><option value="Primary">Primary</option><option value="Secondary">Secondary</option><option value="OND/NCE">OND/NCE</option><option value="HND/Bachelor's">HND/Bachelor's</option><option value="Master's">Master's</option><option value="Doctorate">Doctorate</option><option value="Other">Other</option></select></div>
         <div class="field"><label>Voter Identification Number</label><input th:field="*{vin}"></div>
         <div class="field full"><label>Residential address</label><input th:field="*{address}"></div>
