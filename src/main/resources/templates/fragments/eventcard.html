@@ -13,6 +13,7 @@
     <div class="event-links">
       <span th:if="${!e.hasMedia()}" class="muted small" style="font-style:italic">Photos &amp; videos coming soon</span>
       <a th:if="${e.hasUploadedVideo()}" th:href="@{/events/{id}/video(id=${e.id})}" target="_blank" rel="noopener" class="event-link">▶ Watch video</a>
+      <a th:if="${e.hasYoutubeUrl()}" th:href="${e.youtubeUrl}" target="_blank" rel="noopener" class="event-link">▶ Watch on YouTube</a>
     </div>
   </div>
 </div>

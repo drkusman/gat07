@@ -19,6 +19,7 @@ public class Event {
     private String location;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(nullable = false) private String description;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(name = "video_data") private String videoData;
+    @Column(name = "youtube_url") private String youtubeUrl;
     /** Null zoneId/stateId = a national event, visible and editable by everyone with event access. */
     @Column(name = "zone_id") private Long zoneId;
     @Column(name = "state_id") private Long stateId;
@@ -31,5 +32,6 @@ public class Event {
 
     public boolean isUpcoming() { return !eventDate.isBefore(LocalDate.now()); }
     public boolean hasUploadedVideo() { return videoData != null && !videoData.isBlank(); }
-    public boolean hasMedia() { return hasUploadedVideo(); }
+    public boolean hasYoutubeUrl() { return youtubeUrl != null && !youtubeUrl.isBlank(); }
+    public boolean hasMedia() { return hasUploadedVideo() || hasYoutubeUrl(); }
 }

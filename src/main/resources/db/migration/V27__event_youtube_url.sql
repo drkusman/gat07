@@ -1,0 +1,1 @@
+ALTER TABLE events ADD COLUMN youtube_url VARCHAR(255);

@@ -406,13 +406,13 @@ public class AdminController {
     @PostMapping("/events")
     public String createEvent(@RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
                                @RequestParam String description, @RequestParam(required = false) String published, @RequestParam(defaultValue = "EVENT") PostType postType,
-                               @RequestParam(required = false) String videoData, HttpServletRequest request, RedirectAttributes ra) {
+                               @RequestParam(required = false) String videoData, @RequestParam(required = false) String youtubeUrl, HttpServletRequest request, RedirectAttributes ra) {
         Member u = currentUser.require();
         Long zoneId = u.isAdmin() ? null : u.getRole() == Role.ZONAL_COORDINATOR ? u.getZoneId() : u.getRole() == Role.COORDINATOR ? u.getZoneId() : null;
         Long stateId = u.getRole() == Role.COORDINATOR ? u.getStateId() : null;
         boolean approved = !u.getRole().isMediaTeam();
         try {
-            Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId, u.getId(), approved, postType);
+            Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId, u.getId(), approved, postType, youtubeUrl);
             events.addPhotos(e.getId(), photosFrom(request));
             events.setVideo(e.getId(), videoData);
             ra.addFlashAttribute("success", approved ? "Post created." : "Post submitted — it will appear on the public site once Admin approves it.");
@@ -423,13 +423,13 @@ public class AdminController {
     @PostMapping("/events/{id}")
     public String updateEvent(@PathVariable Long id, @RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
                                @RequestParam String description, @RequestParam(required = false) String published, @RequestParam(defaultValue = "EVENT") PostType postType,
-                               @RequestParam(required = false) String videoData, HttpServletRequest request, RedirectAttributes ra) {
+                               @RequestParam(required = false) String videoData, @RequestParam(required = false) String youtubeUrl, HttpServletRequest request, RedirectAttributes ra) {
         Member u = currentUser.require();
         Event existing = events.find(id).orElse(null);
         if (existing == null || !canManage(u, existing)) { ra.addFlashAttribute("error", "You don't have permission to edit this event."); return "redirect:/admin/events"; }
         boolean approved = !u.getRole().isMediaTeam();
         try {
-            events.save(id, title, eventDate, location, description, published != null, null, null, null, approved, postType);
+            events.save(id, title, eventDate, location, description, published != null, null, null, null, approved, postType, youtubeUrl);
             events.addPhotos(id, photosFrom(request));
             events.setVideo(id, videoData);
             ra.addFlashAttribute("success", approved ? "Post updated." : "Post updated — it will need Admin re-approval before it's visible again.");

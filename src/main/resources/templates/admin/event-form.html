@@ -27,6 +27,11 @@
           <div id="eventPhotosPreview" class="grid cols-4" style="margin-top:.6rem"></div>
         </div>
         <div class="field" style="margin-top:.8rem">
+          <label>YouTube URL (optional)</label>
+          <input name="youtubeUrl" type="url" maxlength="255" th:value="${e.youtubeUrl}" placeholder="e.g. https://www.youtube.com/watch?v=...">
+          <span class="help">If set, the public card gets a "Watch on YouTube" link — no need to also upload a video clip below.</span>
+        </div>
+        <div class="field" style="margin-top:.8rem">
           <label>Upload video clip</label>
           <input type="file" id="eventVideo" accept="video/*">
           <span class="help">Upload the actual clip (MP4 etc., up to 150MB) — the public "Watch video" link will play it directly, no YouTube link needed.</span>

@@ -85,7 +85,7 @@ public class EventService {
      *  a Media Coordinator's own save (create or edit) always resets it to pending. */
     @Transactional
     public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published,
-                       Long creatorZoneId, Long creatorStateId, Long creatorId, boolean approved, PostType postType) {
+                       Long creatorZoneId, Long creatorStateId, Long creatorId, boolean approved, PostType postType, String youtubeUrl) {
         Event e = id == null ? new Event() : repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
         boolean isNew = e.getId() == null;
         e.setTitle(title);
@@ -95,6 +95,7 @@ public class EventService {
         e.setPublished(published);
         e.setApproved(approved);
         e.setPostType(postType);
+        e.setYoutubeUrl(blankToNull(youtubeUrl));
         e.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         if (isNew) { e.setZoneId(creatorZoneId); e.setStateId(creatorStateId); e.setCreatedBy(creatorId); }
         if (isNew || e.getSlug() == null || e.getSlug().isBlank()) e.setSlug(uniqueSlug(title, id));
