@@ -37,6 +37,7 @@ public class HomeController {
     public String home(@RequestParam(required = false) String play, Model model) {
         model.addAttribute("stats", analytics.locationStats());
         model.addAttribute("totalMembers", analytics.totalMembersDisplay());
+        model.addAttribute("publicInfo", announcements.publicInfo());
         List<PromoVideo> active = promoVideos.activeVideos();
         List<PromoVideo> playlist = playlistFor(play, active);
         String currentId = playlist.isEmpty() ? null : playlist.get(0).getYoutubeId();

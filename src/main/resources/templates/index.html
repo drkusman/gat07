@@ -4,6 +4,17 @@
 <body>
 <th:block th:replace="~{fragments/site :: siteHeader('/')}"></th:block>
 
+<div class="news-marquee" th:if="${!publicInfo.isEmpty()}">
+  <span class="news-marquee-label">🔴 Breaking News</span>
+  <div class="news-marquee-viewport">
+    <div class="news-marquee-track" th:style="'animation-duration:' + ${#lists.size(publicInfo) * 8 < 15 ? 15 : #lists.size(publicInfo) * 8} + 's'">
+      <th:block th:each="pass : ${#numbers.sequence(1,2)}">
+        <a class="news-marquee-item" href="/news" th:each="a : ${publicInfo}"><b th:text="${a.title}"></b></a>
+      </th:block>
+    </div>
+  </div>
+</div>
+
 <section class="hero"><div class="inner">
   <div>
     <span class="motto">Motto: Forward Together with PBAT</span>
