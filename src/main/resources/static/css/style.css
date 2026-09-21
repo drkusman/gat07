@@ -233,10 +233,10 @@ td.num, th.num { text-align: right; }
 
 /* Breaking news marquee */
 .news-marquee { display: flex; align-items: stretch; background: var(--red); overflow: hidden; }
-.news-marquee-label { flex: none; display: flex; align-items: center; background: #000; color: #fff; font-weight: 700; font-size: .78rem; letter-spacing: .3px; padding: .5rem .9rem; white-space: nowrap; }
+.news-marquee-label { flex: none; display: flex; align-items: center; background: #000; color: #fff; font-weight: 700; font-size: .88rem; letter-spacing: .3px; padding: .5rem .9rem; white-space: nowrap; }
 .news-marquee-viewport { flex: 1; overflow: hidden; position: relative; }
 .news-marquee-track { display: flex; width: max-content; white-space: nowrap; align-items: center; animation: news-marquee-scroll 20s linear infinite; padding: .55rem 0; }
-.news-marquee-item { padding: 0 2.2rem; font-size: .86rem; color: #fff; font-weight: 600; text-decoration: none; }
+.news-marquee-item { padding: 0 2.2rem; font-size: .98rem; color: #fff; font-weight: 600; text-decoration: none; }
 .news-marquee-item:hover { text-decoration: underline; }
 .news-marquee:hover .news-marquee-track { animation-play-state: paused; }
 @keyframes news-marquee-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
