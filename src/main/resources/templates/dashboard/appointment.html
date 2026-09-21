@@ -21,7 +21,7 @@
         Submitted on <span th:text="${#temporals.format(me.acceptanceUploadedAt, 'd MMM yyyy, HH:mm')}"></span> —
         <a href="/dashboard/appointment/acceptance" target="_blank">view what you uploaded</a>.
       </div>
-      <form method="post" action="/dashboard/appointment/acceptance" id="acceptanceForm">
+      <form method="post" th:action="@{/dashboard/appointment/acceptance}" id="acceptanceForm">
         <div class="field">
           <label for="acceptanceFile" th:text="${me.hasAcceptance()} ? 'Replace with a new photo/scan' : 'Photo or scan of your signed acceptance page'"></label>
           <input type="file" id="acceptanceFile" accept="image/*" capture="environment">
