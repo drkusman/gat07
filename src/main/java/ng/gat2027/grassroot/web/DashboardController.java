@@ -50,7 +50,7 @@ public class DashboardController {
         nav.add(NavItem.of("/dashboard/profile", "Profile & Settings", "✎", "Account"));
         nav.add(NavItem.of("/report", "File a Field Report", "✚", "Account"));
         if (m.isStaff()) nav.add(NavItem.of("/admin", "Coordination Dashboard", "★", "Account"));
-        if (m.getPositionId() != null) nav.add(NavItem.of("/dashboard/appointment", "Appointment Letter", "📄", "Account"));
+        if (m.hasAppointment()) nav.add(NavItem.of("/dashboard/appointment", "Appointment Letter", "📄", "Account"));
         nav.add(NavItem.of("/docs/GAT-2027-User-Manual.pdf", "User Manual (PDF)", "▣", "Help").asExternal());
         nav.add(NavItem.of("/", "Public Website", "⌂", "Help"));
         model.addAttribute("nav", nav);
@@ -76,10 +76,16 @@ public class DashboardController {
     @GetMapping("/appointment")
     public String appointmentPage(Model model) {
         Member m = shell(model, "Appointment Letter");
-        if (m.getPositionId() == null) return "redirect:/dashboard";
-        Position position = organization.findPosition(m.getPositionId()).orElse(null);
-        model.addAttribute("positionLabel", position == null ? null
-            : position.getTitle() + organization.findCommittee(position.getCommitteeId()).map(c -> " (" + c.getCode() + ")").orElse(""));
+        if (!m.hasAppointment()) return "redirect:/dashboard";
+        String label = null;
+        if (m.getPositionId() != null) {
+            Position position = organization.findPosition(m.getPositionId()).orElse(null);
+            label = position == null ? null
+                : position.getTitle() + organization.findCommittee(position.getCommitteeId()).map(c -> " (" + c.getCode() + ")").orElse("");
+        } else if (m.getOtherPositionTitle() != null) {
+            label = m.getOtherPositionTitle();
+        }
+        model.addAttribute("positionLabel", label);
         return "dashboard/appointment";
     }
 
@@ -87,10 +93,16 @@ public class DashboardController {
     public void appointmentLetter(HttpServletResponse response) throws IOException {
         Member m = currentUser.require();
         try {
-            if (m.getPositionId() == null) throw new MemberService.MemberException("No position assigned yet");
-            Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
-            Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
-            byte[] pdf = letters.generate(m, position, committee, analytics.profile(m).stateName());
+            byte[] pdf;
+            if (m.getPositionId() != null) {
+                Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
+                Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
+                pdf = letters.generate(m, position, committee, analytics.profile(m).stateName());
+            } else if (m.getOtherPositionTitle() != null) {
+                pdf = letters.generateOther(m, m.getOtherPositionTitle(), m.getOtherPositionTerms(), analytics.profile(m).stateName());
+            } else {
+                throw new MemberService.MemberException("No position assigned yet");
+            }
             response.setContentType("application/pdf");
             response.setHeader("Content-Disposition", "attachment; filename=\"Appointment-Letter-" + m.getMemberCode() + ".pdf\"");
             response.setContentLength(pdf.length);

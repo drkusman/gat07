@@ -233,8 +233,10 @@ public class AdminController {
         if (u.isAdmin()) {
             model.addAttribute("committeeGroups", organization.positionsGroupedByCommittee());
             Position currentPosition = m.getPositionId() == null ? null : organization.findPosition(m.getPositionId()).orElse(null);
-            model.addAttribute("currentPositionLabel", currentPosition == null ? null
-                : currentPosition.getTitle() + " (" + organization.findCommittee(currentPosition.getCommitteeId()).map(Committee::getCode).orElse("?") + ")");
+            String label = currentPosition == null ? null
+                : currentPosition.getTitle() + " (" + organization.findCommittee(currentPosition.getCommitteeId()).map(Committee::getCode).orElse("?") + ")";
+            if (label == null && m.getOtherPositionTitle() != null) label = m.getOtherPositionTitle() + " (Special Appointment)";
+            model.addAttribute("currentPositionLabel", label);
         }
         return "admin/member";
     }
@@ -253,14 +255,27 @@ public class AdminController {
         return "redirect:/admin/members/" + id;
     }
 
+    @PostMapping("/members/{id}/other-position")
+    public String assignOtherPosition(@PathVariable Long id, @RequestParam(required = false) String otherTitle, @RequestParam(required = false) String otherTerms, RedirectAttributes ra) {
+        try { memberService.assignOtherPosition(currentUser.require(), id, otherTitle, otherTerms); ra.addFlashAttribute("success", "Special appointment updated."); }
+        catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
+        return "redirect:/admin/members/" + id;
+    }
+
     @GetMapping("/members/{id}/appointment-letter")
     public void appointmentLetter(@PathVariable Long id, HttpServletResponse response) throws IOException {
         try {
             Member m = members.findById(id).orElseThrow(() -> new MemberService.MemberException("Member not found"));
-            if (m.getPositionId() == null) throw new MemberService.MemberException("This member has no position assigned yet");
-            Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
-            Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
-            byte[] pdf = letters.generate(m, position, committee, analytics.profile(m).stateName());
+            byte[] pdf;
+            if (m.getPositionId() != null) {
+                Position position = organization.findPosition(m.getPositionId()).orElseThrow(() -> new MemberService.MemberException("Position not found"));
+                Committee committee = organization.findCommittee(position.getCommitteeId()).orElseThrow(() -> new MemberService.MemberException("Committee not found"));
+                pdf = letters.generate(m, position, committee, analytics.profile(m).stateName());
+            } else if (m.getOtherPositionTitle() != null) {
+                pdf = letters.generateOther(m, m.getOtherPositionTitle(), m.getOtherPositionTerms(), analytics.profile(m).stateName());
+            } else {
+                throw new MemberService.MemberException("This member has no position assigned yet");
+            }
             response.setContentType("application/pdf");
             response.setHeader("Content-Disposition", "attachment; filename=\"Appointment-Letter-" + m.getMemberCode() + ".pdf\"");
             response.setContentLength(pdf.length);

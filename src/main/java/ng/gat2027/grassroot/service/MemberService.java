@@ -132,12 +132,54 @@ public class MemberService {
     public void assignPosition(Member admin, Long memberId, Long positionId) {
         if (admin.getId().equals(memberId)) throw new MemberException("You cannot change your own position");
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
-        if (positionId == null) { m.setPositionId(null); members.save(m); return; }
+        boolean changed = !java.util.Objects.equals(m.getPositionId(), positionId) || m.getOtherPositionTitle() != null;
+        m.setOtherPositionTitle(null);
+        m.setOtherPositionTerms(null);
+        if (positionId == null) {
+            m.setPositionId(null);
+            if (changed) clearAcceptance(m);
+            members.save(m);
+            return;
+        }
         Position position = positions.findById(positionId).orElseThrow(() -> new MemberException("Position not found"));
         m.setPositionId(positionId);
         m.setRole(OrganizationService.roleForPositionTitle(position.getTitle()));
+        if (changed) clearAcceptance(m);
         clearPending(m);
         members.save(m);
+    }
+
+    /** An ad hoc "Others" appointment: admin supplies both the position title and the Terms of Reference text
+     *  printed on the letter, for one-off special appointments outside the standing organisational structure.
+     *  Mutually exclusive with a standard Position - assigning one clears the other. A blank title clears it. */
+    @Transactional
+    public void assignOtherPosition(Member admin, Long memberId, String title, String termsOfReference) {
+        if (admin.getId().equals(memberId)) throw new MemberException("You cannot change your own position");
+        Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
+        String cleanTitle = Codes.blankToNull(title);
+        boolean changed = !java.util.Objects.equals(m.getOtherPositionTitle(), cleanTitle) || m.getPositionId() != null;
+        m.setPositionId(null);
+        if (cleanTitle == null) {
+            m.setOtherPositionTitle(null);
+            m.setOtherPositionTerms(null);
+            if (changed) clearAcceptance(m);
+            members.save(m);
+            return;
+        }
+        if (cleanTitle.length() > 150) throw new MemberException("Position title is too long (150 characters max)");
+        String terms = Codes.blankToNull(termsOfReference);
+        if (terms != null && terms.length() > 3000) throw new MemberException("Terms of Reference is too long (3,000 characters max)");
+        m.setOtherPositionTitle(cleanTitle);
+        m.setOtherPositionTerms(terms);
+        m.setRole(Role.MEMBER);
+        if (changed) clearAcceptance(m);
+        clearPending(m);
+        members.save(m);
+    }
+
+    private void clearAcceptance(Member m) {
+        m.setAcceptanceData(null);
+        m.setAcceptanceUploadedAt(null);
     }
 
     /**

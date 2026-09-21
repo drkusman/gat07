@@ -18,10 +18,10 @@
           <dt>Special needs</dt><dd th:text="${m.specialNeeds} ? 'Yes' : 'No'"></dd>
           <dt>Position</dt><dd>
             <span th:text="${currentPositionLabel} ?: '—'"></span>
-            <a th:if="${m.positionId != null}" class="mini" style="margin-left:.5rem" th:href="@{/admin/members/{id}/appointment-letter(id=${m.id})}" target="_blank">Download appointment letter</a>
+            <a th:if="${m.hasAppointment()}" class="mini" style="margin-left:.5rem" th:href="@{/admin/members/{id}/appointment-letter(id=${m.id})}" target="_blank">Download appointment letter</a>
           </dd>
-          <dt th:if="${m.positionId != null}">Signed acceptance</dt>
-          <dd th:if="${m.positionId != null}">
+          <dt th:if="${m.hasAppointment()}">Signed acceptance</dt>
+          <dd th:if="${m.hasAppointment()}">
             <span th:if="${m.hasAcceptance()}">
               Submitted <span th:text="${#temporals.format(m.acceptanceUploadedAt, 'd MMM yyyy')}"></span> —
               <a class="mini" th:href="@{/admin/members/{id}/acceptance-letter(id=${m.id})}" target="_blank">view</a>
@@ -64,8 +64,15 @@
         <form th:action="@{/admin/members/{id}/password(id=${m.id})}" method="post" class="btn-row">
           <input name="password" placeholder="New password" minlength="6" required style="width:170px"><button class="btn secondary sm">Reset password</button></form>
       </div>
-      <div class="btn-row no-print" th:if="${isAdmin}" style="margin-top:.7rem">
-        <form th:action="@{/admin/members/{id}/position(id=${m.id})}" method="post" class="btn-row">
+      <div class="no-print" th:if="${isAdmin}" style="margin-top:.7rem">
+        <div class="field" style="max-width:280px">
+          <label for="apptCategory">Appointment category</label>
+          <select id="apptCategory" th:disabled="${self}">
+            <option value="committee" th:selected="${m.otherPositionTitle == null}">Committee Position</option>
+            <option value="other" th:selected="${m.otherPositionTitle != null}">Others</option>
+          </select>
+        </div>
+        <form id="committeePositionForm" th:action="@{/admin/members/{id}/position(id=${m.id})}" method="post" class="btn-row" style="margin-top:.5rem">
           <select name="positionId" style="width:auto" th:disabled="${self}">
             <option value="">No position</option>
             <optgroup th:each="group : ${committeeGroups}" th:label="${group.committee().name} + ' (' + ${group.committee().code} + ')'">
@@ -73,9 +80,35 @@
             </optgroup>
           </select>
           <button class="btn sm" th:disabled="${self}">Save position</button></form>
+        <form id="otherPositionForm" th:action="@{/admin/members/{id}/other-position(id=${m.id})}" method="post" style="margin-top:.5rem;display:none">
+          <div class="field">
+            <label for="otherTitle">Name of position</label>
+            <input type="text" id="otherTitle" name="otherTitle" maxlength="150" th:value="${m.otherPositionTitle}" th:disabled="${self}" placeholder="e.g. Special Adviser on Youth Mobilisation">
+          </div>
+          <div class="field" style="margin-top:.5rem">
+            <label for="otherTerms">Terms of Reference (printed on the letter)</label>
+            <textarea id="otherTerms" name="otherTerms" rows="5" maxlength="3000" th:disabled="${self}" th:text="${m.otherPositionTerms}"></textarea>
+          </div>
+          <button class="btn sm" style="margin-top:.5rem" th:disabled="${self}">Save special appointment</button>
+          <p class="mini muted" style="margin-top:.3rem">Leave the position name blank and save to clear this special appointment.</p>
+        </form>
       </div>
-      <p class="mini muted" style="margin-top:.4rem">Assigning a position that matches one of the system roles (e.g. State Coordinator, Zonal Coordinator) updates the member's role to match; every other position leaves them a Member.</p>
+      <p class="mini muted" style="margin-top:.4rem">Assigning a Committee Position that matches one of the system roles (e.g. State Coordinator, Zonal Coordinator) updates the member's role to match; every other position, and every "Others" appointment, leaves them a Member.</p>
       <p class="mini muted" th:if="${self}" style="margin-top:.5rem">You cannot change your own role, position, or status.</p>
+      <script th:if="${isAdmin}">
+      (function () {
+        var category = document.getElementById('apptCategory');
+        var committeeForm = document.getElementById('committeePositionForm');
+        var otherForm = document.getElementById('otherPositionForm');
+        function sync() {
+          var isOther = category.value === 'other';
+          committeeForm.style.display = isOther ? 'none' : '';
+          otherForm.style.display = isOther ? '' : 'none';
+        }
+        category.addEventListener('change', sync);
+        sync();
+      })();
+      </script>
       <div class="no-print" th:if="${canPropose}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
         <form th:action="@{/admin/members/{id}/role/request(id=${m.id})}" method="post" class="btn-row">
           <select name="role" style="width:auto">

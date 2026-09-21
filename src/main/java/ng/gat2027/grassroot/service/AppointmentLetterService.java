@@ -58,6 +58,20 @@ public class AppointmentLetterService {
         }
     }
 
+    /** "Others" category: an ad hoc appointment outside the standing organisational structure, where the admin
+     *  supplies both the position title and the free-text Terms of Reference printed on the letter. */
+    public byte[] generateOther(Member m, String positionTitle, String termsOfReference, String stateName) throws IOException {
+        try (PDDocument doc = new PDDocument()) {
+            String title = positionTitle.trim();
+            otherPage(doc, m, title, termsOfReference, stateName);
+            acceptancePage(doc, m, title);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            doc.save(out);
+            return out.toByteArray();
+        }
+    }
+
     /** Standard committee-position letter: subject line, "Scope of Responsibilities" bullets. */
     private void committeePage(PDDocument doc, Member m, Position position, Committee committee, String stateName) throws IOException {
         PDPage page = new PDPage(new PDRectangle(PAGE_WIDTH, PAGE_HEIGHT));
@@ -104,6 +118,66 @@ public class AppointmentLetterService {
                 cy = bulletPoint(cs, regular, bold, 11, MARGIN, cy, width, bullet);
             }
             cy -= 8;
+
+            cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
+                "Please signify your acceptance of this appointment by signing the space provided below and returning a copy "
+                + "to the National Secretariat within seven (7) days of receipt.");
+            cy -= 6;
+            cy = y(cs, regular, 11, MARGIN, cy, "Congratulations on your appointment. We look forward to working with you.") - 16;
+            cy = y(cs, regular, 11, MARGIN, cy, "Sincerely,") - 4;
+
+            cs.drawImage(signature, MARGIN, cy - 45, 70, 45);
+            cy -= 55;
+            cy = y(cs, bold, 11, MARGIN, cy, "Prof. Ochugudu Achoda Ipuele") - 14;
+            cy = y(cs, regular, 10, MARGIN, cy, "National Coordinator") - 13;
+            y(cs, bold, 10, MARGIN, cy, "07038960277, 08085653558");
+        }
+    }
+
+    /** "Others" category letter: same letterhead and tone as the committee-position letter, but with an
+     *  admin-written "Terms of Reference" section instead of the fixed committee bullets, and no committee line. */
+    private void otherPage(PDDocument doc, Member m, String positionTitle, String termsOfReference, String stateName) throws IOException {
+        PDPage page = new PDPage(new PDRectangle(PAGE_WIDTH, PAGE_HEIGHT));
+        doc.addPage(page);
+        PDImageXObject background = loadImage(doc, "letters/appointment-letterhead.png");
+        PDImageXObject signature = loadImage(doc, "letters/coordinator-signature.png");
+        PDType1Font bold = new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD);
+        PDType1Font regular = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
+
+        try (PDPageContentStream cs = new PDPageContentStream(doc, page)) {
+            cs.drawImage(background, 0, 0, PAGE_WIDTH, PAGE_HEIGHT);
+
+            y(cs, regular, 11, 448, 657, LocalDate.now().format(DateTimeFormatter.ofPattern("d MMMM yyyy")));
+
+            float width = PAGE_WIDTH - 2 * MARGIN;
+            float cy = 630;
+
+            cy = paragraph(cs, bold, 11, MARGIN, cy, width, 14,
+                "SUBJECT: LETTER OF APPOINTMENT AS " + positionTitle.toUpperCase());
+            cy -= 12;
+            cy = y(cs, bold, 11, MARGIN, cy, "Dear " + m.getFullName() + ",") - 14;
+            if (stateName != null && !stateName.isBlank()) cy = y(cs, bold, 11, MARGIN, cy, stateName) - 14;
+            else cy -= 4;
+
+            cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
+                "The National Leadership of the Grassroots Advocacy for Tinubu (GAT) 2027 is pleased to formally offer you "
+                + "an appointment as " + positionTitle + ".");
+            cy -= 6;
+            cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
+                "This appointment is effective immediately and is a reflection of your demonstrated commitment, unwavering "
+                + "loyalty to the ideals of the All Progressives Congress (APC), and your proactive dedication to the Renewed "
+                + "Hope Agenda of His Excellency, President Bola Ahmed Tinubu.");
+            cy -= 10;
+
+            cy = y(cs, bold, 11, MARGIN, cy, "1. Terms of Reference") - 14;
+            if (termsOfReference != null && !termsOfReference.isBlank()) {
+                for (String para : termsOfReference.split("\\r?\\n+")) {
+                    if (para.isBlank()) continue;
+                    cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14, para.trim());
+                    cy -= 6;
+                }
+            }
+            cy -= 2;
 
             cy = paragraph(cs, regular, 11, MARGIN, cy, width, 14,
                 "Please signify your acceptance of this appointment by signing the space provided below and returning a copy "

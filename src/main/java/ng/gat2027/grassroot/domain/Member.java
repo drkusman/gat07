@@ -31,6 +31,11 @@ public class Member {
     @Column(name = "marital_status") private String maritalStatus;
     @Column(name = "special_needs", nullable = false) private boolean specialNeeds;
     @Column(name = "position_id") private Long positionId;
+    /** An ad hoc "Others" appointment: an admin-defined position title with admin-written Terms of Reference,
+     *  for one-off special appointments that don't belong to the standing organisational structure. Mutually
+     *  exclusive with positionId - assigning one clears the other. */
+    @Column(name = "other_position_title") private String otherPositionTitle;
+    @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(name = "other_position_terms") private String otherPositionTerms;
     @Column(name = "institution_id") private Long institutionId;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) private String photo;
     /** A photo/scan of the appointee's signed "Acceptance of Appointment" page, returned after they receive
@@ -68,4 +73,5 @@ public class Member {
     public boolean isAdmin() { return role == Role.ADMIN; }
     public boolean isActive() { return status == MemberStatus.ACTIVE; }
     public boolean hasAcceptance() { return acceptanceData != null && !acceptanceData.isBlank(); }
+    public boolean hasAppointment() { return positionId != null || (otherPositionTitle != null && !otherPositionTitle.isBlank()); }
 }
