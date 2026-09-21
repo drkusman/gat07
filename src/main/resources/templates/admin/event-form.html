@@ -3,9 +3,17 @@
 <body>
 <div id="page">
   <div class="two">
-    <div class="panel"><div class="ph"><h2 th:text="${e.id == null} ? 'New event' : 'Edit event'"></h2>
+    <div class="panel"><div class="ph"><h2 th:text="${e.id == null} ? 'New post' : 'Edit post'"></h2>
       <span class="pill" th:text="${scopeLabel}">Nationwide</span></div>
       <form th:action="${e.id == null} ? @{/admin/events} : @{/admin/events/{id}(id=${e.id})}" method="post" class="pb">
+        <div class="field" style="margin-bottom:.8rem">
+          <label>Post type</label>
+          <div style="display:flex;gap:1.2rem;align-items:center;padding-top:.3rem">
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="postType" value="EVENT" style="width:auto" th:checked="${e.postType == null or e.postType.name() == 'EVENT'}"> Event</label>
+            <label style="display:flex;gap:.4rem;align-items:center;font-weight:500"><input type="radio" name="postType" value="PODCAST" style="width:auto" th:checked="${e.postType != null and e.postType.name() == 'PODCAST'}"> Podcast</label>
+          </div>
+          <span class="help">Events show under "Events" (split into Upcoming/Past); Podcasts show together under "Podcast".</span>
+        </div>
         <div class="form-grid">
           <div class="field"><label>Title</label><input name="title" type="text" required maxlength="160" th:value="${e.title}"></div>
           <div class="field"><label>Date</label><input name="eventDate" type="date" required th:value="${e.eventDate}"></div>
@@ -30,7 +38,7 @@
         </div>
         <label style="display:flex;gap:.5rem;align-items:center;margin-top:1rem;font-weight:500"><input type="checkbox" name="published" th:checked="${e.id == null} ? true : ${e.published}" style="width:auto"> Published (visible on the public site)</label>
         <div class="btn-row" style="margin-top:1rem">
-          <button class="btn" type="submit" th:text="${e.id == null} ? 'Create event' : 'Save changes'"></button>
+          <button class="btn" type="submit" th:text="${e.id == null} ? 'Create post' : 'Save changes'"></button>
           <a class="btn secondary" href="/admin/events">Cancel</a>
         </div>
       </form>

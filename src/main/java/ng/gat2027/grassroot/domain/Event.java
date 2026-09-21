@@ -14,6 +14,7 @@ public class Event {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY) private Long id;
     @Column(nullable = false) private String title;
     @Column(nullable = false, unique = true) private String slug;
+    @Enumerated(EnumType.STRING) @Column(name = "post_type", nullable = false) private PostType postType = PostType.EVENT;
     @Column(name = "event_date", nullable = false) private LocalDate eventDate;
     private String location;
     @JdbcTypeCode(SqlTypes.LONGVARCHAR) @Column(nullable = false) private String description;

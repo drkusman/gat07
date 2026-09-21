@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
-<div th:fragment="card(e)" class="event-card">
+<div th:fragment="card(e, showUpcomingTag)" class="event-card">
   <div class="event-cover">
     <span class="event-cover-ph">📅</span>
   </div>
   <div class="event-body">
-    <span th:if="${e.upcoming}" class="event-tag">Upcoming</span>
+    <span th:if="${showUpcomingTag} and ${e.upcoming}" class="event-tag">Upcoming</span>
     <h3 th:text="${e.title}"></h3>
     <div class="event-meta" th:text="${#temporals.format(e.eventDate, 'd MMM yyyy')} + (${e.location} != null ? ' · ' + ${e.location} : '')"></div>
     <p class="muted" th:text="${e.description}"></p>

@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.Institution;
 import ng.gat2027.grassroot.domain.Member;
+import ng.gat2027.grassroot.domain.PostType;
 import ng.gat2027.grassroot.repo.*;
 import ng.gat2027.grassroot.security.CurrentUser;
 import ng.gat2027.grassroot.service.AnalyticsService;
@@ -41,7 +42,7 @@ public class ApiController {
     /** Published events for the public site (e.g. the Next.js home page). */
     @GetMapping("/events")
     public List<EventDto> events() {
-        return events.published().stream().map(e -> new EventDto(e.getId(), e.getTitle(), e.getSlug(), e.getEventDate(), e.getLocation(), e.getDescription(),
+        return events.published(PostType.EVENT).stream().map(e -> new EventDto(e.getId(), e.getTitle(), e.getSlug(), e.getEventDate(), e.getLocation(), e.getDescription(),
             e.hasUploadedVideo() ? "/events/" + e.getId() + "/video" : null, e.hasMedia(), e.isUpcoming())).toList();
     }
 

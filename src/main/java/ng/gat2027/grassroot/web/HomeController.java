@@ -2,6 +2,7 @@ package ng.gat2027.grassroot.web;
 
 import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.EventPhoto;
+import ng.gat2027.grassroot.domain.PostType;
 import ng.gat2027.grassroot.domain.PromoVideo;
 import ng.gat2027.grassroot.service.AnalyticsService;
 import ng.gat2027.grassroot.service.AnnouncementService;
@@ -68,7 +69,7 @@ public class HomeController {
 
     @GetMapping("/events")
     public String eventsPage(@RequestParam(required = false) String when, Model model) {
-        List<Event> published = events.published();
+        List<Event> published = events.published(PostType.EVENT);
         boolean showUpcoming = !"past".equals(when);
         boolean showPast = !"upcoming".equals(when);
         List<Event> upcoming = showUpcoming ? published.stream().filter(Event::isUpcoming).toList() : List.of();
@@ -78,8 +79,16 @@ public class HomeController {
         model.addAttribute("emptyMessage", "upcoming".equals(when) ? "No upcoming events right now — check back soon."
             : "past".equals(when) ? "No past events to show yet."
             : "No events published yet — check back soon.");
-        model.addAttribute("galleryTabs", events.withPhotos().stream().map(e -> new GalleryTab(e, events.photosFor(e.getId()))).toList());
+        model.addAttribute("galleryTabs", events.withPhotos(PostType.EVENT).stream().map(e -> new GalleryTab(e, events.photosFor(e.getId()))).toList());
         return "events";
+    }
+
+    @GetMapping("/podcast")
+    public String podcastPage(Model model) {
+        List<Event> episodes = events.published(PostType.PODCAST);
+        model.addAttribute("episodes", episodes);
+        model.addAttribute("galleryTabs", events.withPhotos(PostType.PODCAST).stream().map(e -> new GalleryTab(e, events.photosFor(e.getId()))).toList());
+        return "podcast";
     }
 
     @GetMapping("/events/{id}/video")

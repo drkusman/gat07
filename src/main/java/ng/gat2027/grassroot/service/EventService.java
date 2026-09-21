@@ -2,6 +2,7 @@ package ng.gat2027.grassroot.service;
 
 import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.EventPhoto;
+import ng.gat2027.grassroot.domain.PostType;
 import ng.gat2027.grassroot.repo.EventPhotoRepository;
 import ng.gat2027.grassroot.repo.EventRepository;
 import org.springframework.stereotype.Service;
@@ -26,15 +27,15 @@ public class EventService {
     public List<Event> forZone(Long zoneId) { return repo.findByZoneIdOrderByEventDateDesc(zoneId); }
     public List<Event> forState(Long stateId) { return repo.findByStateIdOrderByEventDateDesc(stateId); }
     public List<Event> forCreator(Long createdBy) { return repo.findByCreatedByOrderByEventDateDesc(createdBy); }
-    public List<Event> published() { return repo.findByPublishedTrueAndApprovedTrueOrderByEventDateDesc(); }
+    public List<Event> published(PostType postType) { return repo.findByPublishedTrueAndApprovedTrueAndPostTypeOrderByEventDateDesc(postType); }
     public long countPendingApproval() { return repo.countByApprovedFalse(); }
     public Optional<Event> find(Long id) { return repo.findById(id); }
     public List<EventPhoto> photosFor(Long eventId) { return photoRepo.findByEventIdOrderBySortOrderAsc(eventId); }
     public long photoCount(Long eventId) { return photoRepo.countByEventId(eventId); }
 
-    /** Events (published, any date) that have at least one uploaded photo, for the public photo gallery tabs. */
-    public List<Event> withPhotos() {
-        return published().stream().filter(e -> photoCount(e.getId()) > 0).toList();
+    /** Posts (published, any date) of the given type that have at least one uploaded photo, for the public photo gallery tabs. */
+    public List<Event> withPhotos(PostType postType) {
+        return published(postType).stream().filter(e -> photoCount(e.getId()) > 0).toList();
     }
 
     @Transactional
@@ -69,10 +70,10 @@ public class EventService {
     }
 
     public Stats stats() {
-        long total = repo.count();
-        long published = repo.countByPublishedTrueAndApprovedTrue();
-        long upcoming = repo.countByPublishedTrueAndApprovedTrueAndEventDateGreaterThanEqual(LocalDate.now());
-        Event next = repo.findByPublishedTrueAndApprovedTrueOrderByEventDateDesc().stream()
+        long total = repo.countByPostType(PostType.EVENT);
+        long published = repo.countByPublishedTrueAndApprovedTrueAndPostType(PostType.EVENT);
+        long upcoming = repo.countByPublishedTrueAndApprovedTrueAndPostTypeAndEventDateGreaterThanEqual(PostType.EVENT, LocalDate.now());
+        Event next = repo.findByPublishedTrueAndApprovedTrueAndPostTypeOrderByEventDateDesc(PostType.EVENT).stream()
             .filter(Event::isUpcoming)
             .min((a, b) -> a.getEventDate().compareTo(b.getEventDate()))
             .orElse(null);
@@ -84,7 +85,7 @@ public class EventService {
      *  a Media Coordinator's own save (create or edit) always resets it to pending. */
     @Transactional
     public Event save(Long id, String title, LocalDate eventDate, String location, String description, boolean published,
-                       Long creatorZoneId, Long creatorStateId, Long creatorId, boolean approved) {
+                       Long creatorZoneId, Long creatorStateId, Long creatorId, boolean approved, PostType postType) {
         Event e = id == null ? new Event() : repo.findById(id).orElseThrow(() -> new IllegalArgumentException("Event not found"));
         boolean isNew = e.getId() == null;
         e.setTitle(title);
@@ -93,6 +94,7 @@ public class EventService {
         e.setDescription(description);
         e.setPublished(published);
         e.setApproved(approved);
+        e.setPostType(postType);
         e.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         if (isNew) { e.setZoneId(creatorZoneId); e.setStateId(creatorStateId); e.setCreatedBy(creatorId); }
         if (isNew || e.getSlug() == null || e.getSlug().isBlank()) e.setSlug(uniqueSlug(title, id));

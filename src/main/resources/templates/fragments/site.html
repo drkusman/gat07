@@ -130,7 +130,7 @@
         <th:block th:if="${currentUser == null}">
           <a href="/" th:classappend="${active == '/'} ? 'active'">Home</a>
           <div th:replace="~{::eventsDropdown(${active})}"></div>
-          <a href="/news" th:classappend="${active == '/news'} ? 'active'">News</a>
+          <a href="/podcast" th:classappend="${active == '/podcast'} ? 'active'">Podcast</a>
           <div th:replace="~{::socialDropdown}"></div>
           <a href="/register" th:classappend="${active == '/register'} ? 'active'">Register</a>
           <a href="/login" th:classappend="${active == '/login'} ? 'active'">Log in</a>

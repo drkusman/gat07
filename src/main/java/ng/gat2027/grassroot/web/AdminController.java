@@ -7,6 +7,7 @@ import ng.gat2027.grassroot.domain.Event;
 import ng.gat2027.grassroot.domain.Institution;
 import ng.gat2027.grassroot.domain.Member;
 import ng.gat2027.grassroot.domain.Position;
+import ng.gat2027.grassroot.domain.PostType;
 import ng.gat2027.grassroot.domain.MemberStatus;
 import ng.gat2027.grassroot.domain.PromotionStage;
 import ng.gat2027.grassroot.domain.PromoVideo;
@@ -404,34 +405,34 @@ public class AdminController {
 
     @PostMapping("/events")
     public String createEvent(@RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
-                               @RequestParam String description, @RequestParam(required = false) String published,
+                               @RequestParam String description, @RequestParam(required = false) String published, @RequestParam(defaultValue = "EVENT") PostType postType,
                                @RequestParam(required = false) String videoData, HttpServletRequest request, RedirectAttributes ra) {
         Member u = currentUser.require();
         Long zoneId = u.isAdmin() ? null : u.getRole() == Role.ZONAL_COORDINATOR ? u.getZoneId() : u.getRole() == Role.COORDINATOR ? u.getZoneId() : null;
         Long stateId = u.getRole() == Role.COORDINATOR ? u.getStateId() : null;
         boolean approved = !u.getRole().isMediaTeam();
         try {
-            Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId, u.getId(), approved);
+            Event e = events.save(null, title, eventDate, location, description, published != null, zoneId, stateId, u.getId(), approved, postType);
             events.addPhotos(e.getId(), photosFrom(request));
             events.setVideo(e.getId(), videoData);
-            ra.addFlashAttribute("success", approved ? "Event created." : "Event submitted — it will appear on the public site once Admin approves it.");
+            ra.addFlashAttribute("success", approved ? "Post created." : "Post submitted — it will appear on the public site once Admin approves it.");
         } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events";
     }
 
     @PostMapping("/events/{id}")
     public String updateEvent(@PathVariable Long id, @RequestParam String title, @RequestParam LocalDate eventDate, @RequestParam(required = false) String location,
-                               @RequestParam String description, @RequestParam(required = false) String published,
+                               @RequestParam String description, @RequestParam(required = false) String published, @RequestParam(defaultValue = "EVENT") PostType postType,
                                @RequestParam(required = false) String videoData, HttpServletRequest request, RedirectAttributes ra) {
         Member u = currentUser.require();
         Event existing = events.find(id).orElse(null);
         if (existing == null || !canManage(u, existing)) { ra.addFlashAttribute("error", "You don't have permission to edit this event."); return "redirect:/admin/events"; }
         boolean approved = !u.getRole().isMediaTeam();
         try {
-            events.save(id, title, eventDate, location, description, published != null, null, null, null, approved);
+            events.save(id, title, eventDate, location, description, published != null, null, null, null, approved, postType);
             events.addPhotos(id, photosFrom(request));
             events.setVideo(id, videoData);
-            ra.addFlashAttribute("success", approved ? "Event updated." : "Event updated — it will need Admin re-approval before it's visible again.");
+            ra.addFlashAttribute("success", approved ? "Post updated." : "Post updated — it will need Admin re-approval before it's visible again.");
         } catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/events/" + id + "/edit";
     }
