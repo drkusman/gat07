@@ -27,12 +27,13 @@ public class MemberService {
 
     private final MemberRepository members; private final PollingUnitRepository pus; private final LocationService locations;
     private final SettingsService settings; private final PasswordEncoder encoder;
-    private final PasswordResetTokenRepository resetTokens; private final MailService mail; private final WhatsAppService whatsApp; private final PositionRepository positions;
+    private final PasswordResetTokenRepository resetTokens; private final MailService mail; private final WhatsAppService whatsApp;
+    private final TermiiService sms; private final PositionRepository positions;
 
     public MemberService(MemberRepository members, PollingUnitRepository pus, LocationService locations, SettingsService settings, PasswordEncoder encoder,
-                          PasswordResetTokenRepository resetTokens, MailService mail, WhatsAppService whatsApp, PositionRepository positions) {
+                          PasswordResetTokenRepository resetTokens, MailService mail, WhatsAppService whatsApp, TermiiService sms, PositionRepository positions) {
         this.members = members; this.pus = pus; this.locations = locations; this.settings = settings; this.encoder = encoder;
-        this.resetTokens = resetTokens; this.mail = mail; this.whatsApp = whatsApp; this.positions = positions;
+        this.resetTokens = resetTokens; this.mail = mail; this.whatsApp = whatsApp; this.sms = sms; this.positions = positions;
     }
 
     @Transactional
@@ -250,9 +251,9 @@ public class MemberService {
     public record ResetRequestResult(String maskedEmail, String maskedPhone, String devModeLink) {}
 
     /** Nothing found -> all fields null (caller shows a generic message either way, so this can't be used to
-     *  probe who's registered). Every member has a phone number, so WhatsApp is tried first; email (if on
-     *  file) is the fallback; if neither channel is configured, the caller gets the raw link back to show
-     *  directly (dev-mode only - see /forgot-password). */
+     *  probe who's registered). Every member has a phone number, so SMS (Termii) is tried first, then
+     *  WhatsApp; email (if on file) is the fallback after that; if nothing is configured, the caller gets
+     *  the raw link back to show directly (dev-mode only - see /forgot-password). */
     @Transactional
     public ResetRequestResult requestPasswordReset(String phone, String resetBaseUrl) {
         Member m = members.findByPhone(Codes.normalizePhone(phone)).orElse(null);
@@ -263,8 +264,12 @@ public class MemberService {
         t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(RESET_TOKEN_TTL_MINUTES));
         resetTokens.save(t);
         String link = resetBaseUrl + "?token=" + t.getToken();
+        String phoneE164 = Codes.nigeriaE164(m.getPhone());
 
-        if (whatsApp.isConfigured() && whatsApp.sendPasswordResetLink(Codes.nigeriaE164(m.getPhone()), m.getFirstName(), link)) {
+        if (sms.isConfigured() && sms.sendPasswordResetLink(phoneE164, m.getFirstName(), link)) {
+            return new ResetRequestResult(null, maskPhone(m.getPhone()), null);
+        }
+        if (whatsApp.isConfigured() && whatsApp.sendPasswordResetLink(phoneE164, m.getFirstName(), link)) {
             return new ResetRequestResult(null, maskPhone(m.getPhone()), null);
         }
         boolean hasEmail = m.getEmail() != null && !m.getEmail().isBlank();
