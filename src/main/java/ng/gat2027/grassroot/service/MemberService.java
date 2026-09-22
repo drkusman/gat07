@@ -240,10 +240,21 @@ public class MemberService {
         m.setStatus(status); members.save(m);
     }
 
+    /** Admin can reset anyone's password; State/LGA/Ward Coordinators can reset it for members in their own
+     *  jurisdiction only - the intended path for members with no working phone/email channel of their own,
+     *  since their coordinator can verify who they are in person. */
     @Transactional
-    public void resetPassword(Long memberId, String password) {
+    public void resetPassword(Member actor, Long memberId, String password) {
         if (password == null || password.length() < 6) throw new MemberException("Password must be at least 6 characters");
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
+        if (!actor.isAdmin()) {
+            switch (actor.getRole()) {
+                case COORDINATOR -> { if (!actor.getStateId().equals(m.getStateId())) throw new MemberException("You can only reset passwords for members in your own state"); }
+                case LGA_COORDINATOR -> { if (!actor.getLgaId().equals(m.getLgaId())) throw new MemberException("You can only reset passwords for members in your own LGA"); }
+                case WARD_COORDINATOR -> { if (!actor.getWardId().equals(m.getWardId())) throw new MemberException("You can only reset passwords for members in your own ward"); }
+                default -> throw new MemberException("Only Admin, State, LGA, or Ward Coordinators can reset a member's password");
+            }
+        }
         m.setPasswordHash(encoder.encode(password)); members.save(m);
     }
 

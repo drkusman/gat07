@@ -225,6 +225,7 @@ public class AdminController {
         model.addAttribute("p", analytics.profile(m));
         model.addAttribute("refs", analytics.referrals(m.getId()));
         model.addAttribute("self", u.getId().equals(m.getId()));
+        model.addAttribute("canResetPassword", u.isAdmin() || u.getRole() == Role.COORDINATOR || u.getRole() == Role.LGA_COORDINATOR || u.getRole() == Role.WARD_COORDINATOR);
         boolean canRecommend = u.getRole() == Role.ZONAL_COORDINATOR || u.getRole() == Role.COORDINATOR || u.getRole() == Role.LGA_COORDINATOR;
         List<Role> proposableRoles = !canRecommend ? List.of()
             : Arrays.stream(Role.values()).filter(r -> r.coordinatorRank() > 0 && r.coordinatorRank() < u.getRole().coordinatorRank()).toList();
@@ -343,7 +344,7 @@ public class AdminController {
 
     @PostMapping("/members/{id}/password")
     public String resetPassword(@PathVariable Long id, @RequestParam String password, RedirectAttributes ra) {
-        try { memberService.resetPassword(id, password); ra.addFlashAttribute("success", "Password reset. Tell the member their new password."); }
+        try { memberService.resetPassword(currentUser.require(), id, password); ra.addFlashAttribute("success", "Password reset. Tell the member their new password."); }
         catch (Exception e) { ra.addFlashAttribute("error", e.getMessage()); }
         return "redirect:/admin/members/" + id;
     }

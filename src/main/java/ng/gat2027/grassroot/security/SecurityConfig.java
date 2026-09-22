@@ -29,8 +29,9 @@ public class SecurityConfig {
                                  "/api/locations/**", "/api/referral/**", "/api/events/**", "/api/institutions", "/actuator/health").permitAll()
                 .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/announcements/**", "/admin/institutions/**", "/admin/organization/**", "/admin/roles/**", "/admin/support-groups/**", "/api/admin/import",
                                  "/admin/members/suspended", "/admin/members/*/role", "/admin/members/*/position", "/admin/members/*/status",
-                                 "/admin/members/*/password", "/admin/promotions/**", "/admin/events/*/approve", "/admin/videos/*/approve").hasRole("ADMIN")
+                                 "/admin/promotions/**", "/admin/events/*/approve", "/admin/videos/*/approve").hasRole("ADMIN")
                 .requestMatchers("/admin/members/*/appointment-letter").hasAnyRole("ADMIN", "COORDINATOR", "LGA_COORDINATOR")
+                .requestMatchers("/admin/members/*/password").hasAnyRole("ADMIN", "COORDINATOR", "LGA_COORDINATOR", "WARD_COORDINATOR")
                 .requestMatchers("/admin/events/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
                 .requestMatchers("/admin/videos/**").hasAnyRole("ADMIN", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
                 .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "GRAND_PATRON",

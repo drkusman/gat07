@@ -44,7 +44,8 @@
           <form th:action="@{/admin/promotions/{id}/reject(id=${m.id})}" method="post"><button class="btn secondary sm">Reject</button></form>
         </span>
       </div>
-      <div class="btn-row no-print" th:if="${isAdmin}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
+      <div class="btn-row no-print" th:if="${isAdmin or canResetPassword}" style="margin-top:1.2rem;border-top:1px solid var(--line);padding-top:1rem">
+        <th:block th:if="${isAdmin}">
         <form th:action="@{/admin/members/{id}/role(id=${m.id})}" method="post" class="btn-row">
           <select name="role" style="width:auto" th:disabled="${self}">
             <option value="MEMBER" th:selected="${m.role.name() == 'MEMBER'}">member</option>
@@ -61,7 +62,8 @@
           <button class="btn sm" th:disabled="${self}">Save role</button></form>
         <form th:action="@{/admin/members/{id}/status(id=${m.id})}" method="post">
           <input type="hidden" name="status" th:value="${m.active} ? 'SUSPENDED' : 'ACTIVE'"><button class="btn sm" th:classappend="${m.active} ? 'danger' : ''" th:disabled="${self}" th:text="${m.active} ? 'Suspend' : 'Reactivate'"></button></form>
-        <form th:action="@{/admin/members/{id}/password(id=${m.id})}" method="post" class="btn-row">
+        </th:block>
+        <form th:if="${canResetPassword}" th:action="@{/admin/members/{id}/password(id=${m.id})}" method="post" class="btn-row">
           <input name="password" placeholder="New password" minlength="6" required style="width:170px"><button class="btn secondary sm">Reset password</button></form>
       </div>
       <div class="no-print" th:if="${isAdmin}" style="margin-top:.7rem">
