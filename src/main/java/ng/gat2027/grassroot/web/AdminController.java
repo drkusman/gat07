@@ -190,6 +190,7 @@ public class AdminController {
         long total = analytics.countMembers(u, f);
         model.addAttribute("rows", analytics.listMembers(u, f, page, size));
         model.addAttribute("total", total); model.addAttribute("page", page); model.addAttribute("pages", Math.max(1, (total + size - 1) / size));
+        model.addAttribute("canDownloadLetters", u.isAdmin() || u.getRole() == Role.COORDINATOR || u.getRole() == Role.LGA_COORDINATOR);
         return "admin/members";
     }
 

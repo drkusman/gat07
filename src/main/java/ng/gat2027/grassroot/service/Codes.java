@@ -35,5 +35,10 @@ public final class Codes {
 
     public static boolean validPhone(String normalized) { return normalized != null && normalized.matches("^0[789][01]\\d{8}$"); }
 
+    /** 0803... -> 234803... (no leading +), the format the WhatsApp Cloud API expects for "to" numbers. */
+    public static String nigeriaE164(String normalizedPhone) {
+        return normalizedPhone != null && normalizedPhone.startsWith("0") ? "234" + normalizedPhone.substring(1) : normalizedPhone;
+    }
+
     public static String blankToNull(String s) { return s == null || s.isBlank() ? null : s.trim(); }
 }

@@ -35,7 +35,7 @@ public class AnalyticsService {
                           List<NameCount> topCorpsMembers, List<NameCount> topApplicants) {}
     public record AreaRow(long id, String name, String code, long members, long male, long female) {}
     public record MemberRow(long id, String memberCode, String role, String status, String firstName, String lastName, String gender, String phone,
-                            Double lat, Double lng, LocalDateTime createdAt, String location, String referrerName, String referrerCode, long referrals) {}
+                            Double lat, Double lng, LocalDateTime createdAt, String location, String referrerName, String referrerCode, long referrals, boolean hasAppointment) {}
     public record MapPoint(long id, String name, String code, double lat, double lng, String ward, String lga, String state, long members) {}
     public record ReportRow(long id, String category, String title, String body, String status, String adminNote, Double lat, Double lng, LocalDateTime createdAt,
                             String memberCode, String memberName, String phone, String location) {}
@@ -170,12 +170,13 @@ public class AnalyticsService {
     public List<MemberRow> listMembers(Member user, AdminFilter f, int page, int size) {
         Where w = where(user, f);
         return jdbc.query("SELECT m.id, m.member_code, m.role, m.status, m.first_name, m.last_name, m.gender, m.phone, m.pu_latitude, m.pu_longitude, m.created_at, " +
-                "s.name, l.name, w.name, p.name, r.member_code, r.first_name, r.last_name, (SELECT COUNT(*) FROM members x WHERE x.referred_by = m.id) " +
+                "s.name, l.name, w.name, p.name, r.member_code, r.first_name, r.last_name, (SELECT COUNT(*) FROM members x WHERE x.referred_by = m.id), " +
+                "(m.position_id IS NOT NULL OR m.other_position_title IS NOT NULL) " +
                 "FROM members m LEFT JOIN states s ON s.id = m.state_id LEFT JOIN lgas l ON l.id = m.lga_id LEFT JOIN wards w ON w.id = m.ward_id LEFT JOIN polling_units p ON p.id = m.polling_unit_id LEFT JOIN members r ON r.id = m.referred_by " +
                 "WHERE " + w.sql + " ORDER BY m.created_at DESC LIMIT ? OFFSET ?",
             (rs, i) -> new MemberRow(rs.getLong(1), rs.getString(2), rs.getString(3), rs.getString(4), rs.getString(5), rs.getString(6), rs.getString(7), rs.getString(8),
                 (Double) rs.getObject(9), (Double) rs.getObject(10), rs.getTimestamp(11).toLocalDateTime(), join(", ", rs.getString(15), rs.getString(14), rs.getString(13), rs.getString(12)),
-                rs.getString(17) == null ? null : rs.getString(17) + " " + rs.getString(18), rs.getString(16), rs.getLong(19)),
+                rs.getString(17) == null ? null : rs.getString(17) + " " + rs.getString(18), rs.getString(16), rs.getLong(19), rs.getBoolean(20)),
             plus(w.params, size, (page - 1) * size).toArray());
     }
 

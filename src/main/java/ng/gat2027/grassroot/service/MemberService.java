@@ -12,7 +12,6 @@ import ng.gat2027.grassroot.repo.PollingUnitRepository;
 import ng.gat2027.grassroot.repo.PositionRepository;
 import ng.gat2027.grassroot.web.forms.ProfileForm;
 import ng.gat2027.grassroot.web.forms.RegisterForm;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +26,13 @@ public class MemberService {
     private static final long RESET_TOKEN_TTL_MINUTES = 30;
 
     private final MemberRepository members; private final PollingUnitRepository pus; private final LocationService locations;
-    private final SettingsService settings; private final PasswordEncoder encoder; private final JdbcTemplate jdbc;
-    private final PasswordResetTokenRepository resetTokens; private final MailService mail; private final PositionRepository positions;
+    private final SettingsService settings; private final PasswordEncoder encoder;
+    private final PasswordResetTokenRepository resetTokens; private final MailService mail; private final WhatsAppService whatsApp; private final PositionRepository positions;
 
-    public MemberService(MemberRepository members, PollingUnitRepository pus, LocationService locations, SettingsService settings, PasswordEncoder encoder, JdbcTemplate jdbc,
-                          PasswordResetTokenRepository resetTokens, MailService mail, PositionRepository positions) {
-        this.members = members; this.pus = pus; this.locations = locations; this.settings = settings; this.encoder = encoder; this.jdbc = jdbc;
-        this.resetTokens = resetTokens; this.mail = mail; this.positions = positions;
+    public MemberService(MemberRepository members, PollingUnitRepository pus, LocationService locations, SettingsService settings, PasswordEncoder encoder,
+                          PasswordResetTokenRepository resetTokens, MailService mail, WhatsAppService whatsApp, PositionRepository positions) {
+        this.members = members; this.pus = pus; this.locations = locations; this.settings = settings; this.encoder = encoder;
+        this.resetTokens = resetTokens; this.mail = mail; this.whatsApp = whatsApp; this.positions = positions;
     }
 
     @Transactional
@@ -231,12 +230,13 @@ public class MemberService {
 
     private void clearPending(Member m) { m.setPendingRole(null); m.setPendingRoleRequestedBy(null); m.setPendingRoleStage(null); m.setPendingRoleZonalApprovedBy(null); }
 
+    /** A suspended member's remember-me cookie stays valid but auto-login is still blocked, since
+     *  MemberPrincipal.isEnabled()/isAccountNonLocked() re-check the current status on every attempt. */
     @Transactional
     public void setStatus(Member admin, Long memberId, MemberStatus status) {
         if (admin.getId().equals(memberId)) throw new MemberException("You cannot suspend your own account");
         Member m = members.findById(memberId).orElseThrow(() -> new MemberException("Member not found"));
         m.setStatus(status); members.save(m);
-        if (status == MemberStatus.SUSPENDED) jdbc.update("DELETE FROM persistent_logins WHERE username = ?", m.getPhone());
     }
 
     @Transactional
@@ -247,21 +247,37 @@ public class MemberService {
     }
 
     // ----- self-service password reset (forgot password) -----
-    public record ResetRequestResult(String maskedEmail, String devModeLink) {}
+    public record ResetRequestResult(String maskedEmail, String maskedPhone, String devModeLink) {}
 
-    /** Nothing found/emailable -> both fields null (caller shows a generic message either way, so this can't be used to probe who's registered). */
+    /** Nothing found -> all fields null (caller shows a generic message either way, so this can't be used to
+     *  probe who's registered). Every member has a phone number, so WhatsApp is tried first; email (if on
+     *  file) is the fallback; if neither channel is configured, the caller gets the raw link back to show
+     *  directly (dev-mode only - see /forgot-password). */
     @Transactional
     public ResetRequestResult requestPasswordReset(String phone, String resetBaseUrl) {
         Member m = members.findByPhone(Codes.normalizePhone(phone)).orElse(null);
-        if (m == null || m.getEmail() == null || m.getEmail().isBlank() || !m.isActive()) return new ResetRequestResult(null, null);
+        if (m == null || !m.isActive()) return new ResetRequestResult(null, null, null);
         PasswordResetToken t = new PasswordResetToken();
         t.setMemberId(m.getId());
         t.setToken(Codes.secureToken());
         t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(RESET_TOKEN_TTL_MINUTES));
         resetTokens.save(t);
         String link = resetBaseUrl + "?token=" + t.getToken();
-        mail.sendPasswordReset(m.getEmail(), m.getFirstName(), link);
-        return mail.isConfigured() ? new ResetRequestResult(maskEmail(m.getEmail()), null) : new ResetRequestResult(null, link);
+
+        if (whatsApp.isConfigured() && whatsApp.sendPasswordResetLink(Codes.nigeriaE164(m.getPhone()), m.getFirstName(), link)) {
+            return new ResetRequestResult(null, maskPhone(m.getPhone()), null);
+        }
+        boolean hasEmail = m.getEmail() != null && !m.getEmail().isBlank();
+        if (hasEmail) {
+            mail.sendPasswordReset(m.getEmail(), m.getFirstName(), link);
+            if (mail.isConfigured()) return new ResetRequestResult(maskEmail(m.getEmail()), null, null);
+        }
+        return new ResetRequestResult(null, null, link);
+    }
+
+    private static String maskPhone(String phone) {
+        if (phone == null || phone.length() < 7) return phone;
+        return phone.substring(0, 4) + "*".repeat(phone.length() - 6) + phone.substring(phone.length() - 2);
     }
 
     private static String maskEmail(String email) {
@@ -276,6 +292,8 @@ public class MemberService {
         return token != null && resetTokens.findByToken(token).map(PasswordResetToken::isValid).orElse(false);
     }
 
+    /** Also invalidates any remember-me cookies for this member: the cookie's signature is derived from
+     *  the password hash, so it stops verifying the moment the hash changes here. */
     @Transactional
     public void resetPasswordWithToken(String token, String password) {
         if (password == null || password.length() < 6) throw new MemberException("Password must be at least 6 characters");
@@ -286,7 +304,6 @@ public class MemberService {
         members.save(m);
         t.setUsedAt(LocalDateTime.now(ZoneOffset.UTC));
         resetTokens.save(t);
-        jdbc.update("DELETE FROM persistent_logins WHERE username = ?", m.getPhone());
     }
 
     private String uniqueReferralCode() {

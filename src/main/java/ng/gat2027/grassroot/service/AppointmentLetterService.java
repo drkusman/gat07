@@ -131,7 +131,7 @@ public class AppointmentLetterService {
             cy = y(cs, regular, 11, MARGIN, cy, "Congratulations on your appointment. We look forward to working with you.") - 16;
             cy = y(cs, regular, 11, MARGIN, cy, "Sincerely,") - 4;
 
-            cs.drawImage(signature, MARGIN, cy - 45, 70, 45);
+            cs.drawImage(signature, MARGIN, cy - 45, 30, 45);
             cy -= 55;
             cy = y(cs, bold, 11, MARGIN, cy, "Prof. Ochugudu Achoda Ipuele") - 14;
             cy = y(cs, regular, 10, MARGIN, cy, "National Coordinator") - 13;
@@ -206,7 +206,7 @@ public class AppointmentLetterService {
             f.cy = flowText(f, bold, 11, "Yours faithfully,") - 4;
 
             f.ensureSpace(100);
-            f.cs.drawImage(signature, MARGIN, f.cy - 45, 70, 45);
+            f.cs.drawImage(signature, MARGIN, f.cy - 45, 30, 45);
             f.cy -= 55;
             f.cy = flowText(f, bold, 11, "Prof. Ochugudu Achoda Ipuele,") - 14;
             f.cy = flowText(f, regular, 10, "National Coordinator") - 13;
@@ -298,7 +298,7 @@ public class AppointmentLetterService {
             cy = y(cs, regular, 12, MARGIN, cy, "Please accept the assurances of our highest esteem.") - 25;
             cy = y(cs, bold, 12, MARGIN, cy, "Sincerely,") - 4;
 
-            cs.drawImage(signature, MARGIN, cy - 48, 70, 45);
+            cs.drawImage(signature, MARGIN, cy - 48, 30, 45);
             cy -= 58;
             cy = y(cs, bold, 12, MARGIN, cy, "Prof. Ochugudu Achoda Ipuele") - 15;
             cy = y(cs, regular, 11, MARGIN, cy, "National Coordinator,") - 14;

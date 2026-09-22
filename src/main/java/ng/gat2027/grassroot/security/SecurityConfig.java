@@ -8,10 +8,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
-
-import javax.sql.DataSource;
 
 @Configuration
 @EnableWebSecurity
@@ -26,21 +22,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PersistentTokenRepository tokenRepository(DataSource dataSource) {
-        JdbcTokenRepositoryImpl repo = new JdbcTokenRepositoryImpl();
-        repo.setDataSource(dataSource); // table persistent_logins is created by Flyway
-        return repo;
-    }
-
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, MemberUserDetailsService uds, PersistentTokenRepository tokens) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, MemberUserDetailsService uds) throws Exception {
         http
             .authorizeHttpRequests(a -> a
                 .requestMatchers("/", "/events", "/events/*/video", "/news", "/podcast", "/register", "/register-group", "/login", "/forgot-password", "/reset-password", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
                                  "/api/locations/**", "/api/referral/**", "/api/events/**", "/api/institutions", "/actuator/health").permitAll()
                 .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/announcements/**", "/admin/institutions/**", "/admin/organization/**", "/admin/roles/**", "/admin/support-groups/**", "/api/admin/import",
-                                 "/admin/members/suspended", "/admin/members/*/role", "/admin/members/*/position", "/admin/members/*/appointment-letter", "/admin/members/*/status",
+                                 "/admin/members/suspended", "/admin/members/*/role", "/admin/members/*/position", "/admin/members/*/status",
                                  "/admin/members/*/password", "/admin/promotions/**", "/admin/events/*/approve", "/admin/videos/*/approve").hasRole("ADMIN")
+                .requestMatchers("/admin/members/*/appointment-letter").hasAnyRole("ADMIN", "COORDINATOR", "LGA_COORDINATOR")
                 .requestMatchers("/admin/events/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
                 .requestMatchers("/admin/videos/**").hasAnyRole("ADMIN", "MEDIA_COORDINATOR", "NATIONAL_PUBLICITY_SECRETARY")
                 .requestMatchers("/admin/**", "/api/admin/**").hasAnyRole("ADMIN", "COORDINATOR", "ZONAL_COORDINATOR", "GRAND_PATRON",
@@ -53,9 +43,11 @@ public class SecurityConfig {
                 .successHandler(new RoleAwareSuccessHandler())
                 .failureUrl("/login?error")
                 .permitAll())
+            // Stateless (hash-based) remember-me: no DB-backed token to rotate, so no series/token race
+            // under concurrent requests - see MemberService.setStatus/resetPasswordWithToken for how
+            // suspension and password resets still invalidate a remembered login without it.
             .rememberMe(r -> r
                 .key(rememberMeKey)
-                .tokenRepository(tokens)
                 .tokenValiditySeconds(30 * 24 * 3600)
                 .alwaysRemember(true)
                 .userDetailsService(uds))

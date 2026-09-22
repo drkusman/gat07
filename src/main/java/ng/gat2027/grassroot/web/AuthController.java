@@ -55,6 +55,7 @@ public class AuthController {
         var result = memberService.requestPasswordReset(phone, resetBaseUrl);
         model.addAttribute("sent", true);
         model.addAttribute("maskedEmail", result.maskedEmail());
+        model.addAttribute("maskedPhone", result.maskedPhone());
         model.addAttribute("devModeLink", result.devModeLink());
         return "forgot-password";
     }

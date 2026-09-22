@@ -13,12 +13,16 @@
     <form th:action="@{/login}" method="post">
       <input type="hidden" name="next" th:if="${next != null}" th:value="${next}">
       <div class="field"><label>Phone number</label><input name="phone" type="tel" placeholder="0803 123 4567" required autocomplete="username"></div>
-      <div class="field" style="margin-top:.8rem"><label>Password</label><input name="password" type="password" required autocomplete="current-password"></div>
+      <div class="field" style="margin-top:.8rem"><label>Password</label>
+        <div class="pw-field"><input name="password" type="password" required autocomplete="current-password">
+          <button type="button" class="pw-toggle" aria-label="Show password">👁</button></div>
+      </div>
       <button class="btn" type="submit" style="width:100%;margin-top:1rem">Log in</button>
     </form>
     <p class="small muted" style="margin-top:1rem">Not yet a member? <a href="/register">Register here</a>. <a href="/forgot-password">Forgot your password?</a></p>
   </div>
 </main>
 <th:block th:replace="~{fragments/site :: siteFooter(false)}"></th:block>
+<script src="/js/gat.js"></script>
 </body>
 </html>
