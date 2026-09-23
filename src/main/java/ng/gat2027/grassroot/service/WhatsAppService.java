@@ -17,10 +17,12 @@ import java.util.Map;
  * (e.g. to email, or the dev-mode direct link shown on /forgot-password).
  *
  * <p>Setup needed before this does anything: a Meta Business Platform app with a WhatsApp Business
- * phone number, and a "Utility" category message template (submitted to Meta for approval) with one
- * body text variable (first name) and one dynamic URL button variable (the reset link). Once approved,
- * set the GAT_WHATSAPP_ACCESS_TOKEN, GAT_WHATSAPP_PHONE_NUMBER_ID, and (if the template name/language
- * differ from the defaults below) GAT_WHATSAPP_TEMPLATE_NAME / GAT_WHATSAPP_LANGUAGE_CODE env vars.
+ * phone number, and an "Authentication" category message template (submitted to Meta for approval)
+ * with a numeric code body variable and a "Copy Code" button - Meta's Authentication category is the
+ * only one that reliably approves for password-reset-style content; a free-text "Utility" template
+ * with a link was rejected. Once approved, set the GAT_WHATSAPP_ACCESS_TOKEN, GAT_WHATSAPP_PHONE_NUMBER_ID,
+ * and (if the template name/language differ from the defaults below) GAT_WHATSAPP_TEMPLATE_NAME /
+ * GAT_WHATSAPP_LANGUAGE_CODE env vars.
  */
 @Service
 public class WhatsAppService {
@@ -48,11 +50,13 @@ public class WhatsAppService {
 
     public boolean isConfigured() { return configured; }
 
-    /** phoneE164 is digits only, no leading + (e.g. "2348031234567") - see Codes.nigeriaE164. Returns
-     *  true only if the API accepted the send; the caller should fall back to another channel on false. */
-    public boolean sendPasswordResetLink(String phoneE164, String firstName, String resetLink) {
+    /** phoneE164 is digits only, no leading + (e.g. "2348031234567") - see Codes.nigeriaE164. Sends the
+     *  numeric code via an Authentication-category template (body parameter + copy-code button, both
+     *  carrying the same code, per Meta's required format for this template category). Returns true only
+     *  if the API accepted the send; the caller should fall back to another channel on false. */
+    public boolean sendPasswordResetCode(String phoneE164, String code) {
         if (!configured) {
-            log.warn("[whatsapp] Not configured — password reset link for {} <{}>: {}", firstName, phoneE164, resetLink);
+            log.warn("[whatsapp] Not configured — password reset code for <{}>: {}", phoneE164, code);
             return false;
         }
         try {
@@ -64,9 +68,9 @@ public class WhatsAppService {
                     "name", templateName,
                     "language", Map.of("code", languageCode),
                     "components", List.of(
-                        Map.of("type", "body", "parameters", List.of(Map.of("type", "text", "text", firstName))),
-                        Map.of("type", "button", "sub_type", "url", "index", "0",
-                            "parameters", List.of(Map.of("type", "text", "text", resetLink)))
+                        Map.of("type", "body", "parameters", List.of(Map.of("type", "text", "text", code))),
+                        Map.of("type", "button", "sub_type", "copy_code", "index", "0",
+                            "parameters", List.of(Map.of("type", "coupon_code", "coupon_code", code)))
                     )
                 )
             );
@@ -77,7 +81,7 @@ public class WhatsAppService {
                 .toBodilessEntity();
             return true;
         } catch (Exception e) {
-            log.error("[whatsapp] Failed to send password reset to {}: {}", phoneE164, e.getMessage());
+            log.error("[whatsapp] Failed to send password reset code to {}: {}", phoneE164, e.getMessage());
             return false;
         }
     }

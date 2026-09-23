@@ -259,36 +259,65 @@ public class MemberService {
     }
 
     // ----- self-service password reset (forgot password) -----
-    public record ResetRequestResult(String maskedEmail, String maskedPhone, String devModeLink) {}
+    private static final int OTP_TTL_MINUTES = 10;
+
+    /** otpPending: true when a code was sent via WhatsApp - the caller should show a "enter your code"
+     *  form (POST to verifyResetCode) instead of "check your phone/email for a link". */
+    public record ResetRequestResult(String maskedEmail, String maskedPhone, String devModeLink, boolean otpPending) {}
 
     /** Nothing found -> all fields null (caller shows a generic message either way, so this can't be used to
-     *  probe who's registered). Every member has a phone number, so SMS (Termii) is tried first, then
-     *  WhatsApp; email (if on file) is the fallback after that; if nothing is configured, the caller gets
-     *  the raw link back to show directly (dev-mode only - see /forgot-password). */
+     *  probe who's registered). Every member has a phone number, so SMS (Termii, a clickable link) is tried
+     *  first, then WhatsApp (a typed-in code, since Meta only approves Authentication-category templates for
+     *  this kind of content, and that category can't carry a link); email (if on file) is the fallback after
+     *  that; if nothing is configured, the caller gets the raw link back to show directly (dev-mode only). */
     @Transactional
     public ResetRequestResult requestPasswordReset(String phone, String resetBaseUrl) {
         Member m = members.findByPhone(Codes.normalizePhone(phone)).orElse(null);
-        if (m == null || !m.isActive()) return new ResetRequestResult(null, null, null);
+        if (m == null || !m.isActive()) return new ResetRequestResult(null, null, null, false);
         PasswordResetToken t = new PasswordResetToken();
         t.setMemberId(m.getId());
         t.setToken(Codes.secureToken());
         t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(RESET_TOKEN_TTL_MINUTES));
-        resetTokens.save(t);
         String link = resetBaseUrl + "?token=" + t.getToken();
         String phoneE164 = Codes.nigeriaE164(m.getPhone());
 
         if (sms.isConfigured() && sms.sendPasswordResetLink(phoneE164, m.getFirstName(), link)) {
-            return new ResetRequestResult(null, maskPhone(m.getPhone()), null);
+            resetTokens.save(t);
+            return new ResetRequestResult(null, maskPhone(m.getPhone()), null, false);
         }
-        if (whatsApp.isConfigured() && whatsApp.sendPasswordResetLink(phoneE164, m.getFirstName(), link)) {
-            return new ResetRequestResult(null, maskPhone(m.getPhone()), null);
+        if (whatsApp.isConfigured()) {
+            String code = Codes.numericCode(6);
+            t.setOtpCode(code);
+            t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(OTP_TTL_MINUTES));
+            if (whatsApp.sendPasswordResetCode(phoneE164, code)) {
+                resetTokens.save(t);
+                return new ResetRequestResult(null, maskPhone(m.getPhone()), null, true);
+            }
+            t.setOtpCode(null);
+            t.setExpiresAt(LocalDateTime.now(ZoneOffset.UTC).plusMinutes(RESET_TOKEN_TTL_MINUTES));
         }
         boolean hasEmail = m.getEmail() != null && !m.getEmail().isBlank();
         if (hasEmail) {
             mail.sendPasswordReset(m.getEmail(), m.getFirstName(), link);
-            if (mail.isConfigured()) return new ResetRequestResult(maskEmail(m.getEmail()), null, null);
+            if (mail.isConfigured()) {
+                resetTokens.save(t);
+                return new ResetRequestResult(maskEmail(m.getEmail()), null, null, false);
+            }
         }
-        return new ResetRequestResult(null, null, link);
+        resetTokens.save(t);
+        return new ResetRequestResult(null, null, link, false);
+    }
+
+    /** Resolves a WhatsApp-delivered OTP code back to the underlying reset token, so the rest of the flow
+     *  (the /reset-password page) works identically regardless of which channel delivered it. */
+    public String verifyResetCode(String phone, String code) {
+        Member m = members.findByPhone(Codes.normalizePhone(phone)).orElse(null);
+        if (m == null) throw new MemberException("Invalid or expired code");
+        String cleanCode = code == null ? "" : code.trim();
+        PasswordResetToken t = resetTokens.findFirstByMemberIdAndOtpCodeOrderByCreatedAtDesc(m.getId(), cleanCode)
+            .filter(PasswordResetToken::isValid)
+            .orElseThrow(() -> new MemberException("Invalid or expired code"));
+        return t.getToken();
     }
 
     private static String maskPhone(String phone) {

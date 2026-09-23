@@ -25,7 +25,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http, MemberUserDetailsService uds) throws Exception {
         http
             .authorizeHttpRequests(a -> a
-                .requestMatchers("/", "/events", "/events/*/video", "/news", "/podcast", "/register", "/register-group", "/login", "/forgot-password", "/reset-password", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
+                .requestMatchers("/", "/events", "/events/*/video", "/news", "/podcast", "/register", "/register-group", "/login", "/forgot-password", "/reset-password", "/verify-code", "/error", "/css/**", "/js/**", "/img/**", "/docs/**", "/favicon.ico",
                                  "/api/locations/**", "/api/referral/**", "/api/events/**", "/api/institutions", "/actuator/health").permitAll()
                 .requestMatchers("/admin/locations/**", "/admin/settings/**", "/admin/announcements/**", "/admin/institutions/**", "/admin/organization/**", "/admin/roles/**", "/admin/support-groups/**", "/api/admin/import",
                                  "/admin/members/suspended", "/admin/members/*/role", "/admin/members/*/position", "/admin/members/*/status",

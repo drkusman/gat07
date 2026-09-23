@@ -22,6 +22,13 @@ public final class Codes {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
     }
 
+    /** Short numeric code meant to be typed by a human (WhatsApp Authentication-template OTP, etc.). */
+    public static String numericCode(int digits) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < digits; i++) sb.append(RANDOM.nextInt(10));
+        return sb.toString();
+    }
+
     public static String memberCode(long n) { return String.format("GAT-%010d", n); }
 
     /** 0803..., +234803..., 234803... -> 0803... */

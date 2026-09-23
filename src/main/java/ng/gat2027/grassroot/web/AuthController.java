@@ -57,7 +57,23 @@ public class AuthController {
         model.addAttribute("maskedEmail", result.maskedEmail());
         model.addAttribute("maskedPhone", result.maskedPhone());
         model.addAttribute("devModeLink", result.devModeLink());
+        model.addAttribute("otpPending", result.otpPending());
+        if (result.otpPending()) model.addAttribute("phone", phone);
         return "forgot-password";
+    }
+
+    @PostMapping("/verify-code")
+    public String verifyCode(@RequestParam String phone, @RequestParam String code, Model model) {
+        try {
+            String token = memberService.verifyResetCode(phone, code);
+            return "redirect:/reset-password?token=" + token;
+        } catch (MemberService.MemberException e) {
+            model.addAttribute("sent", true);
+            model.addAttribute("otpPending", true);
+            model.addAttribute("phone", phone);
+            model.addAttribute("codeError", e.getMessage());
+            return "forgot-password";
+        }
     }
 
     @GetMapping("/reset-password")
